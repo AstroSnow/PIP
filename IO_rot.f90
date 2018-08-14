@@ -464,11 +464,11 @@ contains
     endif
 
 
-    if(flag_col.ge.1) then
+    if(flag_pip.eq.1.and.flag_col.ge.1) then
        call dacget(11,trim(indir)//step_char//'ac.dac.'//cno,nvar,ac(:,:,:))
     endif
 
-    if(flag_ir.ge.1) then
+    if(flag_pip.eq.1.and.flag_ir.ge.1) then
        call dacget(11,trim(indir)//step_char//'ion.dac.'//cno,nvar,gm_ion(:,:,:))
        call dacget(11,trim(indir)//step_char//'rec.dac.'//cno,nvar,gm_rec(:,:,:))
 !       print *,"GM_ION",maxval(gm_ion),minval(gm_ion)
