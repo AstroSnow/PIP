@@ -840,19 +840,18 @@ contains
     double precision,intent(inout)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
     double precision :: damp_time1(ix,jx,kx)
 
-    damp_time1=spread(spread(1.d0*damp_time - (10.d0*damp_time) &
-       * 0.5d0*(tanh((y(:)-0.15)/0.05)-1.d0),1,ix),3,kx)
+    damp_time1=spread(spread(spread(1.d0*damp_time ,1,ix),2,jx),3,kx)
 
 
     if (flag_mhd.eq.1) then
     U_m(:,:,:,2:4)=U_m(:,:,:,2:4)-spread(damp_time1,4,3)*dt*U_m(:,:,:,2:4)
     U_m(:,:,:,5)=U_m(:,:,:,5)-damp_time1*dt*(U_m(:,:,:,2)**2+U_m(:,:,:,3)**2 &
-      +U_m(:,:,:,4)**2)/U_m(:,:,:,1)
+      +U_m(:,:,:,4)**2)/U_m(:,:,:,1)/2.d0
     endif
     if(flag_mhd.eq.0.or.flag_pip.eq.1) then
     U_h(:,:,:,2:4)=U_h(:,:,:,2:4)-spread(damp_time1,4,3)*dt*U_h(:,:,:,2:4)
     U_h(:,:,:,5)=U_h(:,:,:,5)-damp_time1*dt*(U_h(:,:,:,2)**2+U_h(:,:,:,3)**2 &
-      +U_h(:,:,:,4)**2)/U_h(:,:,:,1)
+      +U_h(:,:,:,4)**2)/U_h(:,:,:,1)/2.d0
     endif
 
 
