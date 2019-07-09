@@ -7,8 +7,9 @@ module boundary_rot
 ! Second version - 2013/06/27 (New labelling for boundaries)
 !====================================================================
   use globalvar,only:ix,jx,kx,ndim,flag_pip,flag_mhd,nvar_h,nvar_m,&
-       flag_mpi,flag_bnd,margin,neighbor,flag_divb
+       flag_mpi,flag_bnd,margin,neighbor,flag_divb,time,x
   use mpi_rot,only:mpi_bnd,mpi_bnd_onevar
+  use parameters,only:pi !for the periodic drivers
 
   implicit none
   integer,allocatable,save ::sym_mhd(:,:)  
@@ -76,13 +77,19 @@ end subroutine PIPbnd
           type=2
        else if(flag_bnd(i).eq.11) then
           type=2
+!       else if(flag_bnd(i).eq.20) then
+!          type=2
        else
           type=flag_bnd(i)
        endif
 
        if(neighbor(i).eq.-1) then
+	if(flag_bnd(i) .EQ. 20) then
+          call boundary_control_custom_mhd(U_m,ix,jx,kx,nvar_m,dir)
+	else
           call boundary_control(U_m,ix,jx,kx,nvar_m,margin,dir,upper_lower, &
                sym_mhd(:,i),type)
+	endif
        endif
     enddo
   end subroutine MHDbnd
@@ -107,9 +114,13 @@ end subroutine PIPbnd
           type=flag_bnd(i)
        endif
        if(neighbor(i).eq.-1) then
+	if(flag_bnd(i) .EQ. 20) then
+          call boundary_control_custom_hd(U_h,ix,jx,kx,nvar_h,dir)
+	else
           call boundary_control(U_h,&
                ix,jx,kx,nvar_h,margin,dir,upper_lower, &
                sym_hd(:,i),type)
+	endif
        endif
     enddo
   end subroutine HDbnd
@@ -168,6 +179,8 @@ end subroutine PIPbnd
           type=2          
        else if(flag_bnd(i).eq.11) then
           type=2
+!       else if(flag_bnd(i).eq.20) then
+!          type=2
        else
           type=flag_bnd(i)
        endif
@@ -254,6 +267,8 @@ end subroutine PIPbnd
           dir=(i+1)/2
           if(flag_bnd(i).eq.2) then
              sym_mhd(9,i) = 1  ! Bn is odd, so psi is even
+          else if(flag_bnd(i).eq.20) then
+             sym_mhd(9,i) = 1  ! Bn is odd, so psi is even
           else if(flag_bnd(i).eq.3) then
              sym_mhd(9,i) = -1 ! Bn is even, so psi is odd
           else if(flag_bnd(i).eq.4) then
@@ -275,6 +290,8 @@ end subroutine PIPbnd
     do i=1,2*ndim
        dir=(i+1)/2
        if(flag_bnd(i).eq.2) then
+          sym_hd(1+dir,i)=-1
+       else if(flag_bnd(i).eq.20) then
           sym_hd(1+dir,i)=-1
        else if(flag_bnd(i).eq.3) then
           sym_hd(1+dir,i)=-1
@@ -454,6 +471,57 @@ end subroutine PIPbnd
     endif
   end subroutine boundary_control_onevar
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine boundary_control_custom_hd(U,ix,jx,kx,nvar,dir)
+!Custom boundary conditions (bnd_flag=20)
+!Velocity driver
+implicit none
+integer,intent(in)::dir,ix,jx,kx,nvar
+double precision,intent(inout)::U(ix,jx,kx,nvar) 
+
+if(dir.eq.1) then 
+!	u(1,:,:,1)=u(2,:,:,1) !Density
+	u(1,:,:,1)=u(1,:,:,1)
+!	u(2,:,:,2)=u(2,:,:,2)+u(2,:,:,1)*0.1d0*dsin(time*2.0d0*pi/30.0d0) !vx momentum
+!	u(2,:,:,2)=u(2,:,:,2)+u(2,:,:,1)*0.0d0*dcos(time*2.0d0*pi/0.5d0) !vx momentum
+	u(1,:,:,2)=u(1,:,:,2)+u(1,:,:,1)*1.0e-6*dcos(time*2.0d0*pi/7.0d0) !vx momentum
+	u(1,:,:,3)=u(1,:,:,3) !vy momentum 
+	u(1,:,:,4)=u(1,:,:,4) !vz momentum 
+!	u(2,:,:,5)=u(2,:,:,5) +0.5d0*u(2,:,:,1)* (0.1d0*dsin(time*2.0d0*pi/30.0d0))**2.0d0 !energy
+	u(1,:,:,5)=u(1,:,:,5) +0.5d0*u(1,:,:,1)* (1.0e-6*dcos(time*2.0d0*pi/7.0d0))**2.0d0 !energy
+!	u(1,:,:,5)=u(3,:,:,5)
+	u(1,:,:,5)=u(1,:,:,5)
+!print*,sl(1)+n-1,sr(1),u(sl(1)+n-1,:,:,2),u(sl(1)+n-1,:,:,5),0.1d0*dsin(time*2.0d0*pi/30.0d0),time
+endif
+end subroutine boundary_control_custom_hd
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine boundary_control_custom_mhd(U,ix,jx,kx,nvar,dir)
+!Custom boundary conditions (bnd_flag=20)
+!Velocity driver
+implicit none
+integer,intent(in)::dir,ix,jx,kx,nvar
+double precision,intent(inout)::U(ix,jx,kx,nvar) 
+
+if(dir.eq.1) then 
+!	u(1,:,:,1)=u(2,:,:,1) !Density
+	u(1,:,:,1)=u(1,:,:,1)
+!	u(2,:,:,2)=u(2,:,:,2)+u(2,:,:,1)*0.1d0*dsin(time*2.0d0*pi/30.0d0) !vx momentum
+!	u(2,:,:,2)=u(2,:,:,2)+u(2,:,:,1)*0.0d0*dcos(time*2.0d0*pi/0.5d0) !vx momentum
+	u(1,:,:,2)=u(1,:,:,2)
+	u(1,:,:,3)=u(1,:,:,3) !vy momentum 
+	u(1,:,:,4)=u(1,:,:,4) !vz momentum 
+!	u(2,:,:,5)=u(2,:,:,5) +0.5d0*u(2,:,:,1)* (0.1d0*dsin(time*2.0d0*pi/30.0d0))**2.0d0 !energy
+!	u(2,:,:,5)=u(2,:,:,5) +0.5d0*u(2,:,:,1)* (0.0d0*dcos(time*2.0d0*pi/0.5d0))**2.0d0 !energy
+!	u(1,:,:,5)=u(3,:,:,5)
+	u(1,:,:,5)=u(1,:,:,5) !Internal energy
+	u(1,:,:,6)=u(1,:,:,6) !bx
+	u(1,:,:,7)=u(1,:,:,7) !by
+	u(1,:,:,8)=u(1,:,:,8) !bz
+!print*,sl(1)+n-1,sr(1),u(sl(1)+n-1,:,:,2),u(sl(1)+n-1,:,:,5),0.1d0*dsin(time*2.0d0*pi/30.0d0),time
+endif
+end subroutine boundary_control_custom_mhd
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
 end module boundary_rot
-
