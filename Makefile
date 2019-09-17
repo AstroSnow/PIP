@@ -1,6 +1,6 @@
 TARGET = a.out
 OBJECTS = Util_rot.o BMP_rot.o Matrix_rot.o \
-	Parameters.o Globalvar.o MPI_rot.o Boundary_rot.o Scheme_rot.o \
+	Globalvar.o Parameters.o MPI_rot.o Boundary_rot.o Scheme_rot.o \
 	HC_rot.o \
 	Res_rot.o Gra_rot.o PIP_rot.o \
 	IOT_rot.o IO_rot.o   \
@@ -17,8 +17,8 @@ OBJECTS = Util_rot.o BMP_rot.o Matrix_rot.o \
 	MRI.o disk_flare.o mass_load_prom.o \
 	Initial_rot.o  main.o relax_prom.o relax_prom2.o procedures.o hsstatic.o\
 	resonator.o ionrectest.o
-MOD_FILES = util_rot.mod parameters.mod \
-	globalvar.mod scheme_rot.mod hc_rot.mod \
+MOD_FILES = util_rot.mod globalvar.modparameters.mod \
+	parameters.mod scheme_rot.mod hc_rot.mod \
 	res_rot.mod gra_rot.mod pip_rot.mod \
 	mpi_rot.mod io_rot.mod \
 	hll_rot.mod model_rot.mod  \

@@ -230,7 +230,7 @@ contains
        if(flag_resi.ge.2) then
           call save1param(eta,tno//"et.dac.",1)
        endif
-       if(flag_ir.ge.2) then
+       if(flag_ir.ge.1) then
 !	print*,gm_ion
           call save1param(Gm_ion,tno//'ion.dac.',1)
           call save1param(Gm_rec,tno//'rec.dac.',1)

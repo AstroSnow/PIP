@@ -48,7 +48,7 @@ ionrectest:flag_ini; flag for initial setting
 0     :flag_pip_imp;for implicit scheme in source term
 10.0   :pip_imp_factor;cfl condition factor for pip_implicit scheme
 3    :flag_col;flag for collisional coefficient
-042:flag_IR;flag for ionization and recombination
+2:flag_IR;flag for ionization and recombination (0:none, 1:Single level, 2:Empirical)
 5d0:t_IR;time scale of ionization and recombination
 ==For heat condution===;
 0 :flag_heat;heat conduction flag (0:switch-off, 1:switch-on)
@@ -79,3 +79,7 @@ ionrectest:flag_ini; flag for initial setting
 100000.0   :damp_time; timescale for damping
 ==Radiative losses==;
 0     :flag_rad; radiative losses
+==Normalisation parameters==
+10000.0 :T_norm; Temperature
+1.0d13  :n_norm; (Electron?) number density
+3.d5    :L_norm; Length scale

@@ -81,4 +81,7 @@ module globalvar
 !For damping across time MAKE ALLOCATABLE??, CHOOSE SENSIBLE VALUE?
   double precision,save :: oldke_damp=1.0d0
   
+
+!Normalisation values
+  double precision, save :: T0, n0, L0
 end module globalvar

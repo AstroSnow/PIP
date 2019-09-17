@@ -19,7 +19,7 @@ module model_rot
        n_fraction,hc_sch,hc_max,gm,flag_restart,flag_debug,mpi_siz,mpi_pos,&
        flag_bnd,dsc,output_type,flag_hll,flag_time,hc_integ,hc_type,ro_lim,pr_lim, &
        flag_hc_test,safety_cnd,nsub_max,b_cr,flag_ps,flag_cyl, &
-       vd_cri,j_cri,flag_damp,damp_time,flag_rad
+       vd_cri,j_cri,flag_damp,damp_time,flag_rad, T0, n0, L0
   use scheme_rot,only:pv2cq_mhd,pv2cq_hd
   use HC_rot,only:initialize_HC
   use Res_rot,only:initialize_resistivity
@@ -193,6 +193,12 @@ subroutine get_parameters
         read(tmp(1:ind_e-1),*)damp_time
      else if(key.eq.'flag_rad') then
         read(tmp(1:ind_e-1),*)flag_rad
+     else if(key.eq.'T_norm') then
+        read(tmp(1:ind_e-1),*)T0
+     else if(key.eq.'n_norm') then
+        read(tmp(1:ind_e-1),*)n0
+     else if(key.eq.'L_norm') then
+        read(tmp(1:ind_e-1),*)L0
      endif
      
      !Make config is delegated to mod.IO_rot sub.mk_config
