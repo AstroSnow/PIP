@@ -15,13 +15,14 @@ OBJECTS = Util_rot.o BMP_rot.o Matrix_rot.o \
 	CS_collapse.o asym_currentsheet.o CSC.o\
 	Alfven_Damping.o cnd_tube.o \
 	MRI.o disk_flare.o mass_load_prom.o \
-	Initial_rot.o  main.o relax_prom.o relax_prom2.o
+	Initial_rot.o  main.o relax_prom.o relax_prom2.o procedures.o hsstatic.o\
+	resonator.o ionrectest.o
 MOD_FILES = util_rot.mod parameters.mod \
 	globalvar.mod scheme_rot.mod hc_rot.mod \
 	res_rot.mod gra_rot.mod pip_rot.mod \
 	mpi_rot.mod io_rot.mod \
 	hll_rot.mod model_rot.mod  \
-	boundary_rot.mod solver_rot.mod matrix_rot.mod initial_rot.mod
+	boundary_rot.mod solver_rot.mod matrix_rot.mod initial_rot.mod procedures.mod
 
 #FC = gfortran
 FC = mpif90 -O2

@@ -5,7 +5,8 @@ module PIP_rot
   use parameters,only:n0,T0,T_r_p,deg1,deg2,pi
   implicit none
   integer,save::col_type,IR_type,xin_type,is_IR,IR_T_dependence
-  double precision factor,factor2,mu_p,mu_n,T_ionization
+  double precision factor,factor2,mu_p,mu_n,T_ionization,factor3
+  double precision :: rec_fac,ion_fac
 contains
   subroutine initialize_collisional(flag_col)
     integer,intent(inout)::flag_col
@@ -103,6 +104,7 @@ contains
     double precision,intent(in)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
     double precision Te_n(ix,jx,kx),Te_p(ix,jx,kx),Te_e(ix,jx,kx)
     double precision xi_n_tmp(ix,jx,kx)
+    double precision Te_0
     select case(IR_type)
     case(0)
        Gm_rec(:,:,:)=n_fraction/t_ir
@@ -128,6 +130,42 @@ contains
 !       print *,"MAXVAL",maxval(GM_rec),maxval(GM_ion),&
 !            maxval(ion_temperature(Te_p)+rec_temperature(te_p))
 !       stop
+    case(3)
+	!Formulation from Jeffery paper
+	!WORK IN PROGRESS - Need to define normalisation quantities
+	! 
+	!Get species temperatures
+	call get_Te_HD(U_h,Te_n)
+	call get_Te_MHD(U_m,Te_p)
+	factor=exp(-13.2d0/(T0/11605.0d0)) !exp(-E0/T0) in electron volts
+	factor2=2.7*(13.2d0*11605.0d0)**-2.0d0*T0**(1.0d0/2.0d0)*n0
+	factor3=5.6e-16*(13.2d0*11605.0d0)**-2.0d0*T0**(-1.0d0)*n0**2.0d0
+	rec_fac=factor2/factor3 !is this right?
+	ion_fac=factor3/t_ir
+	Gm_rec=Te_p**(-0.5d0)*U_m(:,:,:,1)**2.d0*rec_fac*ion_fac
+	Gm_ion=Te_p**0.5d0*U_m(:,:,:,1)*factor**(1.0d0/Te_p)*ion_fac
+!	print*,'factor',factor
+!	print*,'factor2',factor2
+!	print*,'factor3',factor3
+    case(4)
+	!Formulation from Popescu+2019 paper
+	!Empirical estimates for the rates
+	!WORK IN PROGRESS NEED TO NORMALISE
+	call get_Te_HD(U_h,Te_n)
+	call get_Te_MHD(U_m,Te_p)
+	!Calculate electron temperature in eV
+	Te_0=T0/1.1605e4
+	rec_fac=2.6e-19*n0/sqrt(Te_0)
+!	ele_n=U(:,:,:,1)*rho0/mh_si
+!	psi_ion=13.6d0
+!	A_ion=2.91e-14
+!	k_ion=0.39d0
+!	x_ion=0.232d0
+	factor=exp(-13.6d0/Te_0)
+	factor2=2.91e-14*n0*(13.6d0/Te_0)**0.39d0
+	ion_fac=factor*factor2/t_ir
+	Gm_rec=U_m(:,:,:,1)/sqrt(Te_p)*rec_fac*ion_fac
+	Gm_ion=factor**(-Te_p)*U_m(:,:,:,1)*Te_p**(1.0d0-0.39d0)/(Te_p*0.232d0+13.6d0/Te_0)*ion_fac
     end select
   end subroutine set_IR
   
@@ -267,10 +305,11 @@ contains
        ds(:,:,:,3)=Gm_rec*de*vy-Gm_ion*nde*nvy
        ds(:,:,:,4)=Gm_rec*de*vz-Gm_ion*nde*nvz
        ds(:,:,:,5)=0.5d0*(Gm_rec*de*(vx*vx+vy*vy+vz*vz)- &
-            Gm_ion*nde*(nvx*nvx+nvy*nvy+nvz*nvz))
+            Gm_ion*nde*(nvx*nvx+nvy*nvy+nvz*nvz)) -&
+	    Gm_ion*3.0d0/2.0d0/gm*nte + Gm_rec*3.0d0/2.0d0/gm*te
        S_h(:,:,:,1:5)=S_h(:,:,:,1:5)+ds(:,:,:,1:5)
        S_m(:,:,:,1:5)=S_m(:,:,:,1:5)-ds(:,:,:,1:5)
-       
+!       print *, 'term',Gm_rec,Gm_ion,gm,nte,te
     endif    
     return
   end subroutine source_PIP

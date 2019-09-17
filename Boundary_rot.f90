@@ -7,8 +7,9 @@ module boundary_rot
 ! Second version - 2013/06/27 (New labelling for boundaries)
 !====================================================================
   use globalvar,only:ix,jx,kx,ndim,flag_pip,flag_mhd,nvar_h,nvar_m,&
-       flag_mpi,flag_bnd,margin,neighbor,flag_divb
+       flag_mpi,flag_bnd,margin,neighbor,flag_divb,time
   use mpi_rot,only:mpi_bnd,mpi_bnd_onevar
+  use parameters,only:pi !for the periodic drivers
 
   implicit none
   integer,allocatable,save ::sym_mhd(:,:)  
@@ -76,6 +77,8 @@ end subroutine PIPbnd
           type=2
        else if(flag_bnd(i).eq.11) then
           type=2
+!       else if(flag_bnd(i).eq.20) then
+!          type=2
        else
           type=flag_bnd(i)
        endif
@@ -168,6 +171,8 @@ end subroutine PIPbnd
           type=2          
        else if(flag_bnd(i).eq.11) then
           type=2
+!       else if(flag_bnd(i).eq.20) then
+!          type=2
        else
           type=flag_bnd(i)
        endif
@@ -254,6 +259,8 @@ end subroutine PIPbnd
           dir=(i+1)/2
           if(flag_bnd(i).eq.2) then
              sym_mhd(9,i) = 1  ! Bn is odd, so psi is even
+          else if(flag_bnd(i).eq.20) then
+             sym_mhd(9,i) = 1  ! Bn is odd, so psi is even
           else if(flag_bnd(i).eq.3) then
              sym_mhd(9,i) = -1 ! Bn is even, so psi is odd
           else if(flag_bnd(i).eq.4) then
@@ -275,6 +282,8 @@ end subroutine PIPbnd
     do i=1,2*ndim
        dir=(i+1)/2
        if(flag_bnd(i).eq.2) then
+          sym_hd(1+dir,i)=-1
+       else if(flag_bnd(i).eq.20) then
           sym_hd(1+dir,i)=-1
        else if(flag_bnd(i).eq.3) then
           sym_hd(1+dir,i)=-1
@@ -371,6 +380,25 @@ end subroutine PIPbnd
              enddo
           endif
        endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!Velocity driver
+       if (type .EQ. 20) then 
+          if(dir.eq.1) then 
+             do n=1,margin(1)
+                u(1,:,:,1)=u(2,:,:,1) !Density
+!                u(2,:,:,2)=u(2,:,:,2)+u(2,:,:,1)*0.1d0*dsin(time*2.0d0*pi/30.0d0) !vx momentum
+                u(2,:,:,2)=u(2,:,:,2)+u(2,:,:,1)*1.0e-7*dcos(time*2.0d0*pi/1.0d0) !vx momentum
+                u(1,:,:,2)=u(2,:,:,2)
+                u(1,:,:,3)=u(2,:,:,3) !vy momentum 
+                u(1,:,:,4)=u(2,:,:,4) !vz momentum 
+!                u(2,:,:,5)=u(2,:,:,5) +0.5d0*u(2,:,:,1)* (0.1d0*dsin(time*2.0d0*pi/30.0d0))**2.0d0 !energy
+                u(2,:,:,5)=u(2,:,:,5) +0.5d0*u(2,:,:,1)* (1.0e-7*dcos(time*2.0d0*pi/1.0d0))**2.0d0 !energy
+                 u(1,:,:,5)=u(2,:,:,5) 
+		!print*,sl(1)+n-1,sr(1),u(sl(1)+n-1,:,:,2),u(sl(1)+n-1,:,:,5),0.1d0*dsin(time*2.0d0*pi/30.0d0),time
+             enddo
+	  endif
+       endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     endif
   end subroutine boundary_control
 
@@ -451,9 +479,21 @@ end subroutine PIPbnd
              enddo
           endif
        endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!Velocity driver
+       if (type .EQ. 20) then 
+	print*,'onevar type=',type
+	stop
+          if(dir.eq.1) then 
+             do n=1,margin(1)
+                u1(sl(1)+n-1,:,:)=u1(sr(1),:,:)+0.5d0*u1(sr(1),:,:)*(100.0d0*sin(time*1000.0d0))**2.d0 !KINETIC ENERGY?!!!
+		print*,u1(sl(1)+n-1,:,:)
+             enddo
+          endif
+       endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     endif
   end subroutine boundary_control_onevar
 
   
 end module boundary_rot
-

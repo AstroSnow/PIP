@@ -47,6 +47,8 @@ module globalvar
   double precision,save::debug_parameter
 ! alpha is the collision parameter and flag_sch is the flag for the scheme you are using
   double precision,save :: cmax
+! Radiative losses
+  integer,save :: flag_rad
   
 !for coordinate system
   integer,save::ix,jx,kx,nvar_h,nvar_m,margin(3),ndim,ig(3)
@@ -75,5 +77,8 @@ module globalvar
 !for limit
   double precision,save :: ro_lim,pr_lim
   double precision,parameter :: tiny=1d-20
+
+!For damping across time MAKE ALLOCATABLE??, CHOOSE SENSIBLE VALUE?
+  double precision,save :: oldke_damp=1.0d0
   
 end module globalvar

@@ -13,7 +13,7 @@ module io_rot
        flag_ir,nvar_h,nvar_m,flag_resi,nt,nout,margin,gm,flag_restart,&
        flag_bnd,flag_col,flag_grav,tend,mpi_pos,xi_n,mu,flag_visc,&
        total_iter,flag_amb,dtout,mpi_siz,nt,nmax,output_type,flag_ps,flag_divb,&
-       flag_damp,damp_time
+       flag_damp,damp_time,flag_rad
   use mpi_rot,only:end_mpi
   use IOT_rot,only:initialize_IOT,get_next_output
   use Util_rot,only:get_word,get_value_integer
@@ -231,6 +231,7 @@ contains
           call save1param(eta,tno//"et.dac.",1)
        endif
        if(flag_ir.ge.2) then
+!	print*,gm_ion
           call save1param(Gm_ion,tno//'ion.dac.',1)
           call save1param(Gm_rec,tno//'rec.dac.',1)
        endif
@@ -257,6 +258,7 @@ contains
     do nn=1,nvar
        write(mf_q) q(:,:,:,nn)
     enddo
+!print*,mf_q,name,q(1,1,1,:)
     close(mf_q)
   end subroutine save1param
   
