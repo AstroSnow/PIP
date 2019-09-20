@@ -1,8 +1,8 @@
 subroutine hsstatic
-  use parameters,only:pi,T0
+  use parameters,only:pi
   use globalvar,only:ix,jx,kx,U_h,U_m,flag_bnd,col,beta,flag_b_stg,dtout,&
        flag_mhd,flag_mpi,my_rank,flag_pip,gm,beta,tend,&
-       x,y,z,dx,dy,dz,n_fraction,debug_direction,debug_option,gra,flag_grav,total_prc
+       x,y,z,dx,dy,dz,n_fraction,debug_direction,debug_option,gra,flag_grav,total_prc,T0
   use scheme_rot,only:pv2cq_mhd,pv2cq_hd
   use model_rot, only:set_coordinate,setcq
   use procedures
