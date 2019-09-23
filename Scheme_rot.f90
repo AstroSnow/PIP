@@ -16,7 +16,8 @@ module scheme_rot
        flag_amb,flag_mhd,flag_pip,flag_amb,flag_mpi,flag_resi,margin,gm,&
        flag_bnd,xi_n,flag_pip_imp,nt,eta_0,gra,scl_height,s_order,flag_sch,&
        x,y,z,col,n_fraction,flag_ir,gm_rec,gm_ion,t_ir,mpi_pos,my_rank,&
-       debug_parameter,ro_lim,pr_lim,tiny,cmax,dsc,b_cr,damp_time
+       debug_parameter,ro_lim,pr_lim,tiny,cmax,dsc,b_cr,damp_time,flag_damp,&
+       oldke_damp,flag_rad
   use MPI_rot,only:mpi_double_interface
   use Boundary_rot,only:bnd_divb
   implicit none
@@ -279,7 +280,7 @@ contains
 
    subroutine cfl_pip_ir(U_m,U_h)
      double precision,intent(in)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
-     dt=min(dt,safety/max(maxval(gm_rec)+maxval(gm_ion),1.0d-5))     
+     dt=min(dt,safety/max(maxval(gm_rec)+maxval(gm_ion),maxval(gm_rec/U_m(:,:,:,1))+maxval(gm_ion/U_h(:,:,:,1)),1.0d-5))     
    end subroutine cfl_pip_ir
 
   subroutine hd_fluxes(F_h,U_h)
@@ -840,8 +841,19 @@ contains
     double precision,intent(inout)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
     double precision :: damp_time1(ix,jx,kx)
 
-    damp_time1=spread(spread(spread(1.d0*damp_time ,1,ix),2,jx),3,kx)
+!Damping based on sucsessive kinetic energy 
+if (flag_damp.eq.2) then
+	damp_time=1.0d0
+	damp_time1=spread(spread(spread(1.d0*damp_time ,1,ix),2,jx),3,kx)
+	do while (maxval(U_h(:,:,:,5)-damp_time1*dt*(U_h(:,:,:,2)**2+U_h(:,:,:,2)**2+U_h(:,:,:,2)**2)/U_h(:,:,:,1)/2.0d0) .GT. oldke_damp)
+		damp_time=damp_time*2.0d0
+		damp_time1=spread(spread(spread(1.d0*damp_time ,1,ix),2,jx),3,kx)
+	enddo
+!	print*,damp_time,maxval(U_h(:,:,:,5)-damp_time1*dt*(U_h(:,:,:,2)**2+U_h(:,:,:,2)**2+U_h(:,:,:,2)**2)/U_h(:,:,:,1)/2.0d0),oldke_damp
+	damp_time=min(damp_time,1.0e6)
+endif
 
+    damp_time1=spread(spread(spread(1.d0*damp_time ,1,ix),2,jx),3,kx)
 
     if (flag_mhd.eq.1) then
     U_m(:,:,:,2:4)=U_m(:,:,:,2:4)-spread(damp_time1,4,3)*dt*U_m(:,:,:,2:4)
@@ -854,6 +866,7 @@ contains
       +U_h(:,:,:,4)**2)/U_h(:,:,:,1)/2.d0
     endif
 
+    oldke_damp=0.9d0*maxval(U_h(:,:,:,5)-(U_h(:,:,:,2)**2+U_h(:,:,:,2)**2+U_h(:,:,:,2)**2)/U_h(:,:,:,1)/2.0d0)
 
   end subroutine vel_damp
 
@@ -869,5 +882,36 @@ contains
      endif
 
   end subroutine get_vel_diff
+
+  subroutine get_rad_loss(rad_loss,U_h,U_m)
+!NONE OF THIS WORKS
+	double precision,intent(in)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
+	double precision,intent(out)::rad_loss(ix,jx,kx,2)  
+	integer :: i
+	double precision :: rad_time,rad_c
+	double precision :: Te_m(ix,jx,kx),Te_h(ix,jx,kx),Te_amb(ix,jx,kx)
+
+	!Newton cooling
+	if (flag_rad .eq. 1) then
+		rad_time=1.0d0 !FOR TESTING. SHOULD MOVE TO SETTINGS
+	elseif (flag_rad .eq. 2) then
+		print*, 'NEED TO BUILD SPIEGEL RADIATIVE TIMES'
+		stop
+	endif
+
+	stop
+
+	!get ambient temperature
+	call get_Te_MHD(U_m,Te_m)
+	call get_Te_HD(U_h,Te_h)
+	Te_amb=0.5d0*(Te_m+Te_h) !IS THIS RIGHT?
+
+	!Specific heat at constant volume
+	rad_c=1.0d0 !WHAT IS THIS VALUE?
+
+	rad_loss(:,:,:,1)=-rad_c*(Te_m-Te_amb(:,:,:))/rad_time
+	rad_loss(:,:,:,2)=-rad_c*(Te_h-Te_amb(:,:,:))/rad_time
+	
+  end subroutine get_rad_loss
 
 end module scheme_rot
