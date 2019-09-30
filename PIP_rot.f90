@@ -123,12 +123,12 @@ contains
     case(2)
 	!Formulation from Popescu+2019 paper
 	!Empirical estimates for the rates
-	!WORK IN PROGRESS NEED TO NORMALISE
+	!WORK IN PROGRESS
 	call get_Te_HD(U_h,Te_n)
 	call get_Te_MHD(U_m,Te_p)
 	!Calculate electron temperature in eV
-	Te_0=T0/1.1605e4
-	rec_fac=2.6e-19*n0/sqrt(Te_0)
+	Te_0=T0/1.1604e4
+	rec_fac=2.6e-19*n0/sqrt(Te_0)/t_ir
 !	ele_n=U(:,:,:,1)*rho0/mh_si
 !	psi_ion=13.6d0
 !	A_ion=2.91e-14
@@ -136,8 +136,9 @@ contains
 !	x_ion=0.232d0
 	factor=exp(-13.6d0/Te_0)
 	factor2=2.91e-14*n0*(13.6d0/Te_0)**0.39d0
-	ion_fac=factor*factor2/t_ir
-	Gm_rec=U_m(:,:,:,1)/sqrt(Te_p)*rec_fac*ion_fac
+!	ion_fac=factor*factor2/t_ir !Old version (IS THIS RIGHT?)
+	ion_fac=factor2/t_ir !Corrected?
+	Gm_rec=U_m(:,:,:,1)/sqrt(Te_p)*rec_fac
 	Gm_ion=factor**(-Te_p)*U_m(:,:,:,1)*Te_p**(1.0d0-0.39d0)/(Te_p*0.232d0+13.6d0/Te_0)*ion_fac
     end select
   end subroutine set_IR
