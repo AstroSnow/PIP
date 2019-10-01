@@ -43,13 +43,13 @@ ionrectest:flag_ini; flag for initial setting
 1.0:j_cri;  critical current density (for J-dependent anomalous res)
 100.0:vd_cri; critical drift velocity (for vd-dependent anomalous res)
 ===For Two fluid=====;
-0.00004:n_fraction; for uniform ionization degree 
+0.1:n_fraction; for uniform ionization degree 
 1.0:col;for collisional coefficient
 0     :flag_pip_imp;for implicit scheme in source term
 10.0   :pip_imp_factor;cfl condition factor for pip_implicit scheme
 3    :flag_col;flag for collisional coefficient
 2:flag_IR;flag for ionization and recombination (0:none, 1:Single level, 2:Empirical)
-5d0:t_IR;time scale of ionization and recombination
+5d-2:t_IR;time scale of ionization and recombination
 ==For heat condution===;
 0 :flag_heat;heat conduction flag (0:switch-off, 1:switch-on)
 1 :hc_type; type of heat conduction (0:constant-type, 1:Spitzer-type)
@@ -80,6 +80,6 @@ ionrectest:flag_ini; flag for initial setting
 ==Radiative losses==;
 0     :flag_rad; radiative losses
 ==Normalisation parameters==
-11604.0 :T_norm; Temperature
+157814.4 :T_norm; Temperature in K (13.6 eV = 157814.4 K)
 1.0d8  :n_norm; (Electron?) number density
 3.d5    :L_norm; Length scale

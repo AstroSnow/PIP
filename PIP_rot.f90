@@ -128,18 +128,22 @@ contains
 	call get_Te_MHD(U_m,Te_p)
 	!Calculate electron temperature in eV
 	Te_0=T0/1.1604e4
-	rec_fac=2.6e-19*n0/sqrt(Te_0)/t_ir
+	rec_fac=2.6e-19*(n0*1.0e6)/sqrt(Te_0)/t_ir  !n0 converted to m^-3
 !	ele_n=U(:,:,:,1)*rho0/mh_si
 !	psi_ion=13.6d0
 !	A_ion=2.91e-14
 !	k_ion=0.39d0
 !	x_ion=0.232d0
 	factor=exp(-13.6d0/Te_0)
-	factor2=2.91e-14*n0*(13.6d0/Te_0)**0.39d0
-!	ion_fac=factor*factor2/t_ir !Old version (IS THIS RIGHT?)
-	ion_fac=factor2/t_ir !Corrected?
+	factor2=2.91e-14*(n0*1.0e6)*(13.6d0/Te_0)**0.39d0
+	ion_fac=factor2/t_ir
 	Gm_rec=U_m(:,:,:,1)/sqrt(Te_p)*rec_fac
-	Gm_ion=factor**(-Te_p)*U_m(:,:,:,1)*Te_p**(1.0d0-0.39d0)/(Te_p*0.232d0+13.6d0/Te_0)*ion_fac
+!	Gm_ion=factor**(-Te_p)*U_m(:,:,:,1)*Te_p**(1.0d0-0.39d0)/(Te_p*0.232d0+13.6d0/Te_0)*ion_fac
+	Gm_ion=(n0*1.0e6*U_m(:,:,:,1))*2.91e-14*exp(-13.6d0/Te_0/Te_p)*(13.6d0/Te_0/Te_p)**0.39d0/(0.232d0+13.2d0/Te_0/Te_p)/t_ir
+	print*,Gm_rec(1,1,1)/Gm_ion(1,1,1),U_h(1,1,1,1)/U_m(1,1,1,1),(2.6e-19/sqrt(Te_0))/(2.91e-14/(0.232+13.6/Te_0)* &
+		(13.6/Te_0)**0.39*exp(-13.6/Te_0))
+!	print*,'Gm_rec',Gm_rec(1,1,1)/U_m(1,1,1,1)*t_ir,(n0*1.0e6)*(2.6e-19/sqrt(Te_0))
+!	print*,'Gm_ion',Gm_ion(1,1,1)/U_m(1,1,1,1)*t_ir,(n0*1.0e6)*(2.91e-14/(0.232d0+13.6d0/Te_0)*(13.6d0/Te_0)**0.39d0*exp(-13.6d0/Te_0))
     end select
   end subroutine set_IR
   
