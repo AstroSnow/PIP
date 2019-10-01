@@ -112,6 +112,8 @@ contains
           call resonator
        case('ionrectest')
           call ionrectest
+       case('shock_tube_ion')
+          call shock_tube_ion
        end select
        call set_coefficients(U_h,U_m,0)              
        start_t=0.d0

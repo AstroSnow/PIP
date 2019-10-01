@@ -17,13 +17,14 @@ subroutine ionrectest
   double precision :: B_y (1:ix,1:jx,1:kx)
   double precision :: B_z (1:ix,1:jx,1:kx)
   double precision :: temperature(1:ix+1),energy(1:ix+1),rho(1:ix+1)
-  double precision ::mask(ix,jx,kx)
-  double precision ::v_para(ix,jx,kx),v_perp(ix,jx,kx)
-  double precision ::b_para(ix,jx,kx),b_perp(ix,jx,kx)
-  double precision ::v_b_para(ix,jx,kx),b_b_para(ix,jx,kx)
-  double precision ::v_theta(ix,jx,kx),v_phi(ix,jx,kx)
-  double precision ::b_theta(ix,jx,kx),b_phi(ix,jx,kx)
-  double precision f_n,f_p,f_p_n,f_p_p,start(3),end(3),B0,P_tot,P_top,P_base
+  double precision :: mask(ix,jx,kx)
+  double precision :: v_para(ix,jx,kx),v_perp(ix,jx,kx)
+  double precision :: b_para(ix,jx,kx),b_perp(ix,jx,kx)
+  double precision :: v_b_para(ix,jx,kx),b_b_para(ix,jx,kx)
+  double precision :: v_theta(ix,jx,kx),v_phi(ix,jx,kx)
+  double precision :: b_theta(ix,jx,kx),b_phi(ix,jx,kx)
+  double precision :: f_n,f_p,f_p_n,f_p_p,start(3),end(3),B0,P_tot,P_top,P_base
+  double precision :: lambda
   integer i,j,k
 
 
@@ -83,9 +84,60 @@ flag_bnd(6)=1
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 elseif(debug_direction.eq.2) then
-! Leake 2013 reconnection paper TO DO!
+! Leake 2012/2013 reconnection paper 
+! TO DO!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+lambda=0.5 !/L0?
+
+!set ionization fraction-----------------
+if ((flag_pip.eq.0) .OR. (flag_IR.eq.0)) then
+	print*,'=== flag_PIP and flag_IR should be 1 ==='
+	stop
+else
+	f_n=n_fraction
+	f_p=1.0d0-n_fraction     
+	f_p_n=f_n/(f_n+2.0d0*f_p)
+	f_p_p=2.0d0*f_p/(f_n+2.0d0*f_p)
+endif
+!----------------------------------------
+
+!Set coordinate (uniform grid)--------------------------
+!!set lower and upper coordinate
+start(1)=0.0d0 ;end(1)=1.0d0          !400.0d0/f_p
+start(2)=-1.0d0 ;end(2)=1.0d0
+start(3)=-1.0d0 ;end(3)=1.0d0
+call set_coordinate(start,end)
+!---------------------------------------
+
+
+!initialise arrays
+do k=1,kx;do j=1,jx;do i=1,ix
+	ro_h(i,j,k)=1.0d0*f_n
+	ro_m(i,j,k)=1.0d0*f_p
+	p_h(i,j,k)=2.0d0*f_p_n/gm
+	p_m(i,j,k)=2.0d0*f_p_p/gm
+	vx_h(i,j,k)=0.0d0
+	vx_m(i,j,k)=0.0d0
+	vy_h(i,j,k)=0.0d0
+	vy_m(i,j,k)=0.0d0
+	vz_h(i,j,k)=0.0d0
+	vz_m(i,j,k)=0.0d0
+	b_x(i,j,k)=-B0*sinh(y(j)/lambda)
+	b_y(i,j,k)=0.0d0
+	b_z(i,j,k)=0.0d0
+enddo;enddo;enddo
+
+!!set boundary condition----------------------
+flag_bnd(1)=1
+flag_bnd(2)=1
+flag_bnd(3)=1
+flag_bnd(4)=1
+flag_bnd(5)=1
+flag_bnd(6)=1
+!-------------------------------------------------
+
 
 endif
 
