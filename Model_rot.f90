@@ -19,7 +19,7 @@ module model_rot
        n_fraction,hc_sch,hc_max,gm,flag_restart,flag_debug,mpi_siz,mpi_pos,&
        flag_bnd,dsc,output_type,flag_hll,flag_time,hc_integ,hc_type,ro_lim,pr_lim, &
        flag_hc_test,safety_cnd,nsub_max,b_cr,flag_ps,flag_cyl, &
-       vd_cri,j_cri,flag_damp,damp_time,flag_rad, T0, n0, L0
+       vd_cri,j_cri,flag_damp,damp_time
   use scheme_rot,only:pv2cq_mhd,pv2cq_hd
   use HC_rot,only:initialize_HC
   use Res_rot,only:initialize_resistivity
@@ -191,14 +191,6 @@ subroutine get_parameters
         read(tmp(1:ind_e-1),*)flag_damp
      else if(key.eq.'damp_time') then
         read(tmp(1:ind_e-1),*)damp_time
-     else if(key.eq.'flag_rad') then
-        read(tmp(1:ind_e-1),*)flag_rad
-     else if(key.eq.'T_norm') then
-        read(tmp(1:ind_e-1),*)T0
-     else if(key.eq.'n_norm') then
-        read(tmp(1:ind_e-1),*)n0
-     else if(key.eq.'L_norm') then
-        read(tmp(1:ind_e-1),*)L0
      endif
      
      !Make config is delegated to mod.IO_rot sub.mk_config
@@ -261,10 +253,10 @@ subroutine get_parameters
       endif
       if(flag_artvis.eq.-1)flag_artvis=1
       margin(1)=s_order+min(flag_resi,1)+min(flag_amb,1)+flag_artvis*2
-      if(flag_divb.ge.2) flag_divb=1
+      if(flag_divb.gt.2) flag_divb=1 !ORIGINALLY 1, SHOULD BE 2 for iterative
    case(2)
       margin(1)=4+flag_amb*2
-      if(flag_divb.ge.2) flag_divb=1
+      if(flag_divb.gt.2) flag_divb=1 !ORIGINALLY 1, SHOULD BE 2 for iterative
       t_order=4
    end select
    !modification for divb cleaning
@@ -273,6 +265,7 @@ subroutine get_parameters
    case(1)
       nvar_m=nvar_m+1
    case(2)
+      nvar_m=nvar_m+1
    end select
 
    !set dimension

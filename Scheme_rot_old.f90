@@ -95,14 +95,14 @@ contains
   end subroutine get_Pr_HD
 
   subroutine get_Te_MHD(U,Te)
-    double precision,intent(inout)::U(ix,jx,kx,nvar_m)
+    double precision,intent(in)::U(ix,jx,kx,nvar_m)
     double precision,intent(out)::Te(ix,jx,kx)
     double precision pr(ix,jx,kx)
     call get_Pr_MHD(U,pr)
     Te=0.5d0*gm*(pr/U(:,:,:,1))    
   end subroutine get_Te_MHD
   subroutine get_Pr_MHD(U,pr)
-    double precision,intent(inout)::U(ix,jx,kx,nvar_m)
+    double precision,intent(in)::U(ix,jx,kx,nvar_m)
     double precision,intent(out)::Pr(ix,jx,kx)
     pr=(gm-1.0d0)*(u(:,:,:,5)&
          -0.5d0*((U(:,:,:,2)*U(:,:,:,2)&
@@ -111,13 +111,7 @@ contains
          +U(:,:,:,6)*U(:,:,:,6)&
          +U(:,:,:,7)*U(:,:,:,7)&
          +U(:,:,:,8)*U(:,:,:,8)))
-   if(minval(pr).le.pr_lim) pr=max(pr,pr_lim)  
-    u(:,:,:,5)=pr/(gm-1.0d0)+0.5d0*((U(:,:,:,2)*U(:,:,:,2)&
-         +U(:,:,:,3)*U(:,:,:,3)&
-         +U(:,:,:,4)*U(:,:,:,4))/U(:,:,:,1)&
-         +U(:,:,:,6)*U(:,:,:,6)&
-         +U(:,:,:,7)*U(:,:,:,7)&
-         +U(:,:,:,8)*U(:,:,:,8))
+   if(minval(pr).le.0.0d0) pr=max(pr,pr_minimam)   
   end subroutine get_Pr_MHD
 
   
@@ -140,7 +134,7 @@ contains
     double precision,intent(inout):: pr(ix,jx,kx)
     double precision,intent(inout)::bx(ix,jx,kx)
     double precision,intent(inout):: by(ix,jx,kx),bz(ix,jx,kx)
-    double precision,intent(inout)::U_m(ix,jx,kx,nvar_m)
+    double precision,intent(in)::U_m(ix,jx,kx,nvar_m)
 
     
     de=u_m(:,:,:,1)
@@ -152,21 +146,13 @@ contains
     bz=u_m(:,:,:,8)
     pr=(gm-1.0d0)*(u_m(:,:,:,5)-0.5d0*de*(vx**2+vy**2+vz**2)  &
          -0.5d0*(bx**2+by**2+bz**2))
-    if(minval(pr).le.pr_lim) pr=max(pr,pr_lim)
-    if(minval(de).le.ro_lim) de=max(de,ro_lim)
-    u_m(:,:,:,1)=de
-    u_m(:,:,:,2)=vx*de
-    u_m(:,:,:,3)=vy*de
-    u_m(:,:,:,4)=vz*de
-    u_m(:,:,:,5)=pr/(gm-1.0d0)+0.5d0*de*(vx**2+vy**2+vz**2)  &
-         +0.5d0*(bx**2+by**2+bz**2)
-
+    if(minval(pr).le.0.0d0) pr=max(pr,pr_minimam)
   end subroutine cq2pv_mhd
 
 
   !set time step with CFL condition : return dt
   subroutine cfl(U_h,U_m)
-    double precision,intent(inout)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
+    double precision,intent(in)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
     if(flag_pip.eq.1) then
        call cfl_mhd(U_m)
        call cfl_hd(U_h)
@@ -182,7 +168,6 @@ contains
     if(flag_resi.ge.1) call cfl_resi
     if(flag_mpi.eq.1) then
        dt=mpi_double_interface(dt,1)
-if (MY_RANK .eq. 0) print *,'dt: ', dt
     endif
 
     !! for divB cleaning
@@ -226,7 +211,7 @@ if (MY_RANK .eq. 0) print *,'dt: ', dt
   end subroutine cfl_hd
   
   subroutine cfl_mhd(U_m)
-    double precision,intent(inout)::U_m(ix,jx,kx,nvar_m)
+    double precision,intent(in)::U_m(ix,jx,kx,nvar_m)
     double precision dt_min,gmin
     double precision de(ix,jx,kx),pr(ix,jx,kx)
     double precision vx(ix,jx,kx),vy(ix,jx,kx),vz(ix,jx,kx)
@@ -254,7 +239,6 @@ if (MY_RANK .eq. 0) print *,'dt: ', dt
              valf2=(bx(i,j,k)**2+by(i,j,k)**2+bz(i,j,k)**2)/max(de(i,j,k),tiny)
              vabs=sqrt(vx(i,j,k)**2+vy(i,j,k)**2+vz(i,j,k)**2)
              dt_min=min(dt_min,safety*gmin/(vabs+sqrt(cs2+valf2))) !! fast mode speed+fluid speed
-	     !print*,'dt: ',dt_min
           enddo
        enddo
     enddo
@@ -268,7 +252,6 @@ if (MY_RANK .eq. 0) print *,'dt: ', dt
             maxval(xi_n*(bx*bx+by*by+bz*bz)/&
             (ac*de*de*(1.0-xi_n))))
     endif
-    !print*,'dt: ',dt
   end subroutine cfl_mhd
   
   subroutine cfl_resi
@@ -349,7 +332,7 @@ if (MY_RANK .eq. 0) print *,'dt: ', dt
   end subroutine hd_fluxes
   subroutine mhd_fluxes(F_m,U_m)
     double precision,intent(inout):: F_m(ix,jx,kx,nvar_m,ndim)
-    double precision,intent(inout):: U_m(ix,jx,kx,nvar_m)
+    double precision,intent(in):: U_m(ix,jx,kx,nvar_m)
     double precision :: de(ix,jx,kx),vx(ix,jx,kx)
     double precision ::vy(ix,jx,kx),vz(ix,jx,kx)
     double precision :: pr(ix,jx,kx)
@@ -533,7 +516,7 @@ if (MY_RANK .eq. 0) print *,'dt: ', dt
 
     double precision :: eps,epsg,eps_limit,ch,cmaxg
     double precision,parameter::slow=0.9d0
-    integer,parameter :: it_max = 10000
+    integer,parameter :: it_max = 30
     integer,parameter::i_bx=6,i_by=7,i_bz=8,i_psi=9
 
     ncount=0
@@ -545,14 +528,11 @@ if (MY_RANK .eq. 0) print *,'dt: ', dt
     ch = slow*cmax
 
     b_vec = U_m(:,:,:,i_bx:i_bz)
-    !print*,'here1'
     call div_cal(divb,b_vec)
     call bnd_divb(divb)
-    !print*,'here2'
-    !print*,U_m(1,1,1,:)
     psi = U_m(:,:,:,i_psi)
 
-    do while(eps.ge.eps_limit .and. ncount.lt.it_max)
+    do while(eps.ge.eps_limit .or. ncount.lt.1)
        !! initialization
        dpsdx = 0.d0
        dpsdy = 0.d0
@@ -563,11 +543,9 @@ if (MY_RANK .eq. 0) print *,'dt: ', dt
        call derivative(dpsdx,psi,1)
        call derivative(dpsdy,psi,2)
        call derivative(dpsdz,psi,3)
-
        b_vec(:,:,:,1) = b_vec(:,:,:,1) - dt0*dpsdx
        b_vec(:,:,:,2) = b_vec(:,:,:,2) - dt0*dpsdy
        b_vec(:,:,:,3) = b_vec(:,:,:,3) - dt0*dpsdz
-
        call div_cal(divb,b_vec)
        call bnd_divb(divb)
 
@@ -583,12 +561,11 @@ if (MY_RANK .eq. 0) print *,'dt: ', dt
        if(flag_mpi.eq.1) then
           eps = mpi_double_interface(eps,3)
        endif
-!    if (MY_RANK.eq.0) print*,eps,eps_limit,ncount !test to check the number of iteration and convergence
+
        ncount = ncount+1
-!       if(ncount.eq.it_max) exit
+       if(ncount.eq.it_max) exit
     end do
 
-    if (MY_RANK.eq.0) print*,eps,eps_limit,ncount !test to check the number of iteration and convergence
     ! update
     U_m(:,:,:,i_bx:i_bz) = b_vec
     U_m(:,:,:,i_psi) = psi
@@ -744,13 +721,13 @@ if (MY_RANK .eq. 0) print *,'dt: ', dt
     if(mhd.eq.1)then
        bb(:,:,:) = U(:,:,:,6)**2 + U(:,:,:,7)**2 + U(:,:,:,8)**2
        call cq2pv_mhd(de,vx,vy,vz,pr,bx,by,bz,U)
-       rovv=abs(de)*(vx*vx+vy*vy+vz*vz)
-       cc(:,:,:) = sqrt( gm*abs(pr(:,:,:))/abs(U(:,:,:,1)) ) &
-            + sqrt( rovv(:,:,:)/abs(U(:,:,:,1)) ) &
-            + sqrt( bb(:,:,:)/abs(U(:,:,:,1)) )
+       rovv=de*(vx*vx+vy*vy+vz*vz)
+       cc(:,:,:) = sqrt( gm*pr(:,:,:)/U(:,:,:,1) ) &
+            + sqrt( rovv(:,:,:)/U(:,:,:,1) ) &
+            + sqrt( bb(:,:,:)/(U(:,:,:,1)) )
     else 
        call cq2pv_hd(de,vx,vy,vz,pr,U)
-       cc=sqrt(gm*abs(pr(:,:,:))/abs(de))+sqrt(vx*vx+vy*vy+vz*vz)       
+       cc=sqrt(gm*pr(:,:,:)/de)+sqrt(vx*vx+vy*vy+vz*vz)       
     endif
 
     cc(xs:xe,ys:ye,zs:ze) = &
