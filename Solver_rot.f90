@@ -12,7 +12,7 @@ module solver_rot
        flag_divb,flag_grav,flag_amb,flag_artvis,flag_resi,flag_heat,&
        flag_visc,dt,dx,dy,dz,t_order,margin,dsc,dxc,dyc,dzc,ig,nt,x,flag_col, &
        flag_ir,no_advection,x,y,z,s_order,flag_hll,flag_time,hc_integ, &
-       flag_hc_test,flag_cyl,gra,flag_damp,flag_rad
+       flag_hc_test,flag_cyl,gra,flag_damp
   ! This is the HLLD solver routines
   use HLL_rot,only:hll_fluxes_ideal_hd,hll_fluxes_ideal_mhd, &
        hllc_fluxes_ideal,hlld_fluxes_ideal
@@ -68,7 +68,7 @@ contains
        ! fix boundaries so that the substeps are updated, not the main variable
        call PIPbnd(U_h,U_m)
     enddo
-    if ((flag_damp.eq.1) .or. (flag_damp.eq.2))  call vel_damp(U_h,U_m)
+    if (flag_damp.eq.1)  call vel_damp(U_h,U_m)
 
     
     call post_step(U_h,U_m,dt)
@@ -109,10 +109,6 @@ contains
     endif
     if(flag_IR.ge.2.or.(flag.eq.0.and.flag_IR.eq.1)) then
        call set_IR(U_h,U_m)       
-    endif
-    if(flag_rad.ge.1) then
-	print*,'RADIATIVE LOSSES ARE NOT YET FINISHED'
-	stop    
     endif
   end subroutine set_coefficients
 
@@ -207,7 +203,7 @@ contains
           call add_source(S_m,U_m,nvar_m,dt_sub)
           if(flag_mhd.eq.1.and.flag_divb.eq.1) then
              call divb_cleaning_Dedner_source(dt_sub,U_m) !! original Dedner's 9-wave method
-          endif                    
+          endif                   
        endif
     case(1) !! optimal Strong Stability Preserving RK (SSPRK) Ref:Gottlieb+2009
        if(istep.eq.1) then
@@ -281,6 +277,7 @@ contains
        if(flag_mhd.eq.1.and.flag_divb.eq.2) then
           call divb_cleaning_Dedner_iter(dt_sub,U_m)
        endif
+!print*,flag_mhd,flag_divb
     end select
 
     if(flag_heat.eq.1 .and. hc_integ.eq.1) then

@@ -1,4 +1,4 @@
-subroutine field_diffusion
+subroutine field_diffusion_AH
   use parameters,only:pi
   use globalvar,only:ix,jx,kx,U_h,U_m,flag_bnd,beta,flag_b_stg,dtout,&
        flag_mhd,flag_mpi,my_rank,flag_pip,gm,beta,tend,&
@@ -15,6 +15,7 @@ subroutine field_diffusion
   double precision :: B_y (1:ix,1:jx,1:kx),mask(1:ix,1:jx,1:kx)
   double precision :: B_z (1:ix,1:jx,1:kx),p_tot(1:ix,1:jx,1:kx)
   double precision f_n,f_p,f_p_n,f_p_p,start(3),end(3),wtr,b0
+  integer i,j,k
 
   !set ionization fraction-----------------
   if(flag_pip.eq.0) then
@@ -32,40 +33,47 @@ subroutine field_diffusion
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=-20.0d0 ;end(1)=20.0d0
-  start(2)=-1.0d0 ;end(2)=1.0d0
-  start(3)=-1.0d0 ;end(3)=1.0d0
+  start(1)=0.0d0 ;end(1)=2.0d0
+  start(2)=0.0d0 ;end(2)=1.0d0
+  start(3)=0.0d0 ;end(3)=1.0d0
   call set_coordinate(start,end)
   !---------------------------------------
   
   !!default boundary condition----------------------
-  if (flag_bnd(1) .eq.-1) flag_bnd(1)=11
-  if (flag_bnd(2) .eq.-1) flag_bnd(2)=11
-  if (flag_bnd(3) .eq.-1) flag_bnd(3)=11
-  if (flag_bnd(4) .eq.-1) flag_bnd(4)=11!-----------------> updated boundary conditions (corrected)
-  if (flag_bnd(5) .eq.-1) flag_bnd(5)=11
-  if (flag_bnd(6) .eq.-1) flag_bnd(6)=11
+  if (flag_bnd(1) .eq.-1) flag_bnd(1)=3
+  if (flag_bnd(2) .eq.-1) flag_bnd(2)=10
+  if (flag_bnd(3) .eq.-1) flag_bnd(3)=10
+  if (flag_bnd(4) .eq.-1) flag_bnd(4)=10
+  if (flag_bnd(5) .eq.-1) flag_bnd(5)=10
+  if (flag_bnd(6) .eq.-1) flag_bnd(6)=10
   !-------------------------------------------------
 
   !!!========================================================
   !write some code to set physical variables
-  wtr=1.0d0 !0.5d0 !---------------------------------------------> width of current sheet
-  mask=spread(spread(x,2,jx),3,kx)
+  wtr=0.5d0
+  !mask=spread(spread(x,2,jx),3,kx)
   ro_h=f_n*1.0d0
   ro_m=f_p*1.0d0
-
-  B0=sqrt(2.0d0/gm/beta) !---------------------------------------------> requires normalisation
+  
+  B0=sqrt(2.0d0/gm/beta)
   b_x=0.0d0
-  b_y=B0*tanh(mask/wtr) !-----------------------------------> unidimensional problem, set to x to match ambipolar.pro
+  b_y=0.0d0
   b_z=0.0d0
   vx_h=0.0d0;vy_h=0.0d0;vz_h=0.0d0
   vx_m=0.0d0;vy_m=0.0d0;vz_m=0.0d0
 
-  p_tot=0.5d0*(B0**2.0d0-b_y**2.0d0)+1.0d0/gm
+  do k=1,kx;do j=1,jx;do i=1,ix
+	b_y(i,j,k)=B0*tanh(x(i)/wtr)
+  enddo;enddo;enddo
+
+  p_tot=0.5d0*(B0**2.d0-b_y**2.0d0)+1.0d0/gm
   p_h=f_p_n*p_tot
-  p_m=f_p_p*p_tot  
+  p_m=f_p_p*p_tot
+ 
 
    
+  Print *, x
+
   !!!========================================================
 
   !convert PV2cq and set that value to global variable 'U_h' and/or 'U_m'
@@ -81,4 +89,4 @@ subroutine field_diffusion
   endif
   !---------------------------------------------------------------------
 
-end subroutine field_diffusion
+end subroutine field_diffusion_AH

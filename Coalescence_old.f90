@@ -14,24 +14,10 @@ subroutine Coalescence
   double precision :: B_x (1:ix,1:jx,1:kx)
   double precision :: B_y (1:ix,1:jx,1:kx)
   double precision :: B_z (1:ix,1:jx,1:kx)
+  !double precision :: curr_J (1:ix,1:jx,1:kx)
   double precision f_n,f_p,f_p_n,f_p_p,start(3),end(3)
   integer i,j,k
   double precision wave_number,eps,B0,temp,curr_J
-
-  !integer, allocatable:: new(:), old(:)
-  !integer size, seed(2), gseed(2), hiseed(2), zseed(2)
-  !real harvest(ix*jx*kx)
-  !  data seed /123456789, 987654321/
-  !  data hiseed /-1, -1/
-  !  data zseed /0, 0/
-  ! call random_seed(SIZE=size)
-
-  ! ALLOCATE (new(size))
-  ! ALLOCATE (old(size))
-  ! CALL RANDOM_SEED(GET=old(1:size))
-  ! new = old*(my_rank+1)
-  ! CALL RANDOM_SEED(PUT=new(1:size))
-  ! call random_number(HARVEST=harvest)
 
   !set ionization fraction-----------------
   if(flag_pip.eq.0) then
@@ -58,7 +44,7 @@ subroutine Coalescence
   !!default boundary condition----------------------
   if (flag_bnd(1) .eq.-1) flag_bnd(1)=1
   if (flag_bnd(2) .eq.-1) flag_bnd(2)=1
-  if (flag_bnd(3) .eq.-1) flag_bnd(3)=4 !per tutti test con meta' plasmoide avevo usato boundary=4
+  if (flag_bnd(3) .eq.-1) flag_bnd(3)=4
   if (flag_bnd(4) .eq.-1) flag_bnd(4)=3
   if (flag_bnd(5) .eq.-1) flag_bnd(5)=1
   if (flag_bnd(6) .eq.-1) flag_bnd(6)=1
@@ -74,18 +60,16 @@ subroutine Coalescence
   vy_h=0.0d0
   vz_h=0.0d0
   vy_m=0.0d0
-  vz_m=0.0d0
+  vz_m=0.0d0 
   
-  !b_z=0.0d0
+  b_z=0.0d0
   do k=1,kx;do j=1,jx; do i=1,ix
      temp=cosh(wave_number*y(j))+eps*cos(wave_number*x(i))
      b_x(i,j,k)=-B0*sinh(wave_number*y(j))/temp          
      b_y(i,j,k)=-eps*B0*sin(wave_number*x(i))/temp
-     b_z(i,j,k)=sqrt((B0**2)*(1.0d0-eps**2)/(temp**2))
-     p_h(i,j,k)=(1.0d0/gm)                               !+(B0**2/2.0d0)*(1.0d0-eps**2)/(temp**2)
-     p_m(i,j,k)=(1.0d0/gm)                               !+(B0**2/2.0d0)*(1.0d0-eps**2)/(temp**2)
-     vx_m(i,j,k)=-0.05*sin(wave_number*x(i)/2)*exp(-y(j)**2) !+ 0.0005d0*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
-     !vx_h(i,j,k)=-0.05*sin(wave_number*x(i)/2)*exp(-y(j)**2)
+     p_h(i,j,k)=(1.0d0/gm)+(B0**2/2.0d0)*(1.0d0-eps**2)/(temp**2)
+     p_m(i,j,k)=(1.0d0/gm)+(B0**2/2.0d0)*(1.0d0-eps**2)/(temp**2)
+     vx_m(i,j,k)=0.05*sin(wave_number*x(i)/2)*exp(-y(j)**2)
   enddo;enddo;enddo
   p_h=f_p_n*p_h
   p_m=f_p_p*p_m
