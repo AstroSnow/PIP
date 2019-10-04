@@ -49,7 +49,7 @@ shock_tube_ion:flag_ini; flag for initial setting
 10.0   :pip_imp_factor;cfl condition factor for pip_implicit scheme
 3    :flag_col;flag for collisional coefficient
 2:flag_IR;flag for ionization and recombination (0:none, 1:Single level, 2:Empirical)
-1.0d3:t_IR;time scale of ionization and recombination
+1.0d-3:t_IR;time scale of ionization and recombination
 ==For heat condution===;
 0 :flag_heat;heat conduction flag (0:switch-off, 1:switch-on)
 1 :hc_type; type of heat conduction (0:constant-type, 1:Spitzer-type)
