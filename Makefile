@@ -13,7 +13,7 @@ OBJECTS = Util_rot.o BMP_rot.o Matrix_rot.o \
 	HCtest.o HCtest_Tonly.o Flare.o Coalescence.o Sedov.o tearing.o \
 	NUwave.o Reconnection.o BMP_density.o blob.o field_diffusion.o\
 	CS_collapse.o asym_currentsheet.o CSC.o\
-	Alfven_Damping.o cnd_tube.o \
+	Alfven_Damping.o cnd_tube.o shock_tube_ion.o\
 	MRI.o disk_flare.o mass_load_prom.o \
 	Initial_rot.o  main.o relax_prom.o relax_prom2.o procedures.o hsstatic.o\
 	resonator.o ionrectest.o
