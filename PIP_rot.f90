@@ -45,8 +45,7 @@ contains
     allocate(Te_h(ix,jx,kx), Te_m(ix,jx,kx))
     call get_Te_MHD(U_m,Te_m)
     call get_Te_HD(U_h,Te_h)
-    ac(:,:,:)=col*sqrt((Te_h(:,:,:)+Te_m(:,:,:))/2.d0)/sqrt(beta/2.d0*gm/ &
-              (2.d0-n_fraction))
+    ac(:,:,:)=col*sqrt((Te_h(:,:,:)+Te_m(:,:,:))/2.d0)/sqrt(beta/2.d0*gm)
     case(2)
     allocate(Te_h(ix,jx,kx), Te_m(ix,jx,kx))
     call get_Te_MHD(U_m,Te_m)
@@ -57,18 +56,37 @@ contains
     call get_Te_MHD(U_m,Te_m)
     call get_Te_HD(U_h,Te_h)
     call get_vel_diff(vd,U_h,U_m)
-    ac(:,:,:)=col*sqrt((Te_h(:,:,:)+Te_m(:,:,:)+pi/4.d0*sum(vd**2,dim=4))/2.d0) &
-              /sqrt(beta/2.d0*gm/(2.d0-n_fraction))
+    ac(:,:,:)=col*sqrt((Te_h(:,:,:)+Te_m(:,:,:))/2.d0)*sqrt(1.d0 + &
+              9.d0*pi/64.d0*gm/2.d0*sum(vd**2,dim=4)/(Te_h(:,:,:)+Te_m(:,:,:))) &
+              /sqrt(beta/2.d0*gm)
     case(4)
     allocate(Te_h(ix,jx,kx), Te_m(ix,jx,kx), vd(ix,jx,kx,3))
     call get_Te_MHD(U_m,Te_m)
     call get_Te_HD(U_h,Te_h)
     call get_vel_diff(vd,U_h,U_m)
-    ac(:,:,:)=col*sqrt((Te_h(:,:,:)+Te_m(:,:,:)+pi/4.d0*sum(vd**2,dim=4))/2.d0)
+    ac(:,:,:)=col*sqrt((Te_h(:,:,:)+Te_m(:,:,:))/2.d0)*sqrt(1.d0 + &
+              9.d0*pi/64.d0*gm/2.d0*sum(vd**2,dim=4)/(Te_h(:,:,:)+Te_m(:,:,:)))
+    case(5)
+    allocate(Te_h(ix,jx,kx), Te_m(ix,jx,kx), vd(ix,jx,kx,3))
+    call get_Te_MHD(U_m,Te_m)
+    call get_Te_HD(U_h,Te_h)
+    call get_vel_diff(vd,U_h,U_m)
+    ac(:,:,:)=col*sqrt((Te_h(:,:,:)+Te_m(:,:,:))/2.d0)*sqrt(1.d0 + &
+              9.d0*pi/64.d0*gm/2.d0*sum(vd**2,dim=4)/(Te_h(:,:,:)+Te_m(:,:,:))) &
+              /sqrt(beta/2.d0*gm)*((beta/2.d0*gm) &
+              /(Te_h(:,:,:)+Te_m(:,:,:))/2.d0+gm*pi/8.d0*sum(vd**2,dim=4))**0.125d0
+              
+    case(6)
+    allocate(Te_h(ix,jx,kx), Te_m(ix,jx,kx), vd(ix,jx,kx,3))
+    call get_Te_MHD(U_m,Te_m)
+    call get_Te_HD(U_h,Te_h)
+    call get_vel_diff(vd,U_h,U_m)
+    ac(:,:,:)=col*sqrt((Te_h(:,:,:)+Te_m(:,:,:))/2.d0)*sqrt(1.d0 + &
+              9.d0*pi/64.d0*gm/2.d0*sum(vd**2,dim=4)/(Te_h(:,:,:)+Te_m(:,:,:)))&
+              /((Te_h(:,:,:)+Te_m(:,:,:))/2.d0+gm*pi/8.d0*sum(vd**2,dim=4))**0.125d0
 
     end select
   end subroutine set_collisional
-
 
   subroutine initialize_IR(flag_IR)
     integer,intent(inout)::flag_IR
