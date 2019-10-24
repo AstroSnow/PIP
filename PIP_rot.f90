@@ -157,7 +157,7 @@ contains
 	ion_fac=factor2/t_ir
 	Gm_rec=U_m(:,:,:,1)/sqrt(Te_p)*rec_fac
 !	Gm_ion=factor**(-Te_p)*U_m(:,:,:,1)*Te_p**(1.0d0-0.39d0)/(Te_p*0.232d0+13.6d0/Te_0)*ion_fac
-	Gm_ion=(n0*1.0e6*U_m(:,:,:,1))*2.91e-14*exp(-13.6d0/Te_0/Te_p)*(13.6d0/Te_0/Te_p)**0.39d0/(0.232d0+13.2d0/Te_0/Te_p)*t_ir
+	Gm_ion=(n0*1.0e6*U_m(:,:,:,1))*2.91e-14*exp(-13.6d0/Te_0/Te_p)*(13.6d0/Te_0/Te_p)**0.39d0/(0.232d0+13.6d0/Te_0/Te_p)*t_ir
 !	print*,Gm_rec(1,1,1)/Gm_ion(1,1,1),U_h(1,1,1,1)/U_m(1,1,1,1),(2.6e-19/sqrt(Te_0))/(2.91e-14/(0.232+13.6/Te_0)* &
 !		(13.6/Te_0)**0.39*exp(-13.6/Te_0))
 !	print*,'Gm_rec',Gm_rec(1,1,1)/U_m(1,1,1,1)*t_ir,(n0*1.0e6)*(2.6e-19/sqrt(Te_0))
