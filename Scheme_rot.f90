@@ -182,7 +182,7 @@ contains
     if(flag_resi.ge.1) call cfl_resi
     if(flag_mpi.eq.1) then
        dt=mpi_double_interface(dt,1)
-if (MY_RANK .eq. 0) print *,'dt: ', dt
+!if (MY_RANK .eq. 0) print *,'dt: ', dt
     endif
 
     !! for divB cleaning
