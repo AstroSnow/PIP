@@ -12,10 +12,11 @@ contains
     integer,intent(inout)::flag_col
     if (flag_col.eq.0) return
     allocate(ac(ix,jx,kx),xi_n(ix,jx,kx))
-    if (flag_col.ge.2 .and. flag_col.le.5) then
+    if (flag_col.ge.2 .and. flag_col.le.7) then
       col_type=flag_col-1
     else
       col_type=0
+      if(my_rank.eq.1) print*. 'WARNING: constant alpha used'
     endif
 !mod((flag_col/10),10)
     flag_col=mod(flag_col,10)
@@ -57,7 +58,7 @@ contains
     call get_Te_HD(U_h,Te_h)
     call get_vel_diff(vd,U_h,U_m)
     ac(:,:,:)=col*sqrt((Te_h(:,:,:)+Te_m(:,:,:))/2.d0)*sqrt(1.d0 + &
-              9.d0*pi/64.d0*gm/2.d0*sum(vd**2,dim=4)/(Te_h(:,:,:)+Te_m(:,:,:))) &
+              9.d0*pi/64.d0*gm/2.d0*sum(vd**2.d0,dim=4)/(Te_h(:,:,:)+Te_m(:,:,:))) &
               /sqrt(beta/2.d0*gm)
     case(4)
     allocate(Te_h(ix,jx,kx), Te_m(ix,jx,kx), vd(ix,jx,kx,3))
@@ -65,16 +66,16 @@ contains
     call get_Te_HD(U_h,Te_h)
     call get_vel_diff(vd,U_h,U_m)
     ac(:,:,:)=col*sqrt((Te_h(:,:,:)+Te_m(:,:,:))/2.d0)*sqrt(1.d0 + &
-              9.d0*pi/64.d0*gm/2.d0*sum(vd**2,dim=4)/(Te_h(:,:,:)+Te_m(:,:,:)))
+              9.d0*pi/64.d0*gm/2.d0*sum(vd**2.d0,dim=4)/(Te_h(:,:,:)+Te_m(:,:,:)))
     case(5)
     allocate(Te_h(ix,jx,kx), Te_m(ix,jx,kx), vd(ix,jx,kx,3))
     call get_Te_MHD(U_m,Te_m)
     call get_Te_HD(U_h,Te_h)
     call get_vel_diff(vd,U_h,U_m)
     ac(:,:,:)=col*sqrt((Te_h(:,:,:)+Te_m(:,:,:))/2.d0)*sqrt(1.d0 + &
-              9.d0*pi/64.d0*gm/2.d0*sum(vd**2,dim=4)/(Te_h(:,:,:)+Te_m(:,:,:))) &
+              9.d0*pi/64.d0*gm/2.d0*sum(vd**2.d0,dim=4)/(Te_h(:,:,:)+Te_m(:,:,:))) &
               /sqrt(beta/2.d0*gm)*((beta/2.d0*gm) &
-              /(Te_h(:,:,:)+Te_m(:,:,:))/2.d0+gm*pi/8.d0*sum(vd**2,dim=4))**0.125d0
+              /(Te_h(:,:,:)+Te_m(:,:,:))/2.d0+gm*pi/16.d0*sum(vd**2,dim=4))**0.125d0
               
     case(6)
     allocate(Te_h(ix,jx,kx), Te_m(ix,jx,kx), vd(ix,jx,kx,3))
@@ -82,8 +83,8 @@ contains
     call get_Te_HD(U_h,Te_h)
     call get_vel_diff(vd,U_h,U_m)
     ac(:,:,:)=col*sqrt((Te_h(:,:,:)+Te_m(:,:,:))/2.d0)*sqrt(1.d0 + &
-              9.d0*pi/64.d0*gm/2.d0*sum(vd**2,dim=4)/(Te_h(:,:,:)+Te_m(:,:,:)))&
-              /((Te_h(:,:,:)+Te_m(:,:,:))/2.d0+gm*pi/8.d0*sum(vd**2,dim=4))**0.125d0
+              9.d0*pi/64.d0*gm/2.d0*sum(vd**2.d0,dim=4)/(Te_h(:,:,:)+Te_m(:,:,:)))&
+              /((Te_h(:,:,:)+Te_m(:,:,:))/2.d0+gm*pi/16.d0*sum(vd**2,dim=4))**0.125d0
 
     end select
   end subroutine set_collisional
