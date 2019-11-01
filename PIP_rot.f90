@@ -1,6 +1,6 @@
 module PIP_rot
   use globalvar,only:ix,jx,kx,ac,xi_n,gm_rec,gm_ion,nvar_h,nvar_m,&
-       flag_pip_imp,gm,n_fraction,t_ir,col,x,y,z,beta,T0, n0
+       flag_pip_imp,gm,n_fraction,t_ir,col,x,y,z,beta,T0, n0,my_rank
   use scheme_rot,only:get_Te_HD,get_Te_MHD,cq2pv_HD,cq2pv_MHD,get_vel_diff
   use parameters,only:T_r_p,deg1,deg2,pi
   implicit none
