@@ -1,6 +1,6 @@
 TARGET = a.out
 OBJECTS = Util_rot.o BMP_rot.o Matrix_rot.o \
-	Parameters.o Globalvar.o MPI_rot.o Boundary_rot.o Scheme_rot.o \
+	Globalvar.o Parameters.o MPI_rot.o Boundary_rot.o Scheme_rot.o \
 	HC_rot.o \
 	Res_rot.o Gra_rot.o PIP_rot.o \
 	IOT_rot.o IO_rot.o   \
@@ -13,16 +13,16 @@ OBJECTS = Util_rot.o BMP_rot.o Matrix_rot.o \
 	HCtest.o HCtest_Tonly.o Flare.o Coalescence.o Sedov.o tearing.o \
 	NUwave.o Reconnection.o BMP_density.o blob.o field_diffusion.o\
 	CS_collapse.o asym_currentsheet.o CSC.o\
-	Alfven_Damping.o cnd_tube.o \
+	Alfven_Damping.o cnd_tube.o shock_tube_ion.o\
 	MRI.o disk_flare.o mass_load_prom.o \
-	Initial_rot.o  main.o relax_prom.o relax_prom2.o \
-	Prova_plasmoide.o
-MOD_FILES = util_rot.mod parameters.mod \
-	globalvar.mod scheme_rot.mod hc_rot.mod \
+	Initial_rot.o  main.o relax_prom.o relax_prom2.o procedures.o hsstatic.o\
+	resonator.o ionrectest.o
+MOD_FILES = util_rot.mod globalvar.modparameters.mod \
+	parameters.mod scheme_rot.mod hc_rot.mod \
 	res_rot.mod gra_rot.mod pip_rot.mod \
 	mpi_rot.mod io_rot.mod \
 	hll_rot.mod model_rot.mod  \
-	boundary_rot.mod solver_rot.mod matrix_rot.mod initial_rot.mod
+	boundary_rot.mod solver_rot.mod matrix_rot.mod initial_rot.mod procedures.mod
 
 #FC = gfortran
 FC = mpif90 -O2

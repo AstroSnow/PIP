@@ -106,10 +106,14 @@ contains
           call relax_prom
        case('relax_prom2')
           call relax_prom2
-       case('Prova_plasmoide')
-	  call Prova_plasmoide
-       !case('field_diffusion_AH')
-	  !call field_diffusion_AH
+       case('hsstatic')
+          call hsstatic
+       case('resonator')
+          call resonator
+       case('ionrectest')
+          call ionrectest
+       case('shock_tube_ion')
+          call shock_tube_ion
        end select
        call set_coefficients(U_h,U_m,0)              
        start_t=0.d0

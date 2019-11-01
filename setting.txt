@@ -1,14 +1,14 @@
-./coalescence/PIP/force_free/resolution_new_eta_0.0005_100_vn_white_noise/:outdir;   ----------------------->   output directory (this should be written at the first line in this file!)
-./coalescence/PIP/force_free/r/:indir;   -------->   input directory
+./coalescence/PIP/force_free/res_4_test_boundary_2/:outdir;   ----------------------->   output directory (this should be written at the first line in this file!)
+./coalescence/PIP/force_free/res_4_test_boundary_2/:indir;   -------->   input directory
 
 PIP:flag_eqs;   ---------------------------------------->   flag for equation (HD, MHD, PIP)
 -1:flag_restart;   ------------------------------------->   restart count (-1: no restart, 0: restart -> nout at the end of config.txt will be read, >0: restart from no."flag_restart" data)
 2:ndim;   ---------------------------------------------->   dimension (if you try debug_direction of >1, then you need to set ndim to 2 or 3)
-6479:ix;   ------------------------------------------------->   grid number for x-direction
-4855:jx;   ------------------------------------------------->   grid number for y-direction
+1025:ix;   ------------------------------------------------->   grid number for x-direction
+1537:jx;   ------------------------------------------------->   grid number for y-direction
 2:kx;   ------------------------------------------------>   grid number for z-direction
 0.02 :dtout;   --------------------------------------------->   output period 100 
-10.0:tend;   ------------------------------------------>   tend time for simulation (if lt = 0, then default value is set to 2000)
+1.0:tend;   ------------------------------------------>   tend time for simulation (if lt = 0, then default value is set to 2000)
 0 :flag_cyl;   ----------------------------------------->   set to 1 when you use Cylindrical coordinates (x=>r, y=>z, z=>phi). NB: Only ndim=2 is allowed (rz-plane)
 5.0    :gm_d; 
 3.0    :gm_n;
@@ -22,7 +22,7 @@ Coalescence:flag_ini;   -------------------------------->   flag for initial set
 2:t_order;   ------------------------------------------->   order of time (2 or 3. Activated ONLY WHEN flag_time=1)
 0    :flag_grav;   ------------------------------------->   flag for gravity
 -1:flag_artvis;   -------------------------------------->   flag for artificial viscosity (default: -1)
-1.8 :theta;   ------------------------------------------>   parameter for artificial viscosity (set between 1 and 2 inclusive)
+1.5 :theta;   ------------------------------------------>   parameter for artificial viscosity (set between 1 and 2 inclusive)
 
 ===For limits===;
 0.0005001 :ro_lim;   ---------------------------------->   lower limit for density (increased)
@@ -51,10 +51,10 @@ Coalescence:flag_ini;   -------------------------------->   flag for initial set
 
 ===For Two fluid=====;
 0.99:n_fraction;   ------------------------------------>   for uniform ionization degree 
-100.0:col;   ------------------------------------------>   for collisional coefficient
+1.0:col;   ------------------------------------------>   for collisional coefficient
 0     :flag_pip_imp;   --------------------------------->   for implicit scheme in source term
 10.0   :pip_imp_factor;   ------------------------------>   cfl condition factor for pip_implicit scheme
-1    :flag_col;   -------------------------------------->   flag for collisional coefficient
+5    :flag_col;   -------------------------------------->   flag for collisional coefficient
 0:flag_IR;   ------------------------------------------->   flag for ionization and recombination
 5d0:t_IR;   -------------------------------------------->   time scale of ionization and recombination
 

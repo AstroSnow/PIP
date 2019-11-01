@@ -16,7 +16,7 @@ subroutine Coalescence
   double precision :: B_z (1:ix,1:jx,1:kx)
   double precision f_n,f_p,f_p_n,f_p_p,start(3),end(3)
   integer i,j,k
-  double precision wave_number,eps,B0,temp,curr_J
+  double precision wave_number,eps,B0,temp
 
   !Set white noise
   integer, allocatable:: new(:), old(:)
@@ -50,15 +50,15 @@ subroutine Coalescence
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=-4.0d0 ;end(1)=4.0d0
+  start(1)=0.0d0 ;end(1)=4.0d0
   start(2)=-4.0d0 ;end(2)=4.0d0
   start(3)=-1.0d0 ;end(3)=1.0d0
   call set_coordinate(start,end)
   !---------------------------------------
   
   !!default boundary condition----------------------
-  if (flag_bnd(1) .eq.-1) flag_bnd(1)=1
-  if (flag_bnd(2) .eq.-1) flag_bnd(2)=1
+  if (flag_bnd(1) .eq.-1) flag_bnd(1)=2
+  if (flag_bnd(2) .eq.-1) flag_bnd(2)=2
   if (flag_bnd(3) .eq.-1) flag_bnd(3)=3 !per tutti test con meta' plasmoide avevo usato boundary=4; a dominio intero questo deve diventare 3 (bottom boundary)
   if (flag_bnd(4) .eq.-1) flag_bnd(4)=3
   if (flag_bnd(5) .eq.-1) flag_bnd(5)=1
@@ -86,7 +86,7 @@ subroutine Coalescence
      p_h(i,j,k)=(1.0d0/gm)                               !+(B0**2/2.0d0)*(1.0d0-eps**2)/(temp**2)
      p_m(i,j,k)=(1.0d0/gm)                               !+(B0**2/2.0d0)*(1.0d0-eps**2)/(temp**2)
      vx_m(i,j,k)=-0.05*sin(wave_number*x(i)/2)*exp(-y(j)**2) + 0.0005d0*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
-     vx_h(i,j,k)=-0.05*sin(wave_number*x(i)/2)*exp(-y(j)**2)
+     vx_h(i,j,k)=-0.05*sin(wave_number*x(i)/2)*exp(-y(j)**2) + 0.0005d0*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
   enddo;enddo;enddo
   p_h=f_p_n*p_h
   p_m=f_p_p*p_m
