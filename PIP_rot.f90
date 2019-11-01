@@ -16,7 +16,7 @@ contains
       col_type=flag_col-1
     else
       col_type=0
-      if(my_rank.eq.1) print*. 'WARNING: constant alpha used'
+      if(my_rank.eq.1) print*, 'WARNING: constant alpha used'
     endif
 !mod((flag_col/10),10)
     flag_col=mod(flag_col,10)
