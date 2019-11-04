@@ -101,7 +101,7 @@ contains
     if(flag_grav.ge.2.or.(flag.eq.0.and.flag_grav.eq.1)) then
        call set_gravity(U_h,U_m)       
     endif
-    if(flag_col.ge.2.or.(flag.eq.0.and.flag_col.eq.1)) then
+    if((flag_col.ge.2.or.(flag.eq.0.and.flag_col.eq.1)).AND.(flag_pip.eq.1)) then
        call set_collisional(U_h,U_m)       
     endif
     if(flag_amb.ge.2.or.(flag.eq.0.and.flag_amb.eq.1)) then
