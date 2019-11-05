@@ -261,10 +261,10 @@ subroutine get_parameters
       endif
       if(flag_artvis.eq.-1)flag_artvis=1
       margin(1)=s_order+min(flag_resi,1)+min(flag_amb,1)+flag_artvis*2
-      if(flag_divb.ge.2) flag_divb=1
+      if(flag_divb.gt.2) flag_divb=1	!ORIGINALLY 1, SHOULD BE 2 for iterative
    case(2)
       margin(1)=4+flag_amb*2
-      if(flag_divb.ge.2) flag_divb=1
+      if(flag_divb.gt.2) flag_divb=1	!ORIGINALLY 1, SHOULD BE 2 for iterative
       t_order=4
    end select
    !modification for divb cleaning
@@ -273,6 +273,7 @@ subroutine get_parameters
    case(1)
       nvar_m=nvar_m+1
    case(2)
+      nvar_m=nvar_m+1
    end select
 
    !set dimension
