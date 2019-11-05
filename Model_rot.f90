@@ -446,14 +446,14 @@ subroutine get_parameters
 
  subroutine setcq(ro_m,vx_m,vy_m,vz_m,p_m,B_x,B_y,B_z, &
           ro_h,vx_h,vy_h,vz_h,p_h)
-   double precision,intent(in) :: ro_h(1:ix,1:jx,1:kx),ro_m(1:ix,1:jx,1:kx)
-   double precision,intent(in) :: vx_h(1:ix,1:jx,1:kx),vx_m(1:ix,1:jx,1:kx)
-   double precision,intent(in) :: vy_h(1:ix,1:jx,1:kx),vy_m(1:ix,1:jx,1:kx)
-   double precision,intent(in) :: vz_h(1:ix,1:jx,1:kx),vz_m(1:ix,1:jx,1:kx) 
-   double precision,intent(in) :: P_h (1:ix,1:jx,1:kx),P_m (1:ix,1:jx,1:kx)
-   double precision ,intent(in):: B_x (1:ix,1:jx,1:kx)
-   double precision,intent(in) :: B_y (1:ix,1:jx,1:kx)
-   double precision,intent(in) :: B_z (1:ix,1:jx,1:kx)
+   double precision,intent(inout) :: ro_h(1:ix,1:jx,1:kx),ro_m(1:ix,1:jx,1:kx)
+   double precision,intent(inout) :: vx_h(1:ix,1:jx,1:kx),vx_m(1:ix,1:jx,1:kx)
+   double precision,intent(inout) :: vy_h(1:ix,1:jx,1:kx),vy_m(1:ix,1:jx,1:kx)
+   double precision,intent(inout) :: vz_h(1:ix,1:jx,1:kx),vz_m(1:ix,1:jx,1:kx) 
+   double precision,intent(inout) :: P_h (1:ix,1:jx,1:kx),P_m (1:ix,1:jx,1:kx)
+   double precision ,intent(inout):: B_x (1:ix,1:jx,1:kx)
+   double precision,intent(inout) :: B_y (1:ix,1:jx,1:kx)
+   double precision,intent(inout) :: B_z (1:ix,1:jx,1:kx)
    
    if(flag_mhd.eq.1) then      
       call pv2cq_mhd(ro_m,vx_m,vy_m,vz_m,p_m,B_x,B_y,B_z,U_m)
