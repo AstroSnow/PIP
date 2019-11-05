@@ -50,15 +50,15 @@ subroutine Coalescence
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=0.0d0 ;end(1)=4.0d0
+  start(1)=-4.0d0 ;end(1)=4.0d0
   start(2)=-4.0d0 ;end(2)=4.0d0
   start(3)=-1.0d0 ;end(3)=1.0d0
   call set_coordinate(start,end)
   !---------------------------------------
   
   !!default boundary condition----------------------
-  if (flag_bnd(1) .eq.-1) flag_bnd(1)=3
-  if (flag_bnd(2) .eq.-1) flag_bnd(2)=3
+  if (flag_bnd(1) .eq.-1) flag_bnd(1)=1
+  if (flag_bnd(2) .eq.-1) flag_bnd(2)=1 !This becomes 3 for the symmetric simulations at x=0 having one plasmoid only
   if (flag_bnd(3) .eq.-1) flag_bnd(3)=3 !per tutti test con meta' plasmoide avevo usato boundary=4; a dominio intero questo deve diventare 3 (bottom boundary)
   if (flag_bnd(4) .eq.-1) flag_bnd(4)=3
   if (flag_bnd(5) .eq.-1) flag_bnd(5)=1
