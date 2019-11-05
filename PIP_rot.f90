@@ -306,7 +306,7 @@ contains
 	    Gm_ion*npr/(gm-1.d0) + Gm_rec*pr/(gm-1.d0)
        S_h(:,:,:,1:5)=S_h(:,:,:,1:5)+ds(:,:,:,1:5)
        S_m(:,:,:,1:5)=S_m(:,:,:,1:5)-ds(:,:,:,1:5)
-!       print *, 'term',Gm_rec,Gm_ion,gm,nte,te
+
     endif    
     return
   end subroutine source_PIP
