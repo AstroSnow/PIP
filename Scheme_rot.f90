@@ -240,6 +240,7 @@ contains
              valf2=(bx(i,j,k)**2+by(i,j,k)**2+bz(i,j,k)**2)/max(de(i,j,k),tiny)
              vabs=sqrt(vx(i,j,k)**2+vy(i,j,k)**2+vz(i,j,k)**2)
              dt_min=min(dt_min,safety*gmin/(vabs+sqrt(cs2+valf2))) !! fast mode speed+fluid speed
+	     !print*,'dt: ',dt_min
           enddo
        enddo
     enddo
@@ -562,7 +563,7 @@ contains
        if(flag_mpi.eq.1) then
           eps = mpi_double_interface(eps,3)
        endif
-
+!    if (MY_RANK.eq.0) print*,eps,eps_limit,ncount !test to check the number of iteration and convergence
        ncount = ncount+1
        if(ncount.eq.it_max) exit
     end do
