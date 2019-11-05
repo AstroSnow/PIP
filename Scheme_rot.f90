@@ -736,13 +736,13 @@ contains
     if(mhd.eq.1)then
        bb(:,:,:) = U(:,:,:,6)**2 + U(:,:,:,7)**2 + U(:,:,:,8)**2
        call cq2pv_mhd(de,vx,vy,vz,pr,bx,by,bz,U)
-       rovv=de*(vx*vx+vy*vy+vz*vz)
-       cc(:,:,:) = sqrt( gm*pr(:,:,:)/U(:,:,:,1) ) &
-            + sqrt( rovv(:,:,:)/U(:,:,:,1) ) &
-            + sqrt( bb(:,:,:)/(U(:,:,:,1)) )
+       rovv=max(de,ro_lim)*(vx*vx+vy*vy+vz*vz)
+       cc(:,:,:) = sqrt( gm*max(pr(:,:,:),pr_lim)/max(U(:,:,:,1),ro_lim) ) &
+            + sqrt( rovv(:,:,:)/max(U(:,:,:,1),ro_lim) ) &
+            + sqrt( bb(:,:,:)/max(U(:,:,:,1),ro_lim) )
     else 
        call cq2pv_hd(de,vx,vy,vz,pr,U)
-       cc=sqrt(gm*pr(:,:,:)/de)+sqrt(vx*vx+vy*vy+vz*vz)       
+       cc=sqrt(gm*max(pr(:,:,:),pr_lim)/max(de,ro_lim))+sqrt(vx*vx+vy*vy+vz*vz)       
     endif
 
     cc(xs:xe,ys:ye,zs:ze) = &
