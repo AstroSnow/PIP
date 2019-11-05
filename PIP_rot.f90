@@ -117,7 +117,7 @@ contains
   end function ion_temperature
 
   subroutine set_IR(U_h,U_m)
-    double precision,intent(in)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
+    double precision,intent(inout)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
     double precision Te_n(ix,jx,kx),Te_p(ix,jx,kx),Te_e(ix,jx,kx)
     double precision xi_n_tmp(ix,jx,kx)
     double precision Te_0

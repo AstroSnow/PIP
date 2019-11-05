@@ -27,9 +27,9 @@ module scheme_rot
 contains 
 !------------------------------------------------------------------------
   subroutine pv2cq_hd(de,vx,vy,vz,pr,U_h)
-    double precision,intent(in):: de(ix,jx,kx),pr(ix,jx,kx)
-    double precision,intent(in)::vx(ix,jx,kx),vy(ix,jx,kx),vz(ix,jx,kx)
-    double precision,intent(out)::U_h(ix,jx,kx,nvar_h)
+    double precision,intent(inout):: de(ix,jx,kx),pr(ix,jx,kx)
+    double precision,intent(inout)::vx(ix,jx,kx),vy(ix,jx,kx),vz(ix,jx,kx)
+    double precision,intent(inout)::U_h(ix,jx,kx,nvar_h)
     u_h = 0.d0 ! initialization
     u_h(:,:,:,1)=de
     u_h(:,:,:,2)=de*vx
@@ -40,11 +40,11 @@ contains
 
   !Convert physical variables to conserved quantity for MHD
   subroutine pv2cq_mhd (de,vx,vy,vz,pr,bx,by,bz,U_m)
-    double precision,intent(in):: de(ix,jx,kx),vx(ix,jx,kx)
-    double precision,intent(in)::vy(ix,jx,kx),vz(ix,jx,kx)
-    double precision,intent(in):: pr(ix,jx,kx),bx(ix+flag_b_stg,jx,kx)
-    double precision,intent(in):: by(ix,jx+flag_b_stg,kx),bz(ix,jx,kx+flag_b_stg)
-    double precision,intent(out)::U_m(ix,jx,kx,nvar_m)
+    double precision,intent(inout):: de(ix,jx,kx),vx(ix,jx,kx)
+    double precision,intent(inout)::vy(ix,jx,kx),vz(ix,jx,kx)
+    double precision,intent(inout):: pr(ix,jx,kx),bx(ix+flag_b_stg,jx,kx)
+    double precision,intent(inout):: by(ix,jx+flag_b_stg,kx),bz(ix,jx,kx+flag_b_stg)
+    double precision,intent(inout)::U_m(ix,jx,kx,nvar_m)
 !    u_m = 0.d0 ! initialization
     if(flag_b_stg.eq.1) then
        u_m(:,:,:,1)=de
@@ -80,15 +80,15 @@ contains
 !------------------------------------------------------------------------
 !------------------------------------------------------------------------
   subroutine get_Te_HD(U,Te)
-    double precision,intent(in)::U(ix,jx,kx,nvar_h)
-    double precision,intent(out)::Te(ix,jx,kx)
+    double precision,intent(inout)::U(ix,jx,kx,nvar_h)
+    double precision,intent(inout)::Te(ix,jx,kx)
     double precision pr(ix,jx,kx)
     call get_Pr_HD(U,pr)
     Te=gm*(pr/U(:,:,:,1))    
   end subroutine get_Te_HD
   subroutine get_Pr_HD(U,Pr)
-    double precision,intent(in)::U(ix,jx,kx,nvar_m)
-    double precision,intent(out)::Pr(ix,jx,kx)
+    double precision,intent(inout)::U(ix,jx,kx,nvar_m)
+    double precision,intent(inout)::Pr(ix,jx,kx)
     pr=(gm-1.0d0)*(U(:,:,:,5)&
          -0.5d0*(U(:,:,:,2)*U(:,:,:,2) &
          +U(:,:,:,3)*U(:,:,:,3) &
@@ -96,15 +96,15 @@ contains
   end subroutine get_Pr_HD
 
   subroutine get_Te_MHD(U,Te)
-    double precision,intent(in)::U(ix,jx,kx,nvar_m)
-    double precision,intent(out)::Te(ix,jx,kx)
+    double precision,intent(inout)::U(ix,jx,kx,nvar_m)
+    double precision,intent(inout)::Te(ix,jx,kx)
     double precision pr(ix,jx,kx)
     call get_Pr_MHD(U,pr)
     Te=0.5d0*gm*(pr/U(:,:,:,1))    
   end subroutine get_Te_MHD
   subroutine get_Pr_MHD(U,pr)
-    double precision,intent(in)::U(ix,jx,kx,nvar_m)
-    double precision,intent(out)::Pr(ix,jx,kx)
+    double precision,intent(inout)::U(ix,jx,kx,nvar_m)
+    double precision,intent(inout)::Pr(ix,jx,kx)
     pr=(gm-1.0d0)*(u(:,:,:,5)&
          -0.5d0*((U(:,:,:,2)*U(:,:,:,2)&
          +U(:,:,:,3)*U(:,:,:,3)&
@@ -126,7 +126,7 @@ contains
   subroutine cq2pv_hd(de,vx,vy,vz,pr,U_h)
     double precision,intent(inout):: de(ix,jx,kx),pr(ix,jx,kx)
     double precision,intent(inout)::vx(ix,jx,kx),vy(ix,jx,kx),vz(ix,jx,kx)
-    double precision,intent(in)::U_h(ix,jx,kx,nvar_h)
+    double precision,intent(inout)::U_h(ix,jx,kx,nvar_h)
     de=u_h(:,:,:,1)
     vx=u_h(:,:,:,2)/de
     vy=u_h(:,:,:,3)/de
@@ -141,9 +141,9 @@ contains
     double precision,intent(inout):: pr(ix,jx,kx)
     double precision,intent(inout)::bx(ix,jx,kx)
     double precision,intent(inout):: by(ix,jx,kx),bz(ix,jx,kx)
-    double precision,intent(in)::U_m(ix,jx,kx,nvar_m)
+    double precision,intent(inout)::U_m(ix,jx,kx,nvar_m)
 
-    
+   
     de=u_m(:,:,:,1)
     vx=u_m(:,:,:,2)/de
     vy=u_m(:,:,:,3)/de
@@ -166,7 +166,7 @@ contains
 
   !set time step with CFL condition : return dt
   subroutine cfl(U_h,U_m)
-    double precision,intent(in)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
+    double precision,intent(inout)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
     if(flag_pip.eq.1) then
        call cfl_mhd(U_m)
        call cfl_hd(U_h)
@@ -196,7 +196,7 @@ contains
   end subroutine cfl
   !set time step for HD with CFL condition 
   subroutine cfl_hd(U_h)
-    double precision,intent(in)::U_h(ix,jx,kx,nvar_h)
+    double precision,intent(inout)::U_h(ix,jx,kx,nvar_h)
     double precision dt_min,cs2,v2,gmin,cs,vabs
     double precision de(ix,jx,kx),pr(ix,jx,kx)
     double precision vx(ix,jx,kx),vy(ix,jx,kx),vz(ix,jx,kx)
@@ -225,7 +225,7 @@ contains
   end subroutine cfl_hd
   
   subroutine cfl_mhd(U_m)
-    double precision,intent(in)::U_m(ix,jx,kx,nvar_m)
+    double precision,intent(inout)::U_m(ix,jx,kx,nvar_m)
     double precision dt_min,gmin
     double precision de(ix,jx,kx),pr(ix,jx,kx)
     double precision vx(ix,jx,kx),vy(ix,jx,kx),vz(ix,jx,kx)
@@ -284,7 +284,7 @@ contains
 
 
   subroutine cfl_pn_col(U_m,U_h)
-    double precision,intent(in)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
+    double precision,intent(inout)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
     if(flag_pip_imp.eq.1) then
        dt=min(dt,pip_imp_factor/max(maxval(u_m(:,:,:,1)*ac(:,:,:)),maxval(u_h(:,:,:,1)*ac(:,:,:))))
     else
@@ -293,6 +293,7 @@ contains
    end subroutine cfl_pn_col
 
    subroutine cfl_pip_ir(U_m,U_h)
+
      double precision,intent(in)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
      dt=min(dt,safety/max(maxval(gm_rec)+maxval(gm_ion),1.0d-5))   !,maxval(gm_rec/U_m(:,:,:,1))+maxval(gm_ion/U_h(:,:,:,1))  
    end subroutine cfl_pip_ir
@@ -347,7 +348,7 @@ contains
   end subroutine hd_fluxes
   subroutine mhd_fluxes(F_m,U_m)
     double precision,intent(inout):: F_m(ix,jx,kx,nvar_m,ndim)
-    double precision,intent(in):: U_m(ix,jx,kx,nvar_m)
+    double precision,intent(inout):: U_m(ix,jx,kx,nvar_m)
     double precision :: de(ix,jx,kx),vx(ix,jx,kx)
     double precision ::vy(ix,jx,kx),vz(ix,jx,kx)
     double precision :: pr(ix,jx,kx)
@@ -736,13 +737,13 @@ contains
     if(mhd.eq.1)then
        bb(:,:,:) = U(:,:,:,6)**2 + U(:,:,:,7)**2 + U(:,:,:,8)**2
        call cq2pv_mhd(de,vx,vy,vz,pr,bx,by,bz,U)
-       rovv=de*(vx*vx+vy*vy+vz*vz)
-       cc(:,:,:) = sqrt( gm*pr(:,:,:)/U(:,:,:,1) ) &
-            + sqrt( rovv(:,:,:)/U(:,:,:,1) ) &
-            + sqrt( bb(:,:,:)/(U(:,:,:,1)) )
+       rovv=max(de,ro_lim)*(vx*vx+vy*vy+vz*vz)
+       cc(:,:,:) = sqrt( gm*max(pr(:,:,:),pr_lim)/max(U(:,:,:,1),ro_lim) ) &
+            + sqrt( rovv(:,:,:)/max(U(:,:,:,1),ro_lim) ) &
+            + sqrt( bb(:,:,:)/max(U(:,:,:,1),ro_lim) )
     else 
        call cq2pv_hd(de,vx,vy,vz,pr,U)
-       cc=sqrt(gm*pr(:,:,:)/de)+sqrt(vx*vx+vy*vy+vz*vz)       
+       cc=sqrt(gm*max(pr(:,:,:),pr_lim)/max(de,ro_lim))+sqrt(vx*vx+vy*vy+vz*vz)       
     endif
 
     cc(xs:xe,ys:ye,zs:ze) = &
@@ -885,7 +886,7 @@ endif
   end subroutine vel_damp
 
   subroutine get_vel_diff(vd,U_h,U_m)
-  double precision,intent(in)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
+  double precision,intent(inout)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
   double precision,intent(out)::vd(ix,jx,kx,3)  
     integer :: i
 
@@ -899,7 +900,7 @@ endif
 
   subroutine get_rad_loss(rad_loss,U_h,U_m)
 !NONE OF THIS WORKS
-	double precision,intent(in)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
+	double precision,intent(inout)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
 	double precision,intent(out)::rad_loss(ix,jx,kx,2)  
 	integer :: i
 	double precision :: rad_time,rad_c
