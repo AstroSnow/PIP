@@ -112,7 +112,13 @@ contains
          +U(:,:,:,6)*U(:,:,:,6)&
          +U(:,:,:,7)*U(:,:,:,7)&
          +U(:,:,:,8)*U(:,:,:,8)))
-   if(minval(pr).le.0.0d0) pr=max(pr,pr_minimam)   
+   if(minval(pr).le.pr_lim) pr=max(pr,pr_lim)  
+    u(:,:,:,5)=pr/(gm-1.0d0)+0.5d0*((U(:,:,:,2)*U(:,:,:,2)&
+         +U(:,:,:,3)*U(:,:,:,3)&
+         +U(:,:,:,4)*U(:,:,:,4))/U(:,:,:,1)&
+         +U(:,:,:,6)*U(:,:,:,6)&
+         +U(:,:,:,7)*U(:,:,:,7)&
+         +U(:,:,:,8)*U(:,:,:,8)) 
   end subroutine get_Pr_MHD
 
   
@@ -147,7 +153,14 @@ contains
     bz=u_m(:,:,:,8)
     pr=(gm-1.0d0)*(u_m(:,:,:,5)-0.5d0*de*(vx**2+vy**2+vz**2)  &
          -0.5d0*(bx**2+by**2+bz**2))
-    if(minval(pr).le.0.0d0) pr=max(pr,pr_minimam)
+    if(minval(pr).le.pr_lim) pr=max(pr,pr_lim)
+    if(minval(de).le.ro_lim) de=max(de,ro_lim)
+    u_m(:,:,:,1)=de
+    u_m(:,:,:,2)=vx*de
+    u_m(:,:,:,3)=vy*de
+    u_m(:,:,:,4)=vz*de
+    u_m(:,:,:,5)=pr/(gm-1.0d0)+0.5d0*de*(vx**2+vy**2+vz**2)  &
+         +0.5d0*(bx**2+by**2+bz**2)
   end subroutine cq2pv_mhd
 
 
@@ -518,7 +531,7 @@ contains
 
     double precision :: eps,epsg,eps_limit,ch,cmaxg
     double precision,parameter::slow=0.9d0
-    integer,parameter :: it_max = 30
+    integer,parameter :: it_max = 100
     integer,parameter::i_bx=6,i_by=7,i_bz=8,i_psi=9
 
     ncount=0
@@ -534,7 +547,7 @@ contains
     call bnd_divb(divb)
     psi = U_m(:,:,:,i_psi)
 
-    do while(eps.ge.eps_limit .or. ncount.lt.1)
+    do while(eps.ge.eps_limit .and. ncount.lt.it_max)
        !! initialization
        dpsdx = 0.d0
        dpsdy = 0.d0
