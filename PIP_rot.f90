@@ -303,10 +303,10 @@ contains
        ds(:,:,:,4)=Gm_rec*de*vz-Gm_ion*nde*nvz
        ds(:,:,:,5)=0.5d0*(Gm_rec*de*(vx*vx+vy*vy+vz*vz)- &
             Gm_ion*nde*(nvx*nvx+nvy*nvy+nvz*nvz)) -&
-	    Gm_ion*3.0d0/2.0d0/gm*nte + Gm_rec*3.0d0/2.0d0/gm*te
+	    Gm_ion*npr/(gm-1.d0) + Gm_rec*pr/(gm-1.d0)
        S_h(:,:,:,1:5)=S_h(:,:,:,1:5)+ds(:,:,:,1:5)
        S_m(:,:,:,1:5)=S_m(:,:,:,1:5)-ds(:,:,:,1:5)
-!       print *, 'term',Gm_rec,Gm_ion,gm,nte,te
+
     endif    
     return
   end subroutine source_PIP
