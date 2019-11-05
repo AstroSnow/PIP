@@ -114,6 +114,8 @@ contains
           call ionrectest
        case('shock_tube_ion')
           call shock_tube_ion
+       case('com_spec')
+          call Complete_spectrum
        end select
        call set_coefficients(U_h,U_m,0)              
        start_t=0.d0
