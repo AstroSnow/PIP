@@ -22,7 +22,6 @@ module scheme_rot
   use Boundary_rot,only:bnd_divb
   implicit none
   integer i,j,k,ierr
-  double precision,parameter::pr_minimam=1.0d-7
 
 contains 
 !------------------------------------------------------------------------
