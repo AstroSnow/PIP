@@ -112,7 +112,7 @@ contains
          +U(:,:,:,6)*U(:,:,:,6)&
          +U(:,:,:,7)*U(:,:,:,7)&
          +U(:,:,:,8)*U(:,:,:,8)))
-   if(minval(pr).le.pr_lim) pr=max(pr,pr_lim)  
+   if(minval(pr).le.pr_lim) pr=max(pr,pr_lim) ! Modificato qui <----
     u(:,:,:,5)=pr/(gm-1.0d0)+0.5d0*((U(:,:,:,2)*U(:,:,:,2)&
          +U(:,:,:,3)*U(:,:,:,3)&
          +U(:,:,:,4)*U(:,:,:,4))/U(:,:,:,1)&
@@ -153,8 +153,8 @@ contains
     bz=u_m(:,:,:,8)
     pr=(gm-1.0d0)*(u_m(:,:,:,5)-0.5d0*de*(vx**2+vy**2+vz**2)  &
          -0.5d0*(bx**2+by**2+bz**2))
-    if(minval(pr).le.pr_lim) pr=max(pr,pr_lim)
-    if(minval(de).le.ro_lim) de=max(de,ro_lim)
+    if(minval(pr).le.pr_lim) pr=max(pr,pr_lim) ! Modificato qui <----
+    if(minval(de).le.ro_lim) de=max(de,ro_lim) ! Modificato qui <----
     u_m(:,:,:,1)=de
     u_m(:,:,:,2)=vx*de
     u_m(:,:,:,3)=vy*de
