@@ -17,7 +17,7 @@ OBJECTS = Util_rot.o BMP_rot.o Matrix_rot.o \
 	MRI.o disk_flare.o mass_load_prom.o \
 	Initial_rot.o  main.o relax_prom.o relax_prom2.o procedures.o hsstatic.o\
 	resonator.o ionrectest.o
-MOD_FILES = util_rot.mod globalvar.modparameters.mod \
+MOD_FILES = util_rot.mod globalvar.mod parameters.mod \
 	parameters.mod scheme_rot.mod hc_rot.mod \
 	res_rot.mod gra_rot.mod pip_rot.mod \
 	mpi_rot.mod io_rot.mod \
