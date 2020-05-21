@@ -1,12 +1,13 @@
 module PIP_rot
   use globalvar,only:ix,jx,kx,ac,xi_n,gm_rec,gm_ion,nvar_h,nvar_m,&
-       flag_pip_imp,gm,n_fraction,t_ir,col,x,y,z,beta,T0, n0,my_rank
+       flag_pip_imp,gm,n_fraction,t_ir,col,x,y,z,beta,T0, n0,my_rank,flag_IR_type,flag_col,arb_heat,nout
   use scheme_rot,only:get_Te_HD,get_Te_MHD,cq2pv_HD,cq2pv_MHD,get_vel_diff
   use parameters,only:T_r_p,deg1,deg2,pi
   implicit none
   integer,save::col_type,IR_type,xin_type,is_IR,IR_T_dependence
   double precision factor,factor2,mu_p,mu_n,T_ionization,factor3
   double precision :: rec_fac,ion_fac
+  double precision :: ioneq,f_n,f_p, f_p_p,tfac 
 contains
   subroutine initialize_collisional(flag_col)
     integer,intent(inout)::flag_col
@@ -29,6 +30,7 @@ contains
 
     mu_p=0.5d0
     mu_n=1.0d0
+
   end subroutine initialize_collisional
 
 
@@ -163,6 +165,42 @@ contains
 !		(13.6/Te_0)**0.39*exp(-13.6/Te_0))
 !	print*,'Gm_rec',Gm_rec(1,1,1)/U_m(1,1,1,1)*t_ir,(n0*1.0e6)*(2.6e-19/sqrt(Te_0))
 !	print*,'Gm_ion',Gm_ion(1,1,1)/U_m(1,1,1,1)*t_ir,(n0*1.0e6)*(2.91e-14/(0.232d0+13.6d0/Te_0)*(13.6d0/Te_0)**0.39d0*exp(-13.6d0/Te_0))
+    case(3)
+	!Formulation from Popescu+2019 paper
+	!Empirical estimates for the rates
+	!Quarentine attempt
+	call get_Te_HD(U_h,Te_n)
+	call get_Te_MHD(U_m,Te_p)
+	!Calculate electron temperature in eV
+	Te_0=T0/1.1604e4
+	rec_fac=2.6e-19*(n0*1.0e6)/dsqrt(Te_0)  !n0 converted to m^-3
+!	factor=dexp(-13.6d0/Te_0)
+!	factor2=(13.6d0/Te_0)**0.39d0
+!	factor3=1.d0/(0.232d0+13.6d0/Te_0)
+!	ion_fac=factor*factor2*factor3
+
+	!initial equilibrium fractions
+	ioneq=(2.6e-19/dsqrt(Te_0))/(2.91e-14/(0.232d0+13.6d0/Te_0)*(13.6d0/Te_0)**0.39d0*dexp(-13.6d0/Te_0))
+	f_n=ioneq/(ioneq+1.0d0)
+	f_p=1.0d0-f_n
+	f_p_p=2.0d0*f_p/(f_n+2.0d0*f_p)
+	tfac=beta/2.0d0*f_p_p*5.0d0/6.0d0/f_p
+
+	Gm_rec=U_m(:,:,:,1)/dsqrt(Te_p)*t_ir/f_p*dsqrt(tfac)
+	Gm_ion=2.91e-14*(n0*1.0e6)*U_m(:,:,:,1)*dexp(-13.6d0/Te_0/Te_p*tfac)*(13.6d0/Te_0/Te_p*tfac)**0.39d0
+	Gm_ion=Gm_ion/(0.232d0+13.6d0/Te_0/Te_p*tfac)/rec_fac/f_p *t_ir
+!print*,'set_ir:',maxval(gm_rec),maxval(gm_ion)
+    if(nout .eq. 0) then
+	allocate(arb_heat(ix,jx,kx))
+	if(flag_col .eq. 2) then
+		arb_heat=Gm_ion*U_h(:,:,:,1)*(13.6d0/gm/T0/8.6173e-5)
+	elseif(flag_col .eq. 3) then
+		arb_heat=Gm_ion*U_h(:,:,:,1)*(13.6d0*beta/T0/2.d0/8.6173e-5)
+	else
+		print*,'option not included!'
+		stop
+	endif
+    endif
     end select
   end subroutine set_IR
   
@@ -252,7 +290,7 @@ contains
     double precision vz(ix,jx,kx),nvz(ix,jx,kx)
     double precision bx(ix,jx,kx),by(ix,jx,kx),bz(ix,jx,kx)
     double precision kapper(ix,jx,kx),lambda(ix,jx,kx)
-    double precision A(ix,jx,kx),B(ix,jx,kx),D(ix,jx,kx)    
+    double precision A(ix,jx,kx),B(ix,jx,kx),D(ix,jx,kx),ion_pot(ix,jx,kx)    
     dS=0.0
     call cq2pv_hd(nde,nvx,nvy,nvz,npr,U_h)
     call cq2pv_mhd(de,vx,vy,vz,pr,bx,by,bz,U_m)
@@ -301,11 +339,41 @@ contains
        ds(:,:,:,2)=Gm_rec*de*vx-Gm_ion*nde*nvx
        ds(:,:,:,3)=Gm_rec*de*vy-Gm_ion*nde*nvy
        ds(:,:,:,4)=Gm_rec*de*vz-Gm_ion*nde*nvz
-       ds(:,:,:,5)=0.5d0*(Gm_rec*de*(vx*vx+vy*vy+vz*vz)- &
-            Gm_ion*nde*(nvx*nvx+nvy*nvy+nvz*nvz)) -&
-	    Gm_ion*npr/(gm-1.d0) + Gm_rec*pr/(gm-1.d0)
-       S_h(:,:,:,1:5)=S_h(:,:,:,1:5)+ds(:,:,:,1:5)
-       S_m(:,:,:,1:5)=S_m(:,:,:,1:5)-ds(:,:,:,1:5)
+	if(flag_IR_type .eq. 0) then !New formulation
+	ds(:,:,:,5)=0.5d0*(Gm_rec*de*(vx*vx+vy*vy+vz*vz)- &
+	    Gm_ion*nde*(nvx*nvx+nvy*nvy+nvz*nvz)) -&
+	    Gm_ion*npr/(gm-1.d0) + 0.5d0*Gm_rec*pr/(gm-1.d0)
+	S_h(:,:,:,1:5)=S_h(:,:,:,1:5)+ds(:,:,:,1:5)
+	S_m(:,:,:,1:5)=S_m(:,:,:,1:5)-ds(:,:,:,1:5)
+	ion_pot=0.0d0
+		if(flag_col .eq. 2) then
+			ion_pot=Gm_ion*nde*(13.6d0/gm/T0/8.6173e-5)
+		elseif(flag_col .eq. 3) then
+			ion_pot=Gm_ion*nde*(13.6d0*beta/T0/2.d0/8.6173e-5)
+		else
+			print*,'option not included!'
+			stop
+		endif
+!print*,maxval(Gm_ion),maxval(ion_pot)
+!stop
+	!print*,maxval(abs(ion_pot)),maxval(abs(arb_heat)),maxval(abs(ion_pot-arb_heat))
+	S_m(:,:,:,5)=S_m(:,:,:,5)-ion_pot+arb_heat
+!	print*,'New type'
+	else if(flag_IR_type .eq. 1) then
+	ds(:,:,:,5)=0.5d0*(Gm_rec*de*(vx*vx+vy*vy+vz*vz)- &
+	    Gm_ion*nde*(nvx*nvx+nvy*nvy+nvz*nvz)) -&
+	    Gm_ion*npr/(gm-1.d0) + 0.5d0*Gm_rec*pr/(gm-1.d0) !Khomenko
+	S_h(:,:,:,1:5)=S_h(:,:,:,1:5)+ds(:,:,:,1:5)
+	S_m(:,:,:,1:5)=S_m(:,:,:,1:5)-ds(:,:,:,1:5)
+!	print*,'Khomenko type'
+	else if(flag_IR_type .eq. 2) then
+	ds(:,:,:,5)=0.5d0*(Gm_rec*de*(vx*vx+vy*vy+vz*vz)- &
+	    Gm_ion*nde*(nvx*nvx+nvy*nvy+nvz*nvz)) -&
+		    Gm_ion*npr/(gm-1.d0) + Gm_rec*pr/(gm-1.d0) !Singh
+	S_h(:,:,:,1:5)=S_h(:,:,:,1:5)+ds(:,:,:,1:5)
+	S_m(:,:,:,1:5)=S_m(:,:,:,1:5)-ds(:,:,:,1:5)
+!	print*,'Singh type'
+	endif
 
     endif    
     return
