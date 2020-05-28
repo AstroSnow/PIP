@@ -17,12 +17,12 @@ OBJECTS = Util_rot.o BMP_rot.o Matrix_rot.o \
 	MRI.o disk_flare.o mass_load_prom.o \
 	Initial_rot.o  main.o relax_prom.o relax_prom2.o procedures.o hsstatic.o\
 	resonator.o ionrectest.o  Complete_spectrum.o shock_tube_stab.o shock_tube_stab2.o kink_wave.o
-MOD_FILES = util_rot.mod globalvar.modparameters.mod \
-	parameters.mod scheme_rot.mod hc_rot.mod \
+MOD_FILES = util_rot.mod globalvar.mod parameters.mod \
+	scheme_rot.mod hc_rot.mod \
 	res_rot.mod gra_rot.mod pip_rot.mod visc_rot.mod\
 	mpi_rot.mod io_rot.mod \
 	hll_rot.mod model_rot.mod  \
-	boundary_rot.mod solver_rot.mod matrix_rot.mod initial_rot.mod procedures.mod
+	boundary_rot.mod solver_rot.mod matrix_rot.mod initial_rot.mod  procedures.mod
 
 #FC = gfortran
 FC = mpif90 -O2
@@ -51,7 +51,7 @@ ${TARGET} : ${OBJECTS}
 	-L$(LIB_DIR) 
 #	rm ${OBJECTS} ${MOD_FILES}
 clean:
-	rm ${TARGET} ${OBJECTS} ${MOD_FILES} *.dac.*
+	rm ${TARGET} ${OBJECTS} ${MOD_FILES}
 
 datatidy:
 	rm Data/*
