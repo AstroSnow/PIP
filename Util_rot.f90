@@ -235,5 +235,58 @@ contains
     endif
   end subroutine get_rotation
 
+  subroutine get_grad(ix,jx,kx,ndim,s_order,dxc,dyc,dzc,U,R)
+    integer,intent(in)::ix,jx,kx,ndim,s_order
+    double precision,intent(in)::U(ix,jx,kx)
+    double precision,intent(in)::dxc(ix),dyc(jx),dzc(kx)
+    double precision,intent(out)::R(ix,jx,kx,3)
+    integer i,j,k
+
+	if(s_order.eq.4) then 
+		do i=3,ix-2 
+		  R(i,:,:,1)=(-U(i+2,:,:)+8.0d0*U(i+1,:,:) &
+		       -8.0d0*U(i-1,:,:)+U(i-2,:,:))/(12.0d0*dxc(i))
+		enddo
+		do j=3,jx-2 
+		  R(:,j,:,2)=(-U(:,j+2,:)+8.0d0*U(:,j+1,:) &
+		       -8.0d0*U(:,j-1,:)+U(:,j-2,:))/(12.0d0*dyc(j))
+		enddo
+		do k=3,kx-2 
+		  R(:,:,k,3)=(-U(:,:,k+2)+8.0d0*U(:,:,k+1) &
+		       -8.0d0*U(:,:,k-1)+U(:,:,k-2))/(12.0d0*dzc(k))
+		enddo
+	else
+		do i=2,ix-1
+		   R(i,:,:,1)=(U(i+1,:,:)-U(i-1,:,:))/(2.0d0*dxc(i))
+		enddo
+		do j=2,jx-1
+		   R(:,j,:,2)=(U(:,j+1,:)-U(:,j-1,:))/(2.0d0*dyc(j))
+		enddo
+		do k=2,kx-1
+		   R(:,:,k,3)=(U(:,:,k+1)-U(:,:,k-1))/(2.0d0*dzc(k))
+		enddo
+	endif
+
+  end subroutine get_grad
+
+subroutine get_laplace(ix,jx,kx,ndim,s_order,dxc,dyc,dzc,V,L)
+	integer,intent(in)::ix,jx,kx,ndim,s_order
+	double precision,intent(in)::V(ix,jx,kx,3) !V should be velocity
+	double precision,intent(in)::dxc(ix),dyc(jx),dzc(kx)
+	double precision,intent(out)::L(ix,jx,kx,3)
+	double precision::Ltemp(ix,jx,kx),Ltemp2(ix,jx,kx,3)
+	integer i,j,k
+
+!laplacian(A)=grad(div(A)) - curl(curl(A))
+
+	call get_divergence(ix,jx,kx,ndim,s_order,dxc,dyc,dzc,V,Ltemp)
+	call get_grad(ix,jx,kx,ndim,s_order,dxc,dyc,dzc,Ltemp,L)
+
+	call get_rotation(ix,jx,kx,ndim,s_order,dxc,dyc,dzc,V,Ltemp2)
+	call get_rotation(ix,jx,kx,ndim,s_order,dxc,dyc,dzc,Ltemp2,Ltemp2)
+
+	L=L-Ltemp2
+
+end subroutine get_laplace
 
 end module Util_rot

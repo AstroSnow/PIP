@@ -116,6 +116,8 @@ contains
           call shock_tube_ion
        case('shock_tube_stab')
           call shock_tube_stab
+       case('shock_tube_stab2')
+          call shock_tube_stab2
        case('com_spec')
           call Complete_spectrum
        end select

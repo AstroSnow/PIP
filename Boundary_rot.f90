@@ -7,7 +7,7 @@ module boundary_rot
 ! Second version - 2013/06/27 (New labelling for boundaries)
 !====================================================================
   use globalvar,only:ix,jx,kx,ndim,flag_pip,flag_mhd,nvar_h,nvar_m,&
-       flag_mpi,flag_bnd,margin,neighbor,flag_divb,time,x,gm,dt,nt,t_order
+       flag_mpi,flag_bnd,margin,neighbor,flag_divb,time,x,gm,dt,nt,t_order,beta
   use mpi_rot,only:mpi_bnd,mpi_bnd_onevar
   use parameters,only:pi !for the periodic drivers
 
@@ -517,6 +517,7 @@ integer,intent(in)::dir,ix,jx,kx,nvar,istep
 double precision,intent(inout)::U(ix,jx,kx,nvar) 
 double precision :: vxpert,vdxpert,period,ppert,vamp
 double precision :: rodxpert,ropert,cs,pdxpert,pr0,ro0
+  double precision mach,rcom,rpres,alf,ang, byrat,vyrat,vu,bxu,byu,rou,pru,vxu
 
 period=0.5d0 
 vamp=1.0e-2
@@ -558,15 +559,47 @@ if(dir.eq.1) then
 !	u(1,:,:,8)=u(1,:,:,8) !bz
 !!!!!!!!!!!!!!!!!!!!!!!!!!!
 !	Drive velocity, density and pressure
-	u(1,:,:,1)=u(1,:,:,1)+rodxpert*dt
-	u(1,:,:,2)=u(1,:,:,2)+(rodxpert*vxpert+(ropert+ro0)*vdxpert)*dt
-	u(1,:,:,3)=u(1,:,:,3)+(rodxpert*vxpert+(ropert+ro0)*vdxpert)*dt !vy momentum 
-	u(1,:,:,4)=u(1,:,:,4) !vz momentum 
-	u(1,:,:,5)=u(1,:,:,5) +(0.5d0*vxpert**2.0d0*rodxpert+(ropert+ro0)*vxpert*vdxpert+pdxpert/(gm-1.0d0))*dt
-	u(1,:,:,6)=u(1,:,:,6) !bx
-	u(1,:,:,7)=u(1,:,:,7) !by
-	u(1,:,:,8)=u(1,:,:,8) !bz
+!	u(1,:,:,1)=u(1,:,:,1)+rodxpert*dt
+!	u(1,:,:,2)=u(1,:,:,2)+(rodxpert*vxpert+(ropert+ro0)*vdxpert)*dt
+!	u(1,:,:,3)=u(1,:,:,3)+(rodxpert*vxpert+(ropert+ro0)*vdxpert)*dt !vy momentum 
+!	u(1,:,:,4)=u(1,:,:,4) !vz momentum 
+!	u(1,:,:,5)=u(1,:,:,5) +(0.5d0*vxpert**2.0d0*rodxpert+(ropert+ro0)*vxpert*vdxpert+pdxpert/(gm-1.0d0))*dt
+!	u(1,:,:,6)=u(1,:,:,6) !bx
+!	u(1,:,:,7)=u(1,:,:,7) !by
+!	u(1,:,:,8)=u(1,:,:,8) !bz
 !	print*,u(1,1,1,2)/u(1,1,1,1),vxpert
+!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!	Fix boundary values.
+!	u(1,:,:,1)=1.368d0!u(1,:,:,1)
+!	u(1,:,:,2)=u(1,:,:,1)*0.269d0 
+!	u(1,:,:,3)=u(1,:,:,1)*1.d0 
+!	u(1,:,:,4)=u(1,:,:,1)*0.0d0 !vz momentum 
+!	u(1,:,:,5)=1.769d0/(gm-1)+0.5d0*u(1,:,:,1)* (1.d0+0.269**2.0d0)
+!	u(1,:,:,6)=1.d0 !bx
+!	u(1,:,:,7)=0.d0!u(1,:,:,7) !by
+!	u(1,:,:,8)=0.d0!u(1,:,:,8) !bz
+!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!	Fix boundary values - switch-off shock
+	bxu=0.1d0
+	byu=dsqrt(1.d0-bxu**2)
+	rou=1.d0
+	pru=beta*(bxu**2+byu**2)/2.d0
+	ang=dtan(byu/bxu)
+	alf=dsqrt(bxu**2+byu**2)/dsqrt(rou)
+	vxu=-alf*dcos(ang)
+	mach=vxu/dsqrt(gm*pru/rou)
+	rcom=(gm+1.d0)*mach**2/(2.d0+(gm-1.d0)*mach**2)
+	rpres=1.d0+gm*mach**2*(rcom-1.d0)/rcom*(1.d0- &
+ (rcom*alf**2*((rcom+1.d0)*vxu**2-2.d0*rcom*alf**2*dcos(ang)**2))/&
+(2.d0*(vxu**2-rcom*alf**2*dcos(ang)**2)**2))
+	u(1,:,:,1)=rcom*rou
+	u(1,:,:,2)=(vxu/rcom)*u(1,:,:,1) 
+	u(1,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
+	u(1,:,:,4)=0.0d0 !vz momentum 
+	u(1,:,:,5)=rpres*pru/(gm-1)+0.5d0*(u(1,:,:,2)**2+u(1,:,:,3)**2)/u(1,:,:,1)
+	u(1,:,:,6)=bxu !bx
+	u(1,:,:,7)=0.d0!u(1,:,:,7) !by
+	u(1,:,:,8)=0.d0!u(1,:,:,8) !bz
 !!!!!!!!!!!!!!!!!!!!!!!!!!!
 endif
 end subroutine boundary_control_custom_mhd
