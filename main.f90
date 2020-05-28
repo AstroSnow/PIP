@@ -11,11 +11,12 @@ program main
   ! First version - 2014/07/08 NN
   !====================================================================
   !  use globalvar,only:U_h,U_m,nt,time,dt,flag_stop,tend,nmax
-  use globalvar,only:U_h,U_m,nt,time,dt,flag_stop,tend,nmax,nout,my_rank  
+  use globalvar,only:U_h,U_m,nt,time,dt,flag_stop,tend,nmax,nout,my_rank, flag_IR,flag_PIP  
   use initial_rot,only:prologue
   use io_rot,only:output,stop_sim,epilogue
   use solver_rot,only:run_solver
   use scheme_rot,only:cfl
+  use pip_rot,only:set_IR
   implicit none
   !----------------------------------------------------------------------|
   ! initial setting
@@ -25,6 +26,9 @@ program main
   ! Time intergration
   !----------------------------------------------------------------------|
   do while(time .lt. tend)
+    if((flag_IR.ge.1) .and. (flag_pip.ge.1)) then
+       call set_IR(U_h,U_m)       
+    endif
      ! calculate cfl condition  -----------------------------------------
      call cfl(U_h,U_m)          
      ! Time intergration  -----------------------------------------------

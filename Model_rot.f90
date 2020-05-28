@@ -19,7 +19,8 @@ module model_rot
        n_fraction,hc_sch,hc_max,gm,flag_restart,flag_debug,mpi_siz,mpi_pos,&
        flag_bnd,dsc,output_type,flag_hll,flag_time,hc_integ,hc_type,ro_lim,pr_lim, &
        flag_hc_test,safety_cnd,nsub_max,b_cr,flag_ps,flag_cyl, &
-       vd_cri,j_cri,flag_damp,damp_time,flag_rad, T0, n0, L0,flag_visc, nu_0
+       vd_cri,j_cri,flag_damp,damp_time,flag_rad, T0, n0, L0,flag_IR_type, &
+       flag_visc, nu_0
   use scheme_rot,only:pv2cq_mhd,pv2cq_hd
   use HC_rot,only:initialize_HC
   use Res_rot,only:initialize_resistivity
@@ -138,6 +139,8 @@ subroutine get_parameters
         read(tmp(1:ind_e-1),*)flag_col
      else if(key.eq.'flag_IR') then
         read(tmp(1:ind_e-1),*)flag_IR
+     else if(key.eq.'flag_IR_type') then
+        read(tmp(1:ind_e-1),*)flag_IR_type
      else if(key.eq.'t_IR') then
         read(tmp(1:ind_e-1),*)t_ir
      else if(key.eq.'pip_imp_factor') then

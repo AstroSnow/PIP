@@ -26,30 +26,26 @@ subroutine shock_tube_ion
 
   !Find the equilibrium neutral fraction
   Te_0=T0/1.1604e4
-  ioneq=(2.6e-19/sqrt(Te_0))/(2.91e-14/(0.232+13.6/Te_0)*(13.6/Te_0)**0.39*exp(-13.6/Te_0))
+  ioneq=(2.6e-19/dsqrt(Te_0))/(2.91e-14/(0.232+13.6/Te_0)*(13.6/Te_0)**0.39*dexp(-13.6/Te_0))
   f_n=ioneq/(ioneq+1.0d0)
   f_p=1.0d0-f_n
   f_p_n=f_n/(f_n+2.0d0*f_p)
   f_p_p=2.0d0*f_p/(f_n+2.0d0*f_p)
+
   if (my_rank.eq.0) print*,'Neutral fraction = ',f_n
 
 !  !set ionization fraction-----------------
-!  if(flag_pip.eq.0) then
-!     f_n=1.0d0
-!     f_p=1.0d0
-!     f_p_n=1.0d0
-!     f_p_p=1.0d0
-!  else
-!     f_n=n_fraction
-!     f_p=1.0d0-n_fraction     
-!     f_p_n=f_n/(f_n+2.0d0*f_p)
-!     f_p_p=2.0d0*f_p/(f_n+2.0d0*f_p)
-!  endif
+  if(flag_pip.eq.0) then
+     f_n=1.0d0
+     f_p=1.0d0
+     f_p_n=1.0d0
+     f_p_p=1.0d0
+  endif
   !----------------------------------------
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=0.0d0/f_p ;end(1)=800000.0d0          !400.0d0/f_p
+  start(1)=0.0d0/f_p ;end(1)=30000.0d0          !400.0d0/f_p
   start(2)=-1.0d0 ;end(2)=1.0d0
   start(3)=-1.0d0 ;end(3)=1.0d0
   call set_coordinate(start,end)
@@ -68,6 +64,7 @@ subroutine shock_tube_ion
   !parameters---------------------
 !  B0=sqrt(2.0*gm/beta)
   B0=1.0d0
+!  B0=0.0d0
 !/sqrt(2.0)
   !-------------------------
   if(debug_direction.eq.1) then
