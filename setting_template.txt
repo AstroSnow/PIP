@@ -1,12 +1,12 @@
 Data/:outdir; output directory (This should written at the first line in this file!!)
 Data/:indir; input directory
-PIP:flag_eqs;flag_for equation (HD,MHD, PIP) 
+MHD:flag_eqs;flag_for equation (HD,MHD, PIP) 
 -1:flag_restart; restart count (-1:no restart, 0: restart. nout at the end of config.txt will be read, >0: restart from No."flag_restart" data)
 2:ndim; dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
 5000:ix; grid number for x-direction
 50:jx; grid number for y-direction
 2:kx; grid number for z-direction
-0.1 :dtout;  output period 100 
+1.0 :dtout;  output period 100 
 50.0:tend;tend time for simulation (if lt 0 then default value is set) 20000
 0 :flag_cyl; set to 1 when you use Cylindrical coordinates (x=>r,y=>z,z=>phi) NB: Only ndim=2 is allowed (rz-plane)
 5.0    :gm_d; 
@@ -20,7 +20,7 @@ shock_tube_stab2:flag_ini; flag for initial setting
 1:t_order;order of time (2 or 3. Activated ONLY WHEN flag_time=1)
 0    :flag_grav;  flag for gravity
 1    :flag_visc;  flag for viscosity
-1.0e0  :nu_0; Value of viscosity
+1.0e-3  :nu_0; Value of viscosity
 -1:flag_artvis;flag for artificial viscosity (default :-1)
 1.8 :theta; parameterfor artificial viscosity (set between 1 and 2 inclusive)
 ===For limits===;
@@ -50,7 +50,7 @@ shock_tube_stab2:flag_ini; flag for initial setting
 0     :flag_pip_imp;for implicit scheme in source term
 10.0   :pip_imp_factor;cfl condition factor for pip_implicit scheme
 3    :flag_col;flag for collisional coefficient
-3:flag_IR;flag for ionization and recombination (0:none, 1:Single level, 2:Empirical)
+0:flag_IR;flag for ionization and recombination (0:none, 1:Single level, 2:Empirical)
 0:flag_IR_type; (0:new, 1:Khomenko, 2:Singh)
 1.0:t_IR;time scale of ionization and recombination relative to collisional time
 ==For heat condution===;
