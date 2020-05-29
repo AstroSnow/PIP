@@ -124,16 +124,16 @@ contains
              D(i,:,:)=(U(i+1,:,:,1)-U(i-1,:,:,1))/(2.0d0*dxc(i))
           enddo
        elseif(ndim.eq.2)then
-          do j=3,jx-2
-             do i=3,ix-2
+          do j=2,jx-1
+             do i=2,ix-1
                 D(i,j,:)=(U(i+1,j,:,1)-U(i-1,j,:,1))/(2.0d0*dxc(i)) &
                   +(U(i,j+1,:,2)-U(i,j-1,:,2))/(2.0d0*dyc(j))
              enddo
           enddo
        elseif(ndim.eq.3)then
-          do k=3,kx-2
-             do j=3,jx-2
-                do i=3,ix-2
+          do k=2,kx-1
+             do j=2,jx-1
+                do i=2,ix-1
                    D(i,j,k)=(U(i+1,j,k,1)-U(i-1,j,k,1))/(2.0d0*dxc(i)) &
                         +(U(i,j+1,k,2)-U(i,j-1,k,2))/(2.0d0*dyc(j)) &
                         +(U(i,j,k+1,3)-U(i,j,k-1,3))/(2.0d0*dzc(k))
@@ -280,12 +280,15 @@ subroutine get_laplace(ix,jx,kx,ndim,s_order,dxc,dyc,dzc,V,L)
 !laplacian(A)=grad(div(A)) - curl(curl(A))
 
 	call get_divergence(ix,jx,kx,ndim,s_order,dxc,dyc,dzc,V,Ltemp)
+!print*,Ltemp(55,1:5,1)
 	call get_grad(ix,jx,kx,ndim,s_order,dxc,dyc,dzc,Ltemp,L)
-
+!print*,L(55,1:5,1,2)
 	call get_rotation(ix,jx,kx,ndim,s_order,dxc,dyc,dzc,V,Ltemp2)
 	call get_rotation(ix,jx,kx,ndim,s_order,dxc,dyc,dzc,Ltemp2,Ltemp2)
 
 	L=L-Ltemp2
+!print*,L(55,1:5,1,2)
+!stop
 
 end subroutine get_laplace
 

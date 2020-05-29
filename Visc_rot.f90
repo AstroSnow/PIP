@@ -26,13 +26,19 @@ subroutine set_visc(U,nu)
 	V(:,:,:,2)=U(:,:,:,3)/U(:,:,:,1)
 	V(:,:,:,3)=U(:,:,:,4)/U(:,:,:,1)
 
+!	print*,V(54,1:5,1,1)
+
 	!get laplacian of velocity
 	call get_laplace(ix,jx,kx,ndim,s_order,dxc,dyc,dzc,V,L)
-	
+!if (my_rank.eq.0) print*, dyc(1:5)
+!if (my_rank.eq.0) print*, L(55,1:5,:,2)
+
 	call get_divergence(ix,jx,kx,ndim,s_order,dxc,dyc,dzc,V,L3)
 	call get_grad(ix,jx,kx,ndim,s_order,dxc,dyc,dzc,L3,L2)
 
 	L=L+1.0d0/3.0d0*L2
+!if (my_rank.eq.0) print*, L(55,1:5,:,2)
+!stop
 
 	do i=1,2*ndim
 		dir=(i+1)/2
@@ -53,8 +59,8 @@ endif
 if (ndim .eq. 2) then
 L(:,:,:,3)=0.0d0
 endif
-!print*,L(:,1,1,1)
-!stop
+
+
 	select case(flag_visc)
 	case(1)!uniform viscosity 
 		nu(:,:,:,:)=nu_0*L
@@ -75,6 +81,9 @@ subroutine source_visc(S_h,S_m,U_h,U_m)
 	endif
 	if(flag_mhd.eq.1) then
 		call set_visc(U_m,visc)
+
+!if (my_rank.eq.0) print*, visc(55,1:5,:,2)
+!stop
 		S_m(:,:,:,2) = S_m(:,:,:,2) &
 		    + visc(:,:,:,1)
 		S_m(:,:,:,3) = S_m(:,:,:,3) &
@@ -94,16 +103,24 @@ subroutine visc_bc(L,V,dir,upper_lower)
 	else
 		if (dir .eq.1) then
 			if (upper_lower .eq. 0) then
-			L(1,:,:,1)=0.0d0; L(1,:,:,2)=L(2,:,:,2); L(1,:,:,3)=L(2,:,:,3)
+			L(1,:,:,1)=L(3,:,:,1);L(2,:,:,1)=L(3,:,:,1) 
+			L(1,:,:,2)=L(3,:,:,2);L(2,:,:,2)=L(3,:,:,2)
+			L(1,:,:,3)=L(3,:,:,3);L(2,:,:,3)=L(3,:,:,3)
 			elseif (upper_lower .eq. 1) then
-			L(ix,:,:,1)=0.0d0; L(ix,:,:,2)=L(ix-1,:,:,2); L(ix,:,:,3)=L(ix-1,:,:,3)
+			L(ix,:,:,1)=L(ix-2,:,:,1);L(ix-1,:,:,1)=L(ix-2,:,:,1) 
+			L(ix,:,:,2)=L(ix-2,:,:,2);L(ix-1,:,:,2)=L(ix-2,:,:,2)
+			L(ix,:,:,3)=L(ix-2,:,:,3);L(ix-1,:,:,3)=L(ix-2,:,:,3)
 			endif
 		endif
 		if (dir .eq. 2) then
 			if (upper_lower .eq. 0) then
-			L(:,1,:,1)=L(:,2,:,1); L(:,1,:,2)=L(:,1,:,2); L(:,1,:,3)=L(:,1,:,3)
+			L(:,1,:,1)=L(:,3,:,1);L(:,2,:,1)=L(:,3,:,1) 
+			L(:,1,:,2)=L(:,3,:,2);L(:,2,:,2)=L(:,3,:,2)
+			L(:,1,:,3)=L(:,3,:,3);L(:,2,:,3)=L(:,3,:,3)
 			elseif (upper_lower .eq. 1) then
-			L(:,jx,:,1)=L(:,jx-1,:,1); L(:,jx,:,2)=L(:,jx-1,:,2); L(:,jx,:,3)=L(:,jx-1,:,3)
+			L(:,jx,:,1)=L(:,jx-2,:,1);L(:,jx-1,:,1)=L(:,jx-2,:,1)
+			L(:,jx,:,2)=L(:,jx-2,:,2);L(:,jx-1,:,2)=L(:,jx-2,:,2)
+			L(:,jx,:,3)=L(:,jx-2,:,3);L(:,jx-1,:,3)=L(:,jx-2,:,3)
 			endif
 		endif
 	endif

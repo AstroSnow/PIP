@@ -48,8 +48,8 @@ integer::rds,rde
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=0.0d0/f_p ;end(1)=1200.d0!10000.0d0          !400.0d0/f_p
-  start(2)=0.0d0 ;end(2)=200.0d0
+  start(1)=0.0d0 ;end(1)=10.d0!10000.0d0          !400.0d0/f_p
+  start(2)=0.0d0 ;end(2)=0.01d0
   start(3)=-1.0d0 ;end(3)=1.0d0
   call set_coordinate(start,end)
   !---------------------------------------
@@ -252,8 +252,8 @@ do k=1,kx;do j=1,jx;do i=1,ix
 !	if (x(i) .GE. 2500.d0) then	
 !		U_m(i,j,k,1)=U_m(i,j,k,1)+0.2d0*dsin((x(i)-4000.d0)/50.0/3.14)*dcos((y(j))/10.d0/3.14d0)
 !	endif
-	if ((x(i) .GE. 100.d0) .AND. (x(i) .LE. 200.d0)) then	
-		U_m(i,j,k,1)=U_m(i,j,k,1)+ro_read(rde)*0.1d0*dsin((x(i)-100.d0)*3.14d0/100.d0)* dcos(y(j)*3.14d0/100.d0)
+	if ((x(i) .GE. 0.1d0) .AND. (x(i) .LE. 0.12d0)) then	
+		U_m(i,j,k,1)=U_m(i,j,k,1)+ro_read(rde)*0.1d0*dsin((x(i)-0.1d0)*3.14d0/0.02d0)* dcos(y(j)*3.14d0/0.01d0*2.d0)
 		if(flag_pip.eq.1) then
 		U_h(i,j,k,1)=U_h(i,j,k,1)+ron_read(rde)*0.1d0*dsin((x(i)-500.d0)*3.14d0/500.d0)* dcos(y(j)*3.14d0/500.d0)
 		endif
