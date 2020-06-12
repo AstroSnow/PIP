@@ -13,7 +13,7 @@ module io_rot
        flag_ir,nvar_h,nvar_m,flag_resi,nt,nout,margin,gm,flag_restart,&
        flag_bnd,flag_col,flag_grav,tend,mpi_pos,xi_n,mu,flag_visc,&
        total_iter,flag_amb,dtout,mpi_siz,nt,nmax,output_type,flag_ps,flag_divb,&
-       flag_damp,damp_time,flag_rad
+       flag_damp,damp_time,flag_rad,flag_ir_type,arb_heat
   use mpi_rot,only:end_mpi
   use IOT_rot,only:initialize_IOT,get_next_output
   use Util_rot,only:get_word,get_value_integer
@@ -149,6 +149,9 @@ contains
     endif
     if(flag_visc.eq.1) then
        call save1param(mu,tno//'vs.dac.',1)
+    endif
+    if(flag_pip.eq.1.and.flag_ir_type.eq.0.and.flag_IR.ne.0) then
+       call save1param(arb_heat,tno//'aheat.dac.',1)
     endif
 
 
@@ -473,6 +476,10 @@ contains
     if(flag_pip.eq.1.and.flag_ir.ge.1) then
        call dacget(11,trim(indir)//step_char//'ion.dac.'//cno,nvar,gm_ion(:,:,:))
        call dacget(11,trim(indir)//step_char//'rec.dac.'//cno,nvar,gm_rec(:,:,:))
+	if (flag_ir_type .eq.0) then
+		allocate(arb_heat(ix,jx,kx))
+		call dacget(11,trim(indir)//step_char//'aheat.dac.'//cno,nvar,arb_heat(:,:,:))
+	endif
 !       print *,"GM_ION",maxval(gm_ion),minval(gm_ion)
 !       print *,"GM_REC",maxval(gm_rec),minval(gm_rec)
     endif
