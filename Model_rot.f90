@@ -19,11 +19,13 @@ module model_rot
        n_fraction,hc_sch,hc_max,gm,flag_restart,flag_debug,mpi_siz,mpi_pos,&
        flag_bnd,dsc,output_type,flag_hll,flag_time,hc_integ,hc_type,ro_lim,pr_lim, &
        flag_hc_test,safety_cnd,nsub_max,b_cr,flag_ps,flag_cyl, &
-       vd_cri,j_cri,flag_damp,damp_time,flag_rad, T0, n0, L0,flag_IR_type
+       vd_cri,j_cri,flag_damp,damp_time,flag_rad, T0, n0, L0,flag_IR_type, &
+       flag_visc, nu_0
   use scheme_rot,only:pv2cq_mhd,pv2cq_hd
   use HC_rot,only:initialize_HC
   use Res_rot,only:initialize_resistivity
   use Gra_rot,only:initialize_gravity
+  use visc_rot,only:initialize_visc
   use PIP_rot,only:initialize_collisional,initialize_IR,initialize_xin
   use Util_rot,only:get_word
   implicit none
@@ -81,6 +83,10 @@ subroutine get_parameters
         read(tmp(1:ind_e-1),*)t_order
      else if(key.eq.'flag_grav') then
         read(tmp(1:ind_e-1),*)flag_grav
+     else if(key.eq.'flag_visc') then
+        read(tmp(1:ind_e-1),*)flag_visc
+     else if(key.eq.'nu_0') then
+        read(tmp(1:ind_e-1),*)nu_0
      else if(key.eq.'flag_bnd_x_l') then
         read(tmp(1:ind_e-1),*)flag_bnd(1)
      else if(key.eq.'flag_bnd_x_r') then
@@ -351,7 +357,8 @@ subroutine get_parameters
    call initialize_IR(flag_IR)
    call initialize_resistivity(flag_resi)
    call initialize_HC(flag_heat)   
-   call initialize_gravity(flag_grav)     
+   call initialize_gravity(flag_grav)   
+   call initialize_visc(flag_visc)         
  end subroutine allocate_vars
  
  subroutine set_coordinate(start,end)

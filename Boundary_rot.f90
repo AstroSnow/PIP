@@ -7,7 +7,7 @@ module boundary_rot
 ! Second version - 2013/06/27 (New labelling for boundaries)
 !====================================================================
   use globalvar,only:ix,jx,kx,ndim,flag_pip,flag_mhd,nvar_h,nvar_m,&
-       flag_mpi,flag_bnd,margin,neighbor,flag_divb,time
+       flag_mpi,flag_bnd,margin,neighbor,flag_divb,time,x,gm,dt,nt,t_order,beta
   use mpi_rot,only:mpi_bnd,mpi_bnd_onevar
   use parameters,only:pi !for the periodic drivers
 
@@ -30,39 +30,29 @@ contains
     endif    
   end subroutine initialize_bnd
 
-  subroutine PIPbnd(U_h,U_m)
+  subroutine PIPbnd(U_h,U_m,istep)
     double precision,intent(inout)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
+    integer, intent(in)::istep
 
     if(flag_mpi.eq.1) then
-!       print *,"MY_RANK",my_rank
-!       if(my_rank.eq.0) then
-!          print *,my_rank,U_m(4,303:306,1,6),"BEF"
-!       else
-!          print *,my_rank,U_m(4,3:6,1,6),"BEF"
-!       endif
        call mpi_bnd(U_h,U_m)
-!       if(my_rank.eq.0) then
-!          print *,my_rank,U_m(4,303:306,1,6),"AFT"
-!       else
-!          print *,my_rank,U_m(4,3:6,1,6),"AFT"
-!       endif
-!       stop
     endif    
     if (flag_pip.eq.1) then       
-       call MHDbnd(U_m)   
-       call HDbnd(U_h)   
+       call MHDbnd(U_m,istep)   
+       call HDbnd(U_h,istep)   
     elseif (flag_mhd.eq.1) then       
-       call MHDbnd(U_m)          
+       call MHDbnd(U_m,istep)          
     else       
-       call HDbnd(U_h)          
+       call HDbnd(U_h,istep)          
     endif    
 
 
 
 end subroutine PIPbnd
 
-  subroutine MHDbnd(U_m)   
+  subroutine MHDbnd(U_m,istep)   
     double precision,intent(inout)::U_m(ix,jx,kx,nvar_m)
+    integer,intent(in)::istep
     integer dir,upper_lower,type,i
     do i=1,2*ndim
        dir=(i+1)/2
@@ -84,14 +74,19 @@ end subroutine PIPbnd
        endif
 
        if(neighbor(i).eq.-1) then
+	if(flag_bnd(i) .EQ. 20) then
+          call boundary_control_custom_mhd(U_m,ix,jx,kx,nvar_m,dir,istep)
+	else
           call boundary_control(U_m,ix,jx,kx,nvar_m,margin,dir,upper_lower, &
                sym_mhd(:,i),type)
+	endif
        endif
     enddo
   end subroutine MHDbnd
 
-  subroutine HDbnd(U_h)   
+  subroutine HDbnd(U_h,istep)   
     double precision,intent(inout)::U_h(ix,jx,kx,nvar_h)
+    integer,intent(in)::istep
     integer dir,upper_lower,type,i
     do i=1,2*ndim
        dir=(i+1)/2
@@ -110,9 +105,13 @@ end subroutine PIPbnd
           type=flag_bnd(i)
        endif
        if(neighbor(i).eq.-1) then
+	if(flag_bnd(i) .EQ. 20) then
+          call boundary_control_custom_hd(U_h,ix,jx,kx,nvar_h,dir,istep)
+	else
           call boundary_control(U_h,&
                ix,jx,kx,nvar_h,margin,dir,upper_lower, &
                sym_hd(:,i),type)
+	endif
        endif
     enddo
   end subroutine HDbnd
@@ -380,25 +379,6 @@ end subroutine PIPbnd
              enddo
           endif
        endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!Velocity driver
-       if (type .EQ. 20) then 
-          if(dir.eq.1) then 
-             do n=1,margin(1)
-                u(1,:,:,1)=u(2,:,:,1) !Density
-!                u(2,:,:,2)=u(2,:,:,2)+u(2,:,:,1)*0.1d0*dsin(time*2.0d0*pi/30.0d0) !vx momentum
-                u(2,:,:,2)=u(2,:,:,2)+u(2,:,:,1)*1.0e-7*dcos(time*2.0d0*pi/1.0d0) !vx momentum
-                u(1,:,:,2)=u(2,:,:,2)
-                u(1,:,:,3)=u(2,:,:,3) !vy momentum 
-                u(1,:,:,4)=u(2,:,:,4) !vz momentum 
-!                u(2,:,:,5)=u(2,:,:,5) +0.5d0*u(2,:,:,1)* (0.1d0*dsin(time*2.0d0*pi/30.0d0))**2.0d0 !energy
-                u(2,:,:,5)=u(2,:,:,5) +0.5d0*u(2,:,:,1)* (1.0e-7*dcos(time*2.0d0*pi/1.0d0))**2.0d0 !energy
-                 u(1,:,:,5)=u(2,:,:,5) 
-		!print*,sl(1)+n-1,sr(1),u(sl(1)+n-1,:,:,2),u(sl(1)+n-1,:,:,5),0.1d0*dsin(time*2.0d0*pi/30.0d0),time
-             enddo
-	  endif
-       endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     endif
   end subroutine boundary_control
 
@@ -479,21 +459,150 @@ end subroutine PIPbnd
              enddo
           endif
        endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!Velocity driver
-       if (type .EQ. 20) then 
-	print*,'onevar type=',type
-	stop
-          if(dir.eq.1) then 
-             do n=1,margin(1)
-                u1(sl(1)+n-1,:,:)=u1(sr(1),:,:)+0.5d0*u1(sr(1),:,:)*(100.0d0*sin(time*1000.0d0))**2.d0 !KINETIC ENERGY?!!!
-		print*,u1(sl(1)+n-1,:,:)
-             enddo
-          endif
-       endif
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     endif
   end subroutine boundary_control_onevar
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine boundary_control_custom_hd(U,ix,jx,kx,nvar,dir,istep)
+!Custom boundary conditions (bnd_flag=20)
+!Velocity driver
+implicit none
+integer,intent(in)::dir,ix,jx,kx,nvar,istep
+double precision,intent(inout)::U(ix,jx,kx,nvar) 
+double precision :: vxpert,vdxpert,period,ppert,vamp
+double precision :: rodxpert,ropert,cs,pdxpert,pr0,ro0
+
+period=0.5d0 
+vamp=2.0e-1
+ro0=276.17855d0 !xi_n=0.9
+pr0=82.853565d0 !xi_n=0.9
+!ro0=3037.9641d0 !xi_n=0.99
+!pr0=911.38922d0 !xi_n=0.99
+
+if(dir.eq.1) then 
+	if ((time .le. 0.5d0*period) .and. (istep .eq. 0)) then
+		cs=sqrt(gm*pr0/ro0)
+		vxpert=vamp*dsin(time*2.0d0*pi/period)
+		vdxpert=vamp*2.0d0*pi/period*dcos(time*2.0d0*pi/period)
+		ppert=pr0*gm/cs*vxpert 
+		pdxpert=pr0*gm/cs*vdxpert
+		ropert=ro0/cs*vxpert
+		rodxpert=ro0/cs*vdxpert
+	else
+		vxpert=0.0d0
+		vdxpert=0.0d0
+		ppert=0.0d0
+		pdxpert=0.0d0
+		ropert=0.0d0
+		rodxpert=0.0d0
+	endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!	Drive velocity, density and pressure
+	u(1,:,:,1)=u(1,:,:,1)+rodxpert*dt
+	u(1,:,:,2)=u(1,:,:,2)+(rodxpert*vxpert+(ropert+ro0)*vdxpert)*dt
+	u(1,:,:,3)=u(1,:,:,3) !vy momentum 
+	u(1,:,:,4)=u(1,:,:,4) !vz momentum 
+	u(1,:,:,5)=u(1,:,:,5) +(0.5d0*vxpert**2.0d0*rodxpert+(ropert+ro0)*vxpert*vdxpert+pdxpert/(gm-1.0d0))*dt
+!!!!!!!!!!!!!!!!!!!!!!!!!!!
+endif
+end subroutine boundary_control_custom_hd
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine boundary_control_custom_mhd(U,ix,jx,kx,nvar,dir,istep)
+!Custom boundary conditions (bnd_flag=20)
+!Velocity driver
+implicit none
+integer,intent(in)::dir,ix,jx,kx,nvar,istep
+double precision,intent(inout)::U(ix,jx,kx,nvar) 
+double precision :: vxpert,vdxpert,period,ppert,vamp
+double precision :: rodxpert,ropert,cs,pdxpert,pr0,ro0
+  double precision mach,rcom,rpres,alf,ang, byrat,vyrat,vu,bxu,byu,rou,pru,vxu
+
+period=0.5d0 
+vamp=1.0e-2
+!ro0=1.0d0
+ro0=30.686506d0
+!pr0=0.6d0
+pr0=18.411901d0
+
+if(dir.eq.1) then 
+	if ((time .le. 0.5d0*period) .and. (istep .eq. 0)) then
+		cs=sqrt(gm*pr0/ro0)
+		vxpert=vamp*dsin(time*2.0d0*pi/period)
+		vdxpert=vamp*2.0d0*pi/period*dcos(time*2.0d0*pi/period)
+		ppert=pr0*gm/cs*vxpert 
+		pdxpert=pr0*gm/cs*vdxpert
+		ropert=ro0/cs*vxpert
+		rodxpert=ro0/cs*vdxpert
+	else
+		vxpert=0.0d0
+		vdxpert=0.0d0
+		ppert=0.0d0
+		pdxpert=0.0d0
+		ropert=0.0d0
+		rodxpert=0.0d0
+	endif
+!	rodxperp=30.686506d0*vdxpert*ppert/gm
+!	roperp=30.686506d0*vxpert*ppert/gm
+!	rodxperp=vdxpert*ppert/gm
+!	roperp=vxpert*ppert/gm
+!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!	Drive velocity only.
+!	u(1,:,:,1)=u(1,:,:,1)
+!	u(1,:,:,2)=u(1,:,:,2)+u(1,:,:,1)*vxpert 
+!	u(1,:,:,3)=u(1,:,:,3) !vy momentum 
+!	u(1,:,:,4)=u(1,:,:,4) !vz momentum 
+!	u(1,:,:,5)=u(1,:,:,5) +0.5d0*u(1,:,:,1)* vxpert**2.0d0
+!	u(1,:,:,6)=u(1,:,:,6) !bx
+!	u(1,:,:,7)=u(1,:,:,7) !by
+!	u(1,:,:,8)=u(1,:,:,8) !bz
+!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!	Drive velocity, density and pressure
+!	u(1,:,:,1)=u(1,:,:,1)+rodxpert*dt
+!	u(1,:,:,2)=u(1,:,:,2)+(rodxpert*vxpert+(ropert+ro0)*vdxpert)*dt
+!	u(1,:,:,3)=u(1,:,:,3)+(rodxpert*vxpert+(ropert+ro0)*vdxpert)*dt !vy momentum 
+!	u(1,:,:,4)=u(1,:,:,4) !vz momentum 
+!	u(1,:,:,5)=u(1,:,:,5) +(0.5d0*vxpert**2.0d0*rodxpert+(ropert+ro0)*vxpert*vdxpert+pdxpert/(gm-1.0d0))*dt
+!	u(1,:,:,6)=u(1,:,:,6) !bx
+!	u(1,:,:,7)=u(1,:,:,7) !by
+!	u(1,:,:,8)=u(1,:,:,8) !bz
+!	print*,u(1,1,1,2)/u(1,1,1,1),vxpert
+!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!	Fix boundary values.
+!	u(1,:,:,1)=1.368d0!u(1,:,:,1)
+!	u(1,:,:,2)=u(1,:,:,1)*0.269d0 
+!	u(1,:,:,3)=u(1,:,:,1)*1.d0 
+!	u(1,:,:,4)=u(1,:,:,1)*0.0d0 !vz momentum 
+!	u(1,:,:,5)=1.769d0/(gm-1)+0.5d0*u(1,:,:,1)* (1.d0+0.269**2.0d0)
+!	u(1,:,:,6)=1.d0 !bx
+!	u(1,:,:,7)=0.d0!u(1,:,:,7) !by
+!	u(1,:,:,8)=0.d0!u(1,:,:,8) !bz
+!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!	Fix boundary values - switch-off shock
+	bxu=0.1d0
+	byu=dsqrt(1.d0-bxu**2)
+	rou=1.d0
+	pru=beta*(bxu**2+byu**2)/2.d0
+	ang=dtan(byu/bxu)
+	alf=dsqrt(bxu**2+byu**2)/dsqrt(rou)
+	vxu=-alf*dcos(ang)
+	mach=vxu/dsqrt(gm*pru/rou)
+	rcom=(gm+1.d0)*mach**2/(2.d0+(gm-1.d0)*mach**2)
+	rpres=1.d0+gm*mach**2*(rcom-1.d0)/rcom*(1.d0- &
+ (rcom*alf**2*((rcom+1.d0)*vxu**2-2.d0*rcom*alf**2*dcos(ang)**2))/&
+(2.d0*(vxu**2-rcom*alf**2*dcos(ang)**2)**2))
+	u(1,:,:,1)=rcom*rou
+	u(1,:,:,2)=(vxu/rcom)*u(1,:,:,1) 
+	u(1,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
+	u(1,:,:,4)=0.0d0 !vz momentum 
+	u(1,:,:,5)=rpres*pru/(gm-1)+0.5d0*(u(1,:,:,2)**2+u(1,:,:,3)**2)/u(1,:,:,1)
+	u(1,:,:,6)=bxu !bx
+	u(1,:,:,7)=0.d0!u(1,:,:,7) !by
+	u(1,:,:,8)=0.d0!u(1,:,:,8) !bz
+!!!!!!!!!!!!!!!!!!!!!!!!!!!
+endif
+end subroutine boundary_control_custom_mhd
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
 end module boundary_rot

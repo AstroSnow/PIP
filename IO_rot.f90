@@ -13,7 +13,7 @@ module io_rot
        flag_ir,nvar_h,nvar_m,flag_resi,nt,nout,margin,gm,flag_restart,&
        flag_bnd,flag_col,flag_grav,tend,mpi_pos,xi_n,mu,flag_visc,&
        total_iter,flag_amb,dtout,mpi_siz,nt,nmax,output_type,flag_ps,flag_divb,&
-       flag_damp,damp_time,flag_rad,flag_ir_type,arb_heat
+       flag_damp,damp_time,flag_rad,flag_ir_type,arb_heat,visc
   use mpi_rot,only:end_mpi
   use IOT_rot,only:initialize_IOT,get_next_output
   use Util_rot,only:get_word,get_value_integer
@@ -55,8 +55,10 @@ contains
     !output variables 
   if(time.ge.get_next_output(nout,time).or. out.eq.1) then
      !     if(flag_mpi.eq.0 .or.my_rank.eq.0) write(6,*) 'Time,dt,nout,nt,total_iter: ',time,dt,nout,nt,total_iter
+    end_time=MPI_Wtime() 
      if(flag_mpi.eq.0 .or.my_rank.eq.0) &
-          write(6,*) 'Time,dt,dt_cnd,nout,nt,total_iter: ',time,dt,dt_cnd,nout,nt,total_iter     
+!          write(6,*) 'Time,dt,dt_cnd,nout,nt,total_iter: ',time,dt,dt_cnd,nout,nt,total_iter 
+          write(6,*) 'Time,dt,nout,nt,elapsed time: ',time,dt,nout,nt,end_time-start_time   
        total_divb=0.0d0
        max_C=0.0d0
        if(ndim.eq.100) then
@@ -238,6 +240,11 @@ contains
           call save1param(Gm_ion,tno//'ion.dac.',1)
           call save1param(Gm_rec,tno//'rec.dac.',1)
        endif
+       if(flag_visc.ge.1) then
+          call save1param(visc(:,:,:,1),tno//"viscx.dac.",1)
+          call save1param(visc(:,:,:,2),tno//"viscy.dac.",1)
+          call save1param(visc(:,:,:,3),tno//"viscz.dac.",1)
+       endif
     endif
     if(flag_pip.eq.1 .or.flag_mhd.eq.0) then
        do i=1,nvar_h
@@ -377,6 +384,15 @@ contains
 888    continue
        flag_restart=out_tmp-1
     endif
+!    if(flag_restart.eq.-1) then
+!       key="nout"       
+!       do           
+!          read(restart_unit,"(A)",end=889)line
+!          call get_value_integer(line,key,out_tmp)
+!       enddo
+!889    continue
+!       flag_restart=out_tmp-1
+!    endif
 777 continue
 
 
@@ -398,6 +414,7 @@ contains
     call reconf_grid_space
 
     nout = flag_restart+1 
+
     start_time=MPI_Wtime()
     tend=tend+time    
 !    if (flag_mpi.eq.0 .or. my_rank.eq.1) print *,"time",start_time,tend,dtout

@@ -21,7 +21,7 @@ module globalvar
 !other variables
   double precision,allocatable,save ::kap(:,:,:),mu(:,:,:),eta(:,:,:)
   double precision,allocatable,save::ac(:,:,:),xi_n(:,:,:),GM_rec(:,:,:),Gm_ion(:,:,:)
-  double precision,allocatable,save::gra(:,:,:,:)
+  double precision,allocatable,save::gra(:,:,:,:),visc(:,:,:,:)
 
   double precision,allocatable,save::arb_heat(:,:,:)
 
@@ -37,7 +37,7 @@ module globalvar
   integer,save::flag_damp, flag_ir, flag_ir_type
   integer,save::flag_cyl
   integer,save::debug_option,debug_direction,flag_col
-  double precision,save::safety,gm,beta,col,t_ir
+  double precision,save::safety,gm,beta,col,t_ir,nu_0
   !for heat conduction
   integer,save::hc_split,hc_sch,hc_max,hc_integ,hc_type,nsub_max
   double precision,save::kapper,sor_omega

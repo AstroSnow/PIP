@@ -1,24 +1,26 @@
 Data/:outdir; output directory (This should written at the first line in this file!!)
 Data/:indir; input directory
-PIP:flag_eqs;flag_for equation (HD,MHD, PIP) 
+MHD:flag_eqs;flag_for equation (HD,MHD, PIP) 
 -1:flag_restart; restart count (-1:no restart, 0: restart. nout at the end of config.txt will be read, >0: restart from No."flag_restart" data)
-1:ndim; dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
-80000:ix; grid number for x-direction
-2:jx; grid number for y-direction
+2:ndim; dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
+5000:ix; grid number for x-direction
+50:jx; grid number for y-direction
 2:kx; grid number for z-direction
-0.1 :dtout;  output period 100 
+1.0 :dtout;  output period 100 
 50.0:tend;tend time for simulation (if lt 0 then default value is set) 20000
 0 :flag_cyl; set to 1 when you use Cylindrical coordinates (x=>r,y=>z,z=>phi) NB: Only ndim=2 is allowed (rz-plane)
 5.0    :gm_d; 
 3.0    :gm_n;
-0.8  :safety;  safety factor
-shock_tube_ion:flag_ini; flag for initial setting   
+0.3  :safety;  safety factor
+shock_tube_stab2:flag_ini; flag for initial setting   
 0:flag_sch;  flag for numerical scheme (0:HLL-branch, 1:SLW)
 2:flag_hll; flag for HLL branch (0:HLL,1:Rusanov,2:HLLD)
-1:s_order;order of space for HLL branch (1, 2)
+2:s_order;order of space for HLL branch (1, 2)
 0:flag_time; flag for time integration method (0:RK, 1: SSPRK)
 1:t_order;order of time (2 or 3. Activated ONLY WHEN flag_time=1)
 0    :flag_grav;  flag for gravity
+1    :flag_visc;  flag for viscosity
+1.0e-3  :nu_0; Value of viscosity
 -1:flag_artvis;flag for artificial viscosity (default :-1)
 1.8 :theta; parameterfor artificial viscosity (set between 1 and 2 inclusive)
 ===For limits===;
@@ -43,12 +45,12 @@ shock_tube_ion:flag_ini; flag for initial setting
 1.0:j_cri;  critical current density (for J-dependent anomalous res)
 100.0:vd_cri; critical drift velocity (for vd-dependent anomalous res)
 ===For Two fluid=====;
-0.1:n_fraction; for uniform ionization degree 
+0.9:n_fraction; for uniform ionization degree 
 1.0:col;for collisional coefficient
 0     :flag_pip_imp;for implicit scheme in source term
 10.0   :pip_imp_factor;cfl condition factor for pip_implicit scheme
 3    :flag_col;flag for collisional coefficient
-3:flag_IR;flag for ionization and recombination (0:none, 1:Single level, 2:Empirical)
+0:flag_IR;flag for ionization and recombination (0:none, 1:Single level, 2:Empirical)
 0:flag_IR_type; (0:new, 1:Khomenko, 2:Singh)
 1.0:t_IR;time scale of ionization and recombination relative to collisional time
 ==For heat condution===;
@@ -64,13 +66,13 @@ shock_tube_ion:flag_ini; flag for initial setting
 1.0:sor_omega; SOR-omega parameter (for iterative method)
 ==For MPI====;
 1     :flag_mpi;flag for mpi
-1     :mpi_x;node number for x-direction
+8     :mpi_x;node number for x-direction
 1     :mpi_y;node number for y-direction
 1     :mpi_z;node number for z-direction
 1     :flag_mpi_split;flag for splitting domain (Activated ONLY WHEN A=mpi_x*mpi_y*mpi_z=0 or A ne total_prc)
 ==For debug==;
 0     :flag_debug; flag for debug (Currently not used)
-0     :debug_option;option for debug
+3     :debug_option;option for debug
 === NOTE: if you try debug_direction of >1, then you need to set ndim to 2 or 3. ===;
 1:debug_direction;direction for debug (1:x, 2:y, 3:z, ...) 
 0.494:debug_parameter;debug parameter

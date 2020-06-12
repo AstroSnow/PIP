@@ -114,6 +114,10 @@ contains
           call ionrectest
        case('shock_tube_ion')
           call shock_tube_ion
+       case('shock_tube_stab')
+          call shock_tube_stab
+       case('shock_tube_stab2')
+          call shock_tube_stab2
        case('com_spec')
           call Complete_spectrum
        case('kink_wave')
@@ -139,7 +143,7 @@ contains
     endif
 !    start_time=0.d0
     !Boundary conditions to IC
-    call PIPbnd(U_h,U_m)
+    call PIPbnd(U_h,U_m,0)
 !    if(flag_grav.eq.1) call bnd_grav
     
     
