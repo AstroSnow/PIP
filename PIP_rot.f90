@@ -192,9 +192,9 @@ contains
 !print*,'set_ir:',maxval(gm_rec),maxval(gm_ion)
     if(nout .eq. 0 .and. flag_restart.eq.-1) then
 	allocate(arb_heat(ix,jx,kx))
-	if(flag_col .eq. 2) then
+	if(flag_col .eq. 3) then
 		arb_heat=Gm_ion*U_h(:,:,:,1)*(13.6d0/gm/T0/8.6173e-5)
-	elseif(flag_col .eq. 3) then
+	elseif(flag_col .eq. 2) then
 		arb_heat=Gm_ion*U_h(:,:,:,1)*(13.6d0*beta/T0/2.d0/8.6173e-5)
 	else
 		print*,'option not included!'
@@ -346,9 +346,9 @@ contains
 	S_h(:,:,:,1:5)=S_h(:,:,:,1:5)+ds(:,:,:,1:5)
 	S_m(:,:,:,1:5)=S_m(:,:,:,1:5)-ds(:,:,:,1:5)
 	ion_pot=0.0d0
-		if(flag_col .eq. 2) then
+		if(flag_col .eq. 3) then
 			ion_pot=Gm_ion*nde*(13.6d0/gm/T0/8.6173e-5)
-		elseif(flag_col .eq. 3) then
+		elseif(flag_col .eq. 2) then
 			ion_pot=Gm_ion*nde*(13.6d0*beta/T0/2.d0/8.6173e-5)
 		else
 			print*,'option not included!'
