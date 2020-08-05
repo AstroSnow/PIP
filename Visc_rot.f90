@@ -76,8 +76,16 @@ subroutine source_visc(S_h,S_m,U_h,U_m)
 !	double precision visc(ix,jx,kx,3)
 	integer n
 	if(flag_mhd.eq.0.or.flag_pip.eq.1) then
-		print*,'PROGRAMME THIS UP'
-		stop
+		call set_visc(U_h,visc)
+
+!if (my_rank.eq.0) print*, visc(55,1:5,:,2)
+!stop
+		S_h(:,:,:,2) = S_h(:,:,:,2) &
+		    + visc(:,:,:,1)
+		S_h(:,:,:,3) = S_h(:,:,:,3) &
+		    + visc(:,:,:,2)
+		S_h(:,:,:,4) = S_h(:,:,:,4) &
+		    + visc(:,:,:,3)
 	endif
 	if(flag_mhd.eq.1) then
 		call set_visc(U_m,visc)

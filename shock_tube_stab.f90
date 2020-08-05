@@ -23,6 +23,7 @@ subroutine shock_tube_stab
   double precision f_n,f_p,f_p_n,f_p_p,start(3),end(3),B0
   double precision theta_p,phi_p,tmp,v_L(8),v_R(8),wtr,wtrf
   double precision mach,rcom,rpres,alf,ang, byrat,vyrat,vu,bxu,byu,rou,pru,vxu
+  double precision rorand1,rorand2
   integer i,j,k,dpl
 
   !set ionization fraction-----------------
@@ -129,10 +130,14 @@ wtr=1.d0
 !		ro_m(i,j,k)=ro_m(i,j,k)+ro_m(i,j,k)*0.1d0*dsin((x(i)-200.0d0)*3.14d0/100.0d0)* dcos(y(j)*3.14d0/50.0d0*2.d0)
 !		ro_m(i,j,k)=ro_m(i,j,k)+0.2d0*dsin((x(i)-4000.d0)/100.0/3.14)*dcos((y(j))/20.d0/3.14d0)
 		do dpl=1,10
-		ro_m(i,j,k)=ro_m(i,j,k)+ro_m(i,j,k)*0.1d0*rand()*&
- dsin((x(i)-200.0d0)*3.14d0/100.0d0)* dcos((y(j)-rand()*50.d0)*3.14d0/50.0d0*2.d0*wtr)
+		rorand1=rand()
+		rorand2=rand()
+		ro_m(i,j,k)=ro_m(i,j,k)+ro_m(i,j,k)*0.1d0*rorand1*&
+ dsin((x(i)-200.0d0)*3.14d0/100.0d0)* dcos((y(j)-rorand2*50.d0)*3.14d0/50.0d0*2.d0*wtr)
+		ro_h(i,j,k)=ro_h(i,j,k)+ro_h(i,j,k)*0.1d0*rorand1*&
+ dsin((x(i)-200.0d0)*3.14d0/100.0d0)* dcos((y(j)-rorand2*50.d0)*3.14d0/50.0d0*2.d0*wtr)
 		wtr=wtr+1.d0
-enddo
+		enddo
 
 	endif
   enddo;enddo;enddo
