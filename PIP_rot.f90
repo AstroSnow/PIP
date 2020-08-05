@@ -1,6 +1,6 @@
 module PIP_rot
   use globalvar,only:ix,jx,kx,ac,xi_n,gm_rec,gm_ion,nvar_h,nvar_m,&
-       flag_pip_imp,gm,n_fraction,t_ir,col,x,y,z,beta,T0, n0,my_rank,flag_IR_type,flag_col,arb_heat,nout
+       flag_pip_imp,gm,n_fraction,t_ir,col,x,y,z,beta,T0, n0,my_rank,flag_IR_type,flag_col,arb_heat,nout,flag_restart
   use scheme_rot,only:get_Te_HD,get_Te_MHD,cq2pv_HD,cq2pv_MHD,get_vel_diff
   use parameters,only:T_r_p,deg1,deg2,pi
   implicit none
@@ -190,11 +190,11 @@ contains
 	Gm_ion=2.91e-14*(n0*1.0e6)*U_m(:,:,:,1)*dexp(-13.6d0/Te_0/Te_p*tfac)*(13.6d0/Te_0/Te_p*tfac)**0.39d0
 	Gm_ion=Gm_ion/(0.232d0+13.6d0/Te_0/Te_p*tfac)/rec_fac/f_p *t_ir
 !print*,'set_ir:',maxval(gm_rec),maxval(gm_ion)
-    if(nout .eq. 0) then
+    if(nout .eq. 0 .and. flag_restart.eq.-1) then
 	allocate(arb_heat(ix,jx,kx))
-	if(flag_col .eq. 2) then
+	if(flag_col .eq. 3) then
 		arb_heat=Gm_ion*U_h(:,:,:,1)*(13.6d0/gm/T0/8.6173e-5)
-	elseif(flag_col .eq. 3) then
+	elseif(flag_col .eq. 2) then
 		arb_heat=Gm_ion*U_h(:,:,:,1)*(13.6d0*beta/T0/2.d0/8.6173e-5)
 	else
 		print*,'option not included!'
@@ -346,17 +346,16 @@ contains
 	S_h(:,:,:,1:5)=S_h(:,:,:,1:5)+ds(:,:,:,1:5)
 	S_m(:,:,:,1:5)=S_m(:,:,:,1:5)-ds(:,:,:,1:5)
 	ion_pot=0.0d0
-		if(flag_col .eq. 2) then
+		if(flag_col .eq. 3) then
 			ion_pot=Gm_ion*nde*(13.6d0/gm/T0/8.6173e-5)
-		elseif(flag_col .eq. 3) then
+		elseif(flag_col .eq. 2) then
 			ion_pot=Gm_ion*nde*(13.6d0*beta/T0/2.d0/8.6173e-5)
 		else
 			print*,'option not included!'
 			stop
 		endif
-!print*,maxval(Gm_ion),maxval(ion_pot)
-!stop
-	!print*,maxval(abs(ion_pot)),maxval(abs(arb_heat)),maxval(abs(ion_pot-arb_heat))
+!print*,maxval(Gm_ion),maxval(ion_pot),maxval(abs(arb_heat))
+!print*,maxval(abs(ion_pot)),maxval(abs(arb_heat)),maxval(abs(ion_pot-arb_heat))
 	S_m(:,:,:,5)=S_m(:,:,:,5)-ion_pot+arb_heat
 !	print*,'New type'
 	else if(flag_IR_type .eq. 1) then
