@@ -23,7 +23,7 @@ subroutine shock_tube_stab
   double precision f_n,f_p,f_p_n,f_p_p,start(3),end(3),B0
   double precision theta_p,phi_p,tmp,v_L(8),v_R(8),wtr,wtrf
   double precision mach,rcom,rpres,alf,ang, byrat,vyrat,vu,bxu,byu,rou,pru,vxu
-  integer i,j,k
+  integer i,j,k,dpl
 
   !set ionization fraction-----------------
   if(flag_pip.eq.0) then
@@ -41,8 +41,8 @@ subroutine shock_tube_stab
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=0.0d0/f_p ;end(1)=1500.0d0          !400.0d0/f_p
-  start(2)=-1000.0d0 ;end(2)=1000.0d0
+  start(1)=0.0d0/f_p ;end(1)=600.0d0          !400.0d0/f_p
+  start(2)=0.0d0 ;end(2)=50.0d0
   start(3)=-1.0d0 ;end(3)=1.0d0
   call set_coordinate(start,end)
   !---------------------------------------
@@ -62,71 +62,11 @@ subroutine shock_tube_stab
   B0=1.0d0
 !/sqrt(2.0)
   !-------------------------
-  if(debug_direction.eq.1) then
      mask=spread(spread(pi*x,2,jx),3,kx)
      phi_p=0.0d0
      theta_p=pi/2.0d0
      tmp=0.0
-  else if(debug_direction.eq.2) then
-     mask=spread(spread(pi*y,1,ix),3,kx)     
-     phi_p=pi/2.0d0
-     theta_p=pi/2.0d0     
-     tmp=0.0
-  else if(debug_direction.eq.3) then
-     mask=spread(spread(pi*z,1,jx),1,ix)
-     phi_p=0.0d0
-     theta_p=0.0d0
-     tmp=0.0
-  else if(debug_direction.eq.4) then
-     do k=1,kx;do j=1,jx; do i=1,ix
-        if(x(i)+y(j).gt.0)then
-           mask(i,j,k)=1
-        else
-           mask(i,j,k)=-1
-        endif
-     enddo;enddo;enddo
-     phi_p=pi/4.0d0
-     theta_p=pi/2.0d0
-     tmp=pi/2.0d0
-  else if(debug_direction.eq.5) then
-     do k=1,kx;do j=1,jx; do i=1,ix
-        if(x(i)+z(k).gt.0)then
-           mask(i,j,k)=1
-        else
-           mask(i,j,k)=-1
-        endif
-     enddo;enddo;enddo
-     phi_p=0.0d0
-     theta_p=pi/4.0d0
-     tmp=0.0
-  else if(debug_direction.eq.6) then
-     do k=1,kx;do j=1,jx; do i=1,ix
-        if(y(j)+z(k).gt.0)then
-           mask(i,j,k)=1
-        else
-           mask(i,j,k)=-1
-        endif
-     enddo;enddo;enddo
-     phi_p=pi/2.0d0
-     theta_p=pi/4.0d0
-     tmp=0.0
-  else if(debug_direction.eq.7) then
-     do k=1,kx;do j=1,jx; do i=1,ix
-        if(x(i)+y(j)+z(k).gt.0)then
-           mask(i,j,k)=1
-        else
-           mask(i,j,k)=-1
-        endif
-     enddo;enddo;enddo
-     phi_p=pi/4.0d0
-     theta_p=pi/4.0d0
-     tmp=0.0
-  endif  
-  select case(debug_option)
-  case (2)  !Switch-off shock (Falle et al.1998)
-     v_l=(/1.368d0,1.769d0,0.269d0,1.0d0,0.0d0,1.0d0,0.0d0,0.0d0/)
-     v_r=(/1.0d0,1.0d0,0.0d0,0.0d0,0.0d0,1.0d0,1.0d0,0.0d0/)  
-  case (3)  !parallel shock
+
 	print*,'Parallel shock'
 	mach=2.d0
 	rcom=(gm+1.d0)*mach**2/(2.d0+(gm-1.d0)*mach**2)
@@ -136,51 +76,6 @@ subroutine shock_tube_stab
      v_l=(/rcom,rpres/gm,-mach/rcom+mach,0.0d0,0.0d0,sqrt(2.d0/gm/beta),0.0d0,0.0d0/)
      v_r=(/1.0d0,1.0d0/gm,0.0d0,0.0d0,0.0d0,sqrt(2.d0/gm/beta),0.0d0,0.0d0/)  
 !print*,'r',rcom
-  case (4)  !switch-off shock NOT WORKING YET
-	print*,'Switch-off shock'
-!	mach=10.d0
-	bxu=0.1d0
-	byu=-1.d0!dsqrt(1.d0-bxu**2)
-	rou=1.d0
-!	pru=beta*(bxu**2+byu**2)/2.d0
-	pru=beta*(byu**2)/2.d0
-	ang=dtan(byu/bxu)
-	alf=dsqrt(bxu**2+byu**2)/dsqrt(rou)
-	vxu=-alf*dcos(ang)
-	mach=vxu/dsqrt(gm*pru/rou)
-	rcom=(gm+1.d0)*mach**2/(2.d0+(gm-1.d0)*mach**2)
-	rpres=1.d0+gm*mach**2*(rcom-1.d0)/rcom*(1.d0- &
- (rcom*alf**2*((rcom+1.d0)*vxu**2-2.d0*rcom*alf**2*dcos(ang)**2))/&
-(2.d0*(vxu**2-rcom*alf**2*dcos(ang)**2)**2))
-     v_l=(/rcom*rou,rpres*pru,vxu/rcom,0.0d0,0.0d0,bxu,0.0d0,0.0d0/)
-     v_r=(/rou,pru,vxu,0.0d0,0.0d0,bxu,byu,0.0d0/)
-print*,'beta=',beta,2.d0*pru/byu**2
-!print*,rcom 
-  case (5)  !oblique shock
-	mach=10.d0
-	alf=1.0d0
-	ang=0.5d0*3.1415d0
-	rcom=(gm+1.d0)*mach**2/(2.d0+(gm-1.d0)*mach**2)
-	vu=mach*sqrt(gm)
-	byrat=rcom*((vu**2-alf**2.d0*dcos(ang)**2)/(vu**2-rcom*alf**2.d0*dcos(ang)**2))
-	vyrat=(vu**2-alf**2.d0*dcos(ang)**2)/(vu**2-rcom*alf**2.d0*dcos(ang)**2)
-	rpres=1.d0+gm*vu**2*(rcom-1.d0)/gm/rcom*(1.d0- &
- (rcom*alf**2*((rcom+1.d0)*rcom**2-2.d0*rcom*alf**2*dcos(ang)**2))/&
-(2.d0*(vu**2-rcom*alf**2*dcos(ang)**2)))
-     v_l=(/rcom,rpres,vu/rcom-mach,0.0d0,0.0d0,1.0d0,0.0d0,0.0d0/)
-     v_r=(/1.0d0,1.0d0,0.0d0,0.0d0,0.0d0,1.0d0,0.0d0,0.0d0/)
-  case (6)  !switch-off shock from simulation NOT WORKING YET
-     v_l=(/1.9052d0,0.4256d0,0.0d0,-0.9551d0,0.0d0,0.3d0,0.0d0,0.0d0/)
-     v_r=(/0.8372d0,0.3730d0,-1.8383d0,-0.0565d0,0.0d0,0.3d0,-0.822d0,0.0d0/)     
-  case default
-!     v_l=(/1.0d0,1.0d0,0.0d0,0.0d0,0.0d0,B0*0.75d0,B0,0.0d0/)
-!     v_r=(/0.125d0,0.1d0,0.0d0,0.0d0,0.0d0,B0*0.75d0,-B0,0.0d0/)
-     v_l=(/1.0d0,beta*B0**2/2.d0,0.0d0,0.0d0,0.0d0,B0*0.3d0,B0,0.0d0/)
-     v_r=(/1.0d0,beta*B0**2/2.d0,0.0d0,0.0d0,0.0d0,B0*0.3d0,-B0,0.0d0/)
-!     Density, pressure, velocity * 3, magnetic field *3
-
-
-  end select
 
   where(mask<0)
      ro_h=f_n*v_l(1)
@@ -227,8 +122,18 @@ print*,'beta=',beta,2.d0*pru/byu**2
      b_para(i,j,k)=(v_l(6)+(v_r(6)-v_l(6))*(1.0d0+tanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
      b_perp(i,j,k)=(v_l(7)+(v_r(7)-v_l(7))*(1.0d0+tanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
 
-	if (x(i) .GE. 4000.d0) then	
+call srand(81728)
+wtr=1.d0
+
+	if ((x(i) .GE. 200.0d0) .AND. (x(i) .LE. 300.0d0)) then	
+!		ro_m(i,j,k)=ro_m(i,j,k)+ro_m(i,j,k)*0.1d0*dsin((x(i)-200.0d0)*3.14d0/100.0d0)* dcos(y(j)*3.14d0/50.0d0*2.d0)
 !		ro_m(i,j,k)=ro_m(i,j,k)+0.2d0*dsin((x(i)-4000.d0)/100.0/3.14)*dcos((y(j))/20.d0/3.14d0)
+		do dpl=1,10
+		ro_m(i,j,k)=ro_m(i,j,k)+ro_m(i,j,k)*0.1d0*rand()*&
+ dsin((x(i)-200.0d0)*3.14d0/100.0d0)* dcos((y(j)-rand()*50.d0)*3.14d0/50.0d0*2.d0*wtr)
+		wtr=wtr+1.d0
+enddo
+
 	endif
   enddo;enddo;enddo
 
