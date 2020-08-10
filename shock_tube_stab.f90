@@ -42,7 +42,7 @@ subroutine shock_tube_stab
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=0.0d0/f_p ;end(1)=1200.0d0          !400.0d0/f_p
+  start(1)=000.0d0 ;end(1)=1200.0d0          !400.0d0/f_p
   start(2)=0.0d0 ;end(2)=50.0d0
   start(3)=-1.0d0 ;end(3)=1.0d0
   call set_coordinate(start,end)
@@ -74,8 +74,9 @@ subroutine shock_tube_stab
 	rpres=1.d0+gm*mach**2*(1.d0-1.d0/rcom)
 !     v_l=(/rcom,rpres,10.0d0*sqrt(gm)/rcom+10.0d0*sqrt(gm),0.0d0,0.0d0,2.0d0*sqrt(gm)*mach,0.0d0,0.0d0/)
 !     v_r=(/1.0d0,1.0d0,0.0d0,0.0d0,0.0d0,2.0d0*sqrt(gm)*mach,0.0d0,0.0d0/)  
-     v_l=(/rcom,rpres/gm,-mach/rcom+mach,0.0d0,0.0d0,sqrt(2.d0/gm/beta),0.0d0,0.0d0/)
+     v_l=(/rcom,rpres/gm,-mach/rcom+mach,0.0d0,0.0d0,sqrt(2.d0/gm/beta),0.0d0,0.0d0/) !Use this one!
      v_r=(/1.0d0,1.0d0/gm,0.0d0,0.0d0,0.0d0,sqrt(2.d0/gm/beta),0.0d0,0.0d0/)  
+!v_l=v_r
 !print*,'r',rcom
 
   where(mask<0)
@@ -132,9 +133,9 @@ wtr=1.d0
 		do dpl=1,10
 		rorand1=rand()
 		rorand2=rand()
-		ro_m(i,j,k)=ro_m(i,j,k)+ro_m(i,j,k)*0.1d0*rorand1*&
+		ro_m(i,j,k)=ro_m(i,j,k)+f_p*0.1d0*rorand1*&
  dsin((x(i)-200.0d0)*3.14d0/100.0d0)* dcos((y(j)-rorand2*50.d0)*3.14d0/50.0d0*2.d0*wtr)
-		ro_h(i,j,k)=ro_h(i,j,k)+ro_h(i,j,k)*0.1d0*rorand1*&
+		ro_h(i,j,k)=ro_h(i,j,k)+f_n*0.1d0*rorand1*&
  dsin((x(i)-200.0d0)*3.14d0/100.0d0)* dcos((y(j)-rorand2*50.d0)*3.14d0/50.0d0*2.d0*wtr)
 		wtr=wtr+1.d0
 		enddo

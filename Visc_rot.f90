@@ -10,7 +10,7 @@ subroutine initialize_visc(flag_visc)
 	integer,intent(inout)::flag_visc
 	if (flag_visc.eq.0) return
 	       allocate(visc(ix,jx,kx,3))
-	if(my_rank.eq.0) print*,'visc test '
+!	if(my_rank.eq.0) print*,'visc test '
 end subroutine initialize_visc
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 subroutine set_visc(U,nu)
@@ -75,17 +75,21 @@ subroutine source_visc(S_h,S_m,U_h,U_m)
 	double precision,intent(in)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
 !	double precision visc(ix,jx,kx,3)
 	integer n
+!NEED FRACTIONAL VISCOSITY!!!
+	double precision::xif(ix,jx,kx)
+	xif=U_m(:,:,:,1)/(U_m(:,:,:,1)+U_h(:,:,:,1))
+
 	if(flag_mhd.eq.0.or.flag_pip.eq.1) then
 		call set_visc(U_h,visc)
 
 !if (my_rank.eq.0) print*, visc(55,1:5,:,2)
 !stop
 		S_h(:,:,:,2) = S_h(:,:,:,2) &
-		    + visc(:,:,:,1)
+		    + (1.0d0-xif)*visc(:,:,:,1)
 		S_h(:,:,:,3) = S_h(:,:,:,3) &
-		    + visc(:,:,:,2)
+		    + (1.0d0-xif)*visc(:,:,:,2)
 		S_h(:,:,:,4) = S_h(:,:,:,4) &
-		    + visc(:,:,:,3)
+		    + (1.0d0-xif)*visc(:,:,:,3)
 	endif
 	if(flag_mhd.eq.1) then
 		call set_visc(U_m,visc)
@@ -93,11 +97,11 @@ subroutine source_visc(S_h,S_m,U_h,U_m)
 !if (my_rank.eq.0) print*, visc(55,1:5,:,2)
 !stop
 		S_m(:,:,:,2) = S_m(:,:,:,2) &
-		    + visc(:,:,:,1)
+		    + xif*visc(:,:,:,1)
 		S_m(:,:,:,3) = S_m(:,:,:,3) &
-		    + visc(:,:,:,2)
+		    + xif*visc(:,:,:,2)
 		S_m(:,:,:,4) = S_m(:,:,:,4) &
-		    + visc(:,:,:,3)
+		    + xif*visc(:,:,:,3)
 	endif
 end subroutine source_visc
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
