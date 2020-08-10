@@ -78,6 +78,9 @@ subroutine source_visc(S_h,S_m,U_h,U_m)
 !NEED FRACTIONAL VISCOSITY!!!
 	double precision::xif(ix,jx,kx)
 	xif=U_m(:,:,:,1)/(U_m(:,:,:,1)+U_h(:,:,:,1))
+	if(flag_pip.eq.0) then 
+		xif=1.0d0
+	endif
 
 	if(flag_mhd.eq.0.or.flag_pip.eq.1) then
 		call set_visc(U_h,visc)
