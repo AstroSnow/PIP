@@ -24,12 +24,13 @@ subroutine shock_tube_stab2
   double precision f_n,f_p,f_p_n,f_p_p,start(3),end(3),B0
   double precision theta_p,phi_p,tmp,v_L(8),v_R(8),wtr,wtrf
   double precision mach,rcom,rpres,alf,ang, byrat,vyrat,vu,bxu,byu,rou,pru,vxu
-  integer i,j,k
-integer::read_size=10002,tmpr
-double precision :: ro_read(10002),mx_read(10002),my_read(10002),mz_read(10002)
-double precision :: en_read(10002),bx_read(10002),by_read(10002),bz_read(10002)
-double precision :: ron_read(10002),mnx_read(10002),mny_read(10002),mnz_read(10002)
-double precision :: enn_read(10002)
+  double precision rorand1,rorand2
+  integer i,j,k,dpl
+integer::read_size=3004,tmpr
+double precision :: ro_read(3004),mx_read(3004),my_read(3004),mz_read(3004)
+double precision :: en_read(3004),bx_read(3004),by_read(3004),bz_read(3004)
+double precision :: ron_read(3004),mnx_read(3004),mny_read(3004),mnz_read(3004)
+double precision :: enn_read(3004)
 Character(len=40) :: fname,ftime
 integer::rds,rde
   !set ionization fraction-----------------
@@ -48,8 +49,8 @@ integer::rds,rde
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=0.0d0 ;end(1)=10.d0!10000.0d0          !400.0d0/f_p
-  start(2)=0.0d0 ;end(2)=0.01d0
+  start(1)=0.0d0 ;end(1)=600.d0!10000.0d0          !400.0d0/f_p
+  start(2)=0.0d0 ;end(2)=50.0d0
   start(3)=-1.0d0 ;end(3)=1.0d0
   call set_coordinate(start,end)
   !---------------------------------------
@@ -74,15 +75,16 @@ integer::rds,rde
 !call output(0)
 !print*,ix
 
-!fname='Data_MHD_1cpu'; ftime='0100'; rds=3549;rde=3650;read_size=10002 !switch-off shock
-!fname='Data_MHD_slow'; ftime='0030';rds=4539;rde=4640;read_size=10002 !slow-shock
-!fname='Data_MHD_slow2'; ftime='0100';rds=4399;rde=4500;read_size=10002 !slow-shock2
+!fname='Data_MHD_1cpu'; ftime='0100'; rds=3549;rde=3650;read_size=3004 !switch-off shock
+!fname='Data_MHD_slow'; ftime='0030';rds=4539;rde=4640;read_size=3004 !slow-shock
+!fname='Data_MHD_slow2'; ftime='0100';rds=4399;rde=4500;read_size=3004 !slow-shock2
 !fname='Data_PIP_slow2'; ftime='0050';rds=1980;rde=2080;read_size=3002 !slow-shock2 PIP
 
-fname='Data_MHD_par_beta_0.1_m_2'; ftime='0100';rds=1949;rde=2050;read_size=3002 !parallel MHD shock
+!fname='Data_MHD_par_beta_0.1_m_2'; ftime='0100';rds=1949;rde=2050;read_size=3002 !parallel MHD shock
 !fname='Data_PIP_par_beta_0.1_m_2_xn_0.1'; ftime='0090';rds=2639;rde=2740;read_size=3002 !parallel PIP shock
 !fname='Data_PIP_par_beta_0.1_m_2_xn_0.9'; ftime='0090';rds=2639;rde=2740;read_size=3002 !parallel PIP shock
 
+fname='MHD_1D_xr_600_xg_3000'; ftime='0030';rds=2580;rde=2679;read_size=3000 !parallel MHD shock
 
 print*,fname
 
@@ -152,7 +154,6 @@ print*,fname
     read(101)bz_read(1:read_size)
     close(101)
 !print*,ro_read(3550:3650)
-
 
 if(flag_pip.eq.1) then
     open(101,file=trim(fname)//'/'//trim(ftime)//'ro_n.dac.0000',form="unformatted",status="old")
@@ -249,14 +250,24 @@ do k=1,kx;do j=1,jx;do i=1,ix
 		endif
 	endif
 
-!	if (x(i) .GE. 2500.d0) then	
-!		U_m(i,j,k,1)=U_m(i,j,k,1)+0.2d0*dsin((x(i)-4000.d0)/50.0/3.14)*dcos((y(j))/10.d0/3.14d0)
-!	endif
-	if ((x(i) .GE. 0.1d0) .AND. (x(i) .LE. 0.12d0)) then	
-		U_m(i,j,k,1)=U_m(i,j,k,1)+ro_read(rde)*0.1d0*dsin((x(i)-0.1d0)*3.14d0/0.02d0)* dcos(y(j)*3.14d0/0.01d0*2.d0)
+call srand(81728)
+wtr=1.d0
+
+	if ((x(i) .GE. 50.0d0) .AND. (x(i) .LE. 100.0d0)) then	
+!		ro_m(i,j,k)=ro_m(i,j,k)+ro_m(i,j,k)*0.1d0*dsin((x(i)-200.0d0)*3.14d0/100.0d0)* dcos(y(j)*3.14d0/50.0d0*2.d0)
+!		ro_m(i,j,k)=ro_m(i,j,k)+0.2d0*dsin((x(i)-4000.d0)/100.0/3.14)*dcos((y(j))/20.d0/3.14d0)
+		do dpl=1,10
+		rorand1=rand()
+		rorand2=rand()
+		U_m(i,j,k,1)=U_m(i,j,k,1)+f_p*0.1d0*rorand1*&
+ dsin((x(i)-50.0d0)*3.14d0/50.0d0)* dcos((y(j)-rorand2*50.d0)*3.14d0/50.0d0*2.d0*wtr)
 		if(flag_pip.eq.1) then
-		U_h(i,j,k,1)=U_h(i,j,k,1)+ron_read(rde)*0.1d0*dsin((x(i)-500.d0)*3.14d0/500.d0)* dcos(y(j)*3.14d0/500.d0)
+			U_h(i,j,k,1)=U_h(i,j,k,1)+f_n*0.1d0*rorand1*&
+ 	dsin((x(i)-50.0d0)*3.14d0/50.0d0)* dcos((y(j)-rorand2*50.d0)*3.14d0/50.0d0*2.d0*wtr)
 		endif
+		wtr=wtr+1.d0
+		enddo
+
 	endif
 enddo;enddo;enddo
 
