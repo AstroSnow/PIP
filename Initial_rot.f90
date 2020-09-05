@@ -118,6 +118,8 @@ contains
           call shock_tube_stab
        case('shock_tube_stab2')
           call shock_tube_stab2
+       case('shock_tube_stab3')
+          call shock_tube_stab3
        case('com_spec')
           call Complete_spectrum
        case('kink_wave')

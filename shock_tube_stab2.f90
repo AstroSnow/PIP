@@ -49,7 +49,7 @@ integer::rds,rde
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=0.0d0 ;end(1)=600.d0!10000.0d0          !400.0d0/f_p
+  start(1)=0.0d0 ;end(1)=200.d0!10000.0d0          !400.0d0/f_p
   start(2)=0.0d0 ;end(2)=50.0d0
   start(3)=-1.0d0 ;end(3)=1.0d0
   call set_coordinate(start,end)

@@ -854,9 +854,12 @@ contains
   subroutine vel_damp(U_h,U_m)
     double precision,intent(inout)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
     double precision :: damp_time1(ix,jx,kx)
+    double precision :: mach,rcom,rpres,damp_time_x
 
 !Damping based on sucsessive kinetic energy 
-if (flag_damp.eq.2) then
+if ((flag_damp.eq.1).or.(flag_damp.eq.2)) then
+
+    if (flag_damp.eq.2) then
 	damp_time=1.0d0
 	damp_time1=spread(spread(spread(1.d0*damp_time ,1,ix),2,jx),3,kx)
 	do while (maxval(U_h(:,:,:,5)-damp_time1*dt*(U_h(:,:,:,2)**2+U_h(:,:,:,2)**2+U_h(:,:,:,2)**2)/U_h(:,:,:,1)/2.0d0) .GT. oldke_damp)
@@ -865,7 +868,7 @@ if (flag_damp.eq.2) then
 	enddo
 !	print*,damp_time,maxval(U_h(:,:,:,5)-damp_time1*dt*(U_h(:,:,:,2)**2+U_h(:,:,:,2)**2+U_h(:,:,:,2)**2)/U_h(:,:,:,1)/2.0d0),oldke_damp
 	damp_time=min(damp_time,1.0e6)
-endif
+    endif
 
     damp_time1=spread(spread(spread(1.d0*damp_time ,1,ix),2,jx),3,kx)
 
@@ -881,6 +884,38 @@ endif
     endif
 
     oldke_damp=0.9d0*maxval(U_h(:,:,:,5)-(U_h(:,:,:,2)**2+U_h(:,:,:,2)**2+U_h(:,:,:,2)**2)/U_h(:,:,:,1)/2.0d0)
+
+
+endif
+
+if (flag_damp.eq.3) then
+
+!Damping based on the shock frame parameters
+	mach=2.d0
+	rcom=(gm+1.d0)*mach**2/(2.d0+(gm-1.d0)*mach**2)
+	rpres=1.d0+gm*mach**2*(1.d0-1.d0/rcom)
+
+	i=1
+
+	do while (x(i) .lt. 40.0d0)
+
+		damp_time_x=(tanh((x(i)/1.5d0+45.d0)/1.5d0)+1.0d0)/2.0d0
+
+		U_h(i,:,:,5)=U_h(i,:,:,5)-0.5d0*(U_h(i,:,:,2)**2+U_h(i,:,:,3)**2+U_h(i,:,:,4)**2)/U_h(i,:,:,1)
+		U_h(i,:,:,2)=(U_h(i,:,:,2)+mach)*damp_time_x-mach
+		U_h(i,:,:,3)=(U_h(i,:,:,3))*damp_time_x
+		U_h(i,:,:,4)=(U_h(i,:,:,4))*damp_time_x
+		U_h(i,:,:,5)=U_h(i,:,:,5)+0.5d0*(U_h(i,:,:,2)**2+U_h(i,:,:,3)**2+U_h(i,:,:,4)**2)/U_h(i,:,:,1)
+
+		U_m(i,:,:,5)=U_m(i,:,:,5)-0.5d0*(U_m(i,:,:,2)**2+U_m(i,:,:,3)**2+U_m(i,:,:,4)**2)/U_m(i,:,:,1)
+		U_m(i,:,:,2)=(U_m(i,:,:,2)+mach)*damp_time_x-mach
+		U_m(i,:,:,3)=(U_m(i,:,:,3))*damp_time_x
+		U_m(i,:,:,4)=(U_m(i,:,:,4))*damp_time_x
+		U_m(i,:,:,5)=U_m(i,:,:,5)+0.5d0*(U_m(i,:,:,2)**2+U_m(i,:,:,3)**2+U_m(i,:,:,4)**2)/U_m(i,:,:,1)	
+		i=i+1
+	enddo
+
+endif
 
   end subroutine vel_damp
 

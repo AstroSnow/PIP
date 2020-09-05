@@ -56,7 +56,8 @@ end subroutine PIPbnd
     integer dir,upper_lower,type,i
     do i=1,2*ndim
        dir=(i+1)/2
-       upper_lower=mod(i+1,2)       
+       upper_lower=mod(i+1,2)
+!print*,upper_lower       
        if(flag_bnd(i).eq.3) then
           type=2
        else if(flag_bnd(i).eq.4) then
@@ -75,7 +76,7 @@ end subroutine PIPbnd
 
        if(neighbor(i).eq.-1) then
 	if(flag_bnd(i) .EQ. 20) then
-          call boundary_control_custom_mhd(U_m,ix,jx,kx,nvar_m,dir,istep)
+          call boundary_control_custom_mhd(U_m,ix,jx,kx,nvar_m,upper_lower,istep)
 	else
           call boundary_control(U_m,ix,jx,kx,nvar_m,margin,dir,upper_lower, &
                sym_mhd(:,i),type)
@@ -526,23 +527,23 @@ ro0=30.686506d0
 !pr0=0.6d0
 pr0=18.411901d0
 
-if(dir.eq.1) then 
-	if ((time .le. 0.5d0*period) .and. (istep .eq. 0)) then
-		cs=sqrt(gm*pr0/ro0)
-		vxpert=vamp*dsin(time*2.0d0*pi/period)
-		vdxpert=vamp*2.0d0*pi/period*dcos(time*2.0d0*pi/period)
-		ppert=pr0*gm/cs*vxpert 
-		pdxpert=pr0*gm/cs*vdxpert
-		ropert=ro0/cs*vxpert
-		rodxpert=ro0/cs*vdxpert
-	else
-		vxpert=0.0d0
-		vdxpert=0.0d0
-		ppert=0.0d0
-		pdxpert=0.0d0
-		ropert=0.0d0
-		rodxpert=0.0d0
-	endif
+if(dir.eq.0) then 
+!	if ((time .le. 0.5d0*period) .and. (istep .eq. 0)) then
+!		cs=sqrt(gm*pr0/ro0)
+!		vxpert=vamp*dsin(time*2.0d0*pi/period)
+!		vdxpert=vamp*2.0d0*pi/period*dcos(time*2.0d0*pi/period)
+!		ppert=pr0*gm/cs*vxpert 
+!		pdxpert=pr0*gm/cs*vdxpert
+!		ropert=ro0/cs*vxpert
+!		rodxpert=ro0/cs*vdxpert
+!	else
+!		vxpert=0.0d0
+!		vdxpert=0.0d0
+!		ppert=0.0d0
+!		pdxpert=0.0d0
+!		ropert=0.0d0
+!		rodxpert=0.0d0
+!	endif
 !	rodxperp=30.686506d0*vdxpert*ppert/gm
 !	roperp=30.686506d0*vxpert*ppert/gm
 !	rodxperp=vdxpert*ppert/gm
@@ -579,27 +580,93 @@ if(dir.eq.1) then
 !	u(1,:,:,7)=0.d0!u(1,:,:,7) !by
 !	u(1,:,:,8)=0.d0!u(1,:,:,8) !bz
 !!!!!!!!!!!!!!!!!!!!!!!!!!!
-!	Fix boundary values - switch-off shock
-	bxu=0.1d0
-	byu=dsqrt(1.d0-bxu**2)
-	rou=1.d0
-	pru=beta*(bxu**2+byu**2)/2.d0
-	ang=dtan(byu/bxu)
-	alf=dsqrt(bxu**2+byu**2)/dsqrt(rou)
-	vxu=-alf*dcos(ang)
-	mach=vxu/dsqrt(gm*pru/rou)
+!	Fix boundary values - parallel shock
+	mach=2.d0
 	rcom=(gm+1.d0)*mach**2/(2.d0+(gm-1.d0)*mach**2)
-	rpres=1.d0+gm*mach**2*(rcom-1.d0)/rcom*(1.d0- &
- (rcom*alf**2*((rcom+1.d0)*vxu**2-2.d0*rcom*alf**2*dcos(ang)**2))/&
-(2.d0*(vxu**2-rcom*alf**2*dcos(ang)**2)**2))
-	u(1,:,:,1)=rcom*rou
-	u(1,:,:,2)=(vxu/rcom)*u(1,:,:,1) 
+	rpres=1.d0+gm*mach**2*(1.d0-1.d0/rcom)
+!     v_l=(/rcom,rpres/gm,-mach/rcom,0.0d0,0.0d0,dsqrt(2.d0/gm/beta),0.0d0,0.0d0/) !Use this one!
+!     v_r=(/1.0d0,1.0d0/gm,mach,0.0d0,0.0d0,dsqrt(2.d0/gm/beta),0.0d0,0.0d0/)  
+
+	u(1,:,:,1)=rcom
+	u(1,:,:,2)=-mach
 	u(1,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
 	u(1,:,:,4)=0.0d0 !vz momentum 
-	u(1,:,:,5)=rpres*pru/(gm-1)+0.5d0*(u(1,:,:,2)**2+u(1,:,:,3)**2)/u(1,:,:,1)
-	u(1,:,:,6)=bxu !bx
+	u(1,:,:,5)=(rpres/gm)/(gm-1.d0)+0.5d0*(mach**2)/rcom +0.5d0*(2.d0/gm/beta)
+	u(1,:,:,6)=dsqrt(2.d0/gm/beta) !bx
 	u(1,:,:,7)=0.d0!u(1,:,:,7) !by
 	u(1,:,:,8)=0.d0!u(1,:,:,8) !bz
+
+	u(2,:,:,1)=rcom
+	u(2,:,:,2)=-mach
+	u(2,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
+	u(2,:,:,4)=0.0d0 !vz momentum 
+	u(2,:,:,5)=(rpres/gm)/(gm-1.d0)+0.5d0*(mach**2)/rcom +0.5d0*(2.d0/gm/beta)
+	u(2,:,:,6)=dsqrt(2.d0/gm/beta) !bx
+	u(2,:,:,7)=0.d0!u(1,:,:,7) !by
+	u(2,:,:,8)=0.d0!u(1,:,:,8) !bz
+
+	u(3,:,:,1)=rcom
+	u(3,:,:,2)=-mach
+	u(3,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
+	u(3,:,:,4)=0.0d0 !vz momentum 
+	u(3,:,:,5)=(rpres/gm)/(gm-1.d0)+0.5d0*(mach**2)/rcom +0.5d0*(2.d0/gm/beta)
+	u(3,:,:,6)=dsqrt(2.d0/gm/beta) !bx
+	u(3,:,:,7)=0.d0!u(1,:,:,7) !by
+	u(3,:,:,8)=0.d0!u(1,:,:,8) !bz
+
+	u(4,:,:,1)=rcom
+	u(4,:,:,2)=-mach
+	u(4,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
+	u(4,:,:,4)=0.0d0 !vz momentum 
+	u(4,:,:,5)=(rpres/gm)/(gm-1.d0)+0.5d0*(mach**2)/rcom +0.5d0*(2.d0/gm/beta)
+	u(4,:,:,6)=dsqrt(2.d0/gm/beta) !bx
+	u(4,:,:,7)=0.d0!u(1,:,:,7) !by
+	u(4,:,:,8)=0.d0!u(1,:,:,8) !bz
+
+endif
+
+if (dir .eq. 1) then 
+	mach=2.d0
+	rcom=(gm+1.d0)*mach**2/(2.d0+(gm-1.d0)*mach**2)
+	rpres=1.d0+gm*mach**2*(1.d0-1.d0/rcom)
+!     v_l=(/rcom,rpres/gm,-mach/rcom,0.0d0,0.0d0,dsqrt(2.d0/gm/beta),0.0d0,0.0d0/) !Use this one!
+!     v_r=(/1.0d0,1.0d0/gm,mach,0.0d0,0.0d0,dsqrt(2.d0/gm/beta),0.0d0,0.0d0/)  
+!print*,rpres/gm
+	u(ix,:,:,1)=1.0d0
+	u(ix,:,:,2)=-mach
+	u(ix,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
+	u(ix,:,:,4)=0.0d0 !vz momentum 
+	u(ix,:,:,5)=(1.d0/gm)/(gm-1.d0)+0.5d0*mach**2 +0.5d0*(2.d0/gm/beta)
+	u(ix,:,:,6)=dsqrt(2.d0/gm/beta) !bx
+	u(ix,:,:,7)=0.d0!u(1,:,:,7) !by
+	u(ix,:,:,8)=0.d0!u(1,:,:,8) !bz
+
+	u(ix-1,:,:,1)=1.0d0
+	u(ix-1,:,:,2)=-mach
+	u(ix-1,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
+	u(ix-1,:,:,4)=0.0d0 !vz momentum 
+	u(ix-1,:,:,5)=(1.d0/gm)/(gm-1.d0)+0.5d0*mach**2+0.5d0*(2.d0/gm/beta)
+	u(ix-1,:,:,6)=dsqrt(2.d0/gm/beta) !bx
+	u(ix-1,:,:,7)=0.d0!u(1,:,:,7) !by
+	u(ix-1,:,:,8)=0.d0!u(1,:,:,8) !bz
+
+	u(ix-2,:,:,1)=1.0d0
+	u(ix-2,:,:,2)=-mach
+	u(ix-2,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
+	u(ix-2,:,:,4)=0.0d0 !vz momentum 
+	u(ix-2,:,:,5)=(1.d0/gm)/(gm-1.d0)+0.5d0*mach**2+0.5d0*(2.d0/gm/beta)
+	u(ix-2,:,:,6)=dsqrt(2.d0/gm/beta) !bx
+	u(ix-2,:,:,7)=0.d0!u(1,:,:,7) !by
+	u(ix-2,:,:,8)=0.d0!u(1,:,:,8) !bz
+
+	u(ix-3,:,:,1)=1.0d0
+	u(ix-3,:,:,2)=-mach
+	u(ix-3,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
+	u(ix-3,:,:,4)=0.0d0 !vz momentum 
+	u(ix-3,:,:,5)=(1.d0/gm)/(gm-1.d0)+0.5d0*mach**2+0.5d0*(2.d0/gm/beta)
+	u(ix-3,:,:,6)=dsqrt(2.d0/gm/beta) !bx
+	u(ix-3,:,:,7)=0.d0!u(1,:,:,7) !by
+	u(ix-3,:,:,8)=0.d0!u(1,:,:,8) !bz
 !!!!!!!!!!!!!!!!!!!!!!!!!!!
 endif
 end subroutine boundary_control_custom_mhd

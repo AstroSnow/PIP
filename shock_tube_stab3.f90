@@ -1,4 +1,4 @@
-subroutine shock_tube_stab
+subroutine shock_tube_stab3
   use parameters,only:pi
   use globalvar,only:ix,jx,kx,U_h,U_m,flag_bnd,col,beta,flag_b_stg,dtout,&
        flag_mhd,flag_mpi,my_rank,flag_pip,gm,beta,tend,&
@@ -42,15 +42,15 @@ subroutine shock_tube_stab
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=000.0d0 ;end(1)=600.d0!1200.0d0          !400.0d0/f_p
-  start(2)=0.0d0 ;end(2)=50.0d0
+  start(1)=-50.0d0 ;end(1)=100.d0!1200.0d0          !400.0d0/f_p
+  start(2)=0.0d0 ;end(2)=10.0d0
   start(3)=-1.0d0 ;end(3)=1.0d0
   call set_coordinate(start,end)
   !---------------------------------------
   
   !!default boundary condition----------------------
-  if (flag_bnd(1) .eq.-1) flag_bnd(1)=10
-  if (flag_bnd(2) .eq.-1) flag_bnd(2)=10
+  if (flag_bnd(1) .eq.-1) flag_bnd(1)=20
+  if (flag_bnd(2) .eq.-1) flag_bnd(2)=20
   if (flag_bnd(3) .eq.-1) flag_bnd(3)=1
   if (flag_bnd(4) .eq.-1) flag_bnd(4)=1
   if (flag_bnd(5) .eq.-1) flag_bnd(5)=10
@@ -74,10 +74,10 @@ subroutine shock_tube_stab
 	rpres=1.d0+gm*mach**2*(1.d0-1.d0/rcom)
 !     v_l=(/rcom,rpres,10.0d0*sqrt(gm)/rcom+10.0d0*sqrt(gm),0.0d0,0.0d0,2.0d0*sqrt(gm)*mach,0.0d0,0.0d0/)
 !     v_r=(/1.0d0,1.0d0,0.0d0,0.0d0,0.0d0,2.0d0*sqrt(gm)*mach,0.0d0,0.0d0/)  
-     v_l=(/rcom,rpres/gm,-mach/rcom+mach,0.0d0,0.0d0,sqrt(2.d0/gm/beta),0.0d0,0.0d0/) !Use this one!
-     v_r=(/1.0d0,1.0d0/gm,0.0d0,0.0d0,0.0d0,sqrt(2.d0/gm/beta),0.0d0,0.0d0/)  
+     v_l=(/rcom,rpres/gm,-mach/rcom,0.0d0,0.0d0,dsqrt(2.d0/gm/beta),0.0d0,0.0d0/) !Use this one!
+     v_r=(/1.0d0,1.0d0/gm,-mach,0.0d0,0.0d0,dsqrt(2.d0/gm/beta),0.0d0,0.0d0/)  
 !v_l=v_r
-!print*,'r',rcom
+!print*,'r',rpres
 
   where(mask<0)
      ro_h=f_n*v_l(1)
@@ -107,48 +107,48 @@ subroutine shock_tube_stab
      b_perp=v_r(7)
   end where
 !  wtr=0.001d0
-  wtr=1.0d0!dx(1)*1.d0
-  wtrf=dx(1)*4.d0
+  wtr=0.0d0!0.001d0!dx(1)*1.d0
+  wtrf=0.0d0!dx(1)*4.d0
 !0.001d0
   do k=1,kx;do j=1,jx;do i=1,ix
-     ro_h(i,j,k)=f_n*(v_l(1)+(v_r(1)-v_l(1))*(1.0d0+tanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
-     ro_m(i,j,k)=f_p*(v_l(1)+(v_r(1)-v_l(1))*(1.0d0+tanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
-     p_h(i,j,k)=f_p_n*(v_l(2)+(v_r(2)-v_l(2))*(1.0d0+tanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
-     p_m(i,j,k)=f_p_p*(v_l(2)+(v_r(2)-v_l(2))*(1.0d0+tanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
-     vx_h(i,j,k)=(v_l(3)+(v_r(3)-v_l(3))*(1.0d0+tanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
-     vx_m(i,j,k)=(v_l(3)+(v_r(3)-v_l(3))*(1.0d0+tanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
-     vy_h(i,j,k)=(v_l(4)+(v_r(4)-v_l(4))*(1.0d0+tanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
-     vy_m(i,j,k)=(v_l(4)+(v_r(4)-v_l(4))*(1.0d0+tanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
-     vz_h(i,j,k)=(v_l(5)+(v_r(5)-v_l(5))*(1.0d0+tanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
-     vz_m(i,j,k)=(v_l(5)+(v_r(5)-v_l(5))*(1.0d0+tanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
-     b_para(i,j,k)=(v_l(6)+(v_r(6)-v_l(6))*(1.0d0+tanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
-     b_perp(i,j,k)=(v_l(7)+(v_r(7)-v_l(7))*(1.0d0+tanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
+     ro_h(i,j,k)=f_n*(v_l(1)+(v_r(1)-v_l(1))*(1.0d0+dtanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
+     ro_m(i,j,k)=f_p*(v_l(1)+(v_r(1)-v_l(1))*(1.0d0+dtanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
+     p_h(i,j,k)=f_p_n*(v_l(2)+(v_r(2)-v_l(2))*(1.0d0+dtanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
+     p_m(i,j,k)=f_p_p*(v_l(2)+(v_r(2)-v_l(2))*(1.0d0+dtanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
+     vx_h(i,j,k)=(v_l(3)+(v_r(3)-v_l(3))*(1.0d0+dtanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
+     vx_m(i,j,k)=(v_l(3)+(v_r(3)-v_l(3))*(1.0d0+dtanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
+     vy_h(i,j,k)=(v_l(4)+(v_r(4)-v_l(4))*(1.0d0+dtanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
+     vy_m(i,j,k)=(v_l(4)+(v_r(4)-v_l(4))*(1.0d0+dtanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
+     vz_h(i,j,k)=(v_l(5)+(v_r(5)-v_l(5))*(1.0d0+dtanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
+     vz_m(i,j,k)=(v_l(5)+(v_r(5)-v_l(5))*(1.0d0+dtanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
+     b_para(i,j,k)=(v_l(6)+(v_r(6)-v_l(6))*(1.0d0+dtanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
+     b_perp(i,j,k)=(v_l(7)+(v_r(7)-v_l(7))*(1.0d0+dtanh(mask(i,j,k)/wtr-wtrf))*0.5d0)
 
 call srand(81728)
 wtr=1.d0
 
-!	if ((x(i) .GE. 200.0d0) .AND. (x(i) .LE. 300.0d0)) then	
-!		do dpl=1,10
-!		rorand1=rand()
-!		rorand2=rand()
-!		ro_m(i,j,k)=ro_m(i,j,k)+f_p*0.1d0*rorand1*&
-! dsin((x(i)-200.0d0)*3.14d0/100.0d0)* dcos((y(j)-rorand2*50.d0)*3.14d0/50.0d0*2.d0*wtr)
-!		ro_h(i,j,k)=ro_h(i,j,k)+f_n*0.1d0*rorand1*&
-! dsin((x(i)-200.0d0)*3.14d0/100.0d0)* dcos((y(j)-rorand2*50.d0)*3.14d0/50.0d0*2.d0*wtr)
-!		wtr=wtr+1.d0
-!		enddo
-!
-!	endif
+	if ((x(i) .GE. 10.0d0) .AND. (x(i) .LE. 20.0d0)) then	
+		do dpl=1,10
+		rorand1=rand()
+		rorand2=rand()
+		ro_m(i,j,k)=ro_m(i,j,k)+f_p*0.1d0*rorand1*&
+ dsin((x(i)-10.0d0)*3.14d0/10.0d0)* dcos((y(j)-rorand2*10.d0)*3.14d0/10.0d0*2.d0*wtr)
+		ro_h(i,j,k)=ro_h(i,j,k)+f_n*0.1d0*rorand1*&
+ dsin((x(i)-40.0d0)*3.14d0/10.0d0)* dcos((y(j)-rorand2*10.d0)*3.14d0/10.0d0*2.d0*wtr)
+		wtr=wtr+1.d0
+		enddo
+	endif
   enddo;enddo;enddo
+!print*,f_p_p,rpres/gm,p_m(1,1,1)
+!print*,f_p,rcom,ro_m(1,1,1)
 
-
-  b_theta=b_perp*sin(tmp)
-  b_phi  =b_perp*cos(tmp)
-  b_x=b_para*sin(theta_p)*cos(phi_p)+ &
-       b_theta*cos(theta_p)*cos(phi_p)-b_phi*sin(phi_p)
-  b_y=b_para*sin(theta_p)*sin(phi_p)+ &
-       b_theta*cos(theta_p)*sin(phi_p)+b_phi*cos(phi_p)
-  b_z=b_para*cos(theta_p)-b_theta*sin(theta_p) 
+  b_theta=b_perp*dsin(tmp)
+  b_phi  =b_perp*dcos(tmp)
+  b_x=b_para*dsin(theta_p)*dcos(phi_p)+ &
+       b_theta*dcos(theta_p)*dcos(phi_p)-b_phi*dsin(phi_p)
+  b_y=b_para*dsin(theta_p)*dsin(phi_p)+ &
+       b_theta*dcos(theta_p)*dsin(phi_p)+b_phi*dcos(phi_p)
+  b_z=b_para*dcos(theta_p)-b_theta*dsin(theta_p) 
   !!!========================================================
 
   !convert PV2cq and set that value to global variable 'U_h' and/or 'U_m'
@@ -164,4 +164,4 @@ wtr=1.d0
   endif
   !---------------------------------------------------------------------
 
-end subroutine shock_tube_stab
+end subroutine shock_tube_stab3

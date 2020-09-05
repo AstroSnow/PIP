@@ -69,7 +69,7 @@ contains
        ! fix boundaries so that the substeps are updated, not the main variable
        call PIPbnd(U_h,U_m,istep)
     enddo
-    if ((flag_damp.eq.1) .or. (flag_damp.eq.2))  call vel_damp(U_h,U_m)
+    if ((flag_damp.eq.1) .or. (flag_damp.eq.2) .or. (flag_damp.eq.3))  call vel_damp(U_h,U_m)
 
     
     call post_step(U_h,U_m,dt)
