@@ -899,14 +899,14 @@ if (flag_damp.eq.3) then
 
 if (flag_pip .eq. 1) then
 	U_h(:,:,:,5)=U_h(:,:,:,5)-0.5d0*(U_h(:,:,:,2)**2+U_h(:,:,:,3)**2+U_h(:,:,:,4)**2)/U_h(:,:,:,1)
-	U_h(:,:,:,2)=(U_h(:,:,:,2)+mach)*damp_time1-spread(spread(spread(mach,1,ix),2,jx),3,kx)
+	U_h(:,:,:,2)=(U_h(:,:,:,2)+n_fraction*mach)*damp_time1-spread(spread(spread(n_fraction*mach,1,ix),2,jx),3,kx)
 	U_h(:,:,:,3)=(U_h(:,:,:,3))*damp_time1
 	U_h(:,:,:,4)=(U_h(:,:,:,4))*damp_time1
 	U_h(:,:,:,5)=U_h(:,:,:,5)+0.5d0*(U_h(:,:,:,2)**2+U_h(:,:,:,3)**2+U_h(:,:,:,4)**2)/U_h(:,:,:,1)
 endif
 
 	U_m(:,:,:,5)=U_m(:,:,:,5)-0.5d0*(U_m(:,:,:,2)**2+U_m(:,:,:,3)**2+U_m(:,:,:,4)**2)/U_m(:,:,:,1)
-	U_m(:,:,:,2)=(U_m(:,:,:,2)+mach)*damp_time1-spread(spread(spread(mach,1,ix),2,jx),3,kx)
+	U_m(:,:,:,2)=(U_m(:,:,:,2)+(1.0d0-n_fraction)*mach)*damp_time1-spread(spread(spread((1.0d0-n_fraction)*mach,1,ix),2,jx),3,kx)
 	U_m(:,:,:,3)=(U_m(:,:,:,3))*damp_time1
 	U_m(:,:,:,4)=(U_m(:,:,:,4))*damp_time1
 	U_m(:,:,:,5)=U_m(:,:,:,5)+0.5d0*(U_m(:,:,:,2)**2+U_m(:,:,:,3)**2+U_m(:,:,:,4)**2)/U_m(:,:,:,1)	
