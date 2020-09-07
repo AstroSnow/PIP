@@ -134,7 +134,7 @@ wtr=1.d0
 		ro_m(i,j,k)=ro_m(i,j,k)+f_p*0.1d0*rorand1*&
  dsin((x(i)-10.0d0)*3.14d0/10.0d0)* dcos((y(j)-rorand2*10.d0)*3.14d0/10.0d0*2.d0*wtr)
 		ro_h(i,j,k)=ro_h(i,j,k)+f_n*0.1d0*rorand1*&
- dsin((x(i)-40.0d0)*3.14d0/10.0d0)* dcos((y(j)-rorand2*10.d0)*3.14d0/10.0d0*2.d0*wtr)
+ dsin((x(i)-10.0d0)*3.14d0/10.0d0)* dcos((y(j)-rorand2*10.d0)*3.14d0/10.0d0*2.d0*wtr)
 		wtr=wtr+1.d0
 		enddo
 	endif
