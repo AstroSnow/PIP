@@ -854,7 +854,7 @@ contains
   subroutine vel_damp(U_h,U_m)
     double precision,intent(inout)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
     double precision :: damp_time1(ix,jx,kx)
-    double precision :: mach,rcom,rpres,damp_time_x
+    double precision :: mach,rcom,rpres
 
 !Damping based on sucsessive kinetic energy 
 if ((flag_damp.eq.1).or.(flag_damp.eq.2)) then
@@ -894,28 +894,24 @@ if (flag_damp.eq.3) then
 	rcom=(gm+1.d0)*mach**2/(2.d0+(gm-1.d0)*mach**2)
 	rpres=1.d0+gm*mach**2*(1.d0-1.d0/rcom)
 
-	i=1
+	damp_time1=spread(spread((tanh((x+40.d0)/2.0d0)+1.0d0)/2.0d0&
++(1.0d0-tanh((x-40.0d0)/2.0d0))/2.0d0-1.0d0,2,jx),3,kx)
 
-	if (x(0) .lt. -40.d0) then
-	do while (x(i) .lt. -40.0d0)
-		damp_time_x=(tanh((x(i)/1.5d0+45.d0)/1.5d0)+1.0d0)/2.0d0
+if (flag_pip .eq. 1) then
+	U_h(:,:,:,5)=U_h(:,:,:,5)-0.5d0*(U_h(:,:,:,2)**2+U_h(:,:,:,3)**2+U_h(:,:,:,4)**2)/U_h(:,:,:,1)
+	U_h(:,:,:,2)=(U_h(:,:,:,2)+mach)*damp_time1-spread(spread(spread(mach,1,ix),2,jx),3,kx)
+	U_h(:,:,:,3)=(U_h(:,:,:,3))*damp_time1
+	U_h(:,:,:,4)=(U_h(:,:,:,4))*damp_time1
+	U_h(:,:,:,5)=U_h(:,:,:,5)+0.5d0*(U_h(:,:,:,2)**2+U_h(:,:,:,3)**2+U_h(:,:,:,4)**2)/U_h(:,:,:,1)
+endif
 
-		U_h(i,:,:,5)=U_h(i,:,:,5)-0.5d0*(U_h(i,:,:,2)**2+U_h(i,:,:,3)**2+U_h(i,:,:,4)**2)/U_h(i,:,:,1)
-		U_h(i,:,:,2)=(U_h(i,:,:,2)+mach)*damp_time_x-mach
-		U_h(i,:,:,3)=(U_h(i,:,:,3))*damp_time_x
-		U_h(i,:,:,4)=(U_h(i,:,:,4))*damp_time_x
-		U_h(i,:,:,5)=U_h(i,:,:,5)+0.5d0*(U_h(i,:,:,2)**2+U_h(i,:,:,3)**2+U_h(i,:,:,4)**2)/U_h(i,:,:,1)
-
-		U_m(i,:,:,5)=U_m(i,:,:,5)-0.5d0*(U_m(i,:,:,2)**2+U_m(i,:,:,3)**2+U_m(i,:,:,4)**2)/U_m(i,:,:,1)
-		U_m(i,:,:,2)=(U_m(i,:,:,2)+mach)*damp_time_x-mach
-		U_m(i,:,:,3)=(U_m(i,:,:,3))*damp_time_x
-		U_m(i,:,:,4)=(U_m(i,:,:,4))*damp_time_x
-		U_m(i,:,:,5)=U_m(i,:,:,5)+0.5d0*(U_m(i,:,:,2)**2+U_m(i,:,:,3)**2+U_m(i,:,:,4)**2)/U_m(i,:,:,1)	
-		i=i+1
+	U_m(:,:,:,5)=U_m(:,:,:,5)-0.5d0*(U_m(:,:,:,2)**2+U_m(:,:,:,3)**2+U_m(:,:,:,4)**2)/U_m(:,:,:,1)
+	U_m(:,:,:,2)=(U_m(:,:,:,2)+mach)*damp_time1-spread(spread(spread(mach,1,ix),2,jx),3,kx)
+	U_m(:,:,:,3)=(U_m(:,:,:,3))*damp_time1
+	U_m(:,:,:,4)=(U_m(:,:,:,4))*damp_time1
+	U_m(:,:,:,5)=U_m(:,:,:,5)+0.5d0*(U_m(:,:,:,2)**2+U_m(:,:,:,3)**2+U_m(:,:,:,4)**2)/U_m(:,:,:,1)	
 
 !		print*,U_m(i,1,1,:)
-	enddo
-	endif
 endif
 
   end subroutine vel_damp
