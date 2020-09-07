@@ -854,7 +854,7 @@ contains
   subroutine vel_damp(U_h,U_m)
     double precision,intent(inout)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
     double precision :: damp_time1(ix,jx,kx)
-    double precision :: mach,rcom,rpres
+    double precision :: mach,rcom,rpres,f_n
 
 !Damping based on sucsessive kinetic energy 
 if ((flag_damp.eq.1).or.(flag_damp.eq.2)) then
@@ -897,16 +897,19 @@ if (flag_damp.eq.3) then
 	damp_time1=spread(spread((tanh((x+40.d0)/2.0d0)+1.0d0)/2.0d0&
 +(1.0d0-tanh((x-40.0d0)/2.0d0))/2.0d0-1.0d0,2,jx),3,kx)
 
+f_n=0.0d0
+
 if (flag_pip .eq. 1) then
+	f_n=n_fraction
 	U_h(:,:,:,5)=U_h(:,:,:,5)-0.5d0*(U_h(:,:,:,2)**2+U_h(:,:,:,3)**2+U_h(:,:,:,4)**2)/U_h(:,:,:,1)
-	U_h(:,:,:,2)=(U_h(:,:,:,2)+n_fraction*mach)*damp_time1-spread(spread(spread(n_fraction*mach,1,ix),2,jx),3,kx)
+	U_h(:,:,:,2)=(U_h(:,:,:,2)+f_n*mach)*damp_time1-spread(spread(spread(f_n*mach,1,ix),2,jx),3,kx)
 	U_h(:,:,:,3)=(U_h(:,:,:,3))*damp_time1
 	U_h(:,:,:,4)=(U_h(:,:,:,4))*damp_time1
 	U_h(:,:,:,5)=U_h(:,:,:,5)+0.5d0*(U_h(:,:,:,2)**2+U_h(:,:,:,3)**2+U_h(:,:,:,4)**2)/U_h(:,:,:,1)
 endif
 
 	U_m(:,:,:,5)=U_m(:,:,:,5)-0.5d0*(U_m(:,:,:,2)**2+U_m(:,:,:,3)**2+U_m(:,:,:,4)**2)/U_m(:,:,:,1)
-	U_m(:,:,:,2)=(U_m(:,:,:,2)+(1.0d0-n_fraction)*mach)*damp_time1-spread(spread(spread((1.0d0-n_fraction)*mach,1,ix),2,jx),3,kx)
+	U_m(:,:,:,2)=(U_m(:,:,:,2)+(1.0d0-f_n)*mach)*damp_time1-spread(spread(spread((1.0d0-f_n)*mach,1,ix),2,jx),3,kx)
 	U_m(:,:,:,3)=(U_m(:,:,:,3))*damp_time1
 	U_m(:,:,:,4)=(U_m(:,:,:,4))*damp_time1
 	U_m(:,:,:,5)=U_m(:,:,:,5)+0.5d0*(U_m(:,:,:,2)**2+U_m(:,:,:,3)**2+U_m(:,:,:,4)**2)/U_m(:,:,:,1)	
