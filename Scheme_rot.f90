@@ -889,7 +889,6 @@ if ((flag_damp.eq.1).or.(flag_damp.eq.2)) then
 endif
 
 if (flag_damp.eq.3) then
-
 !Damping based on the shock frame parameters
 	mach=2.d0
 	rcom=(gm+1.d0)*mach**2/(2.d0+(gm-1.d0)*mach**2)
@@ -897,8 +896,8 @@ if (flag_damp.eq.3) then
 
 	i=1
 
-	do while (x(i) .lt. 40.0d0)
-
+	if (x(0) .lt. -40.d0) then
+	do while (x(i) .lt. -40.0d0)
 		damp_time_x=(tanh((x(i)/1.5d0+45.d0)/1.5d0)+1.0d0)/2.0d0
 
 		U_h(i,:,:,5)=U_h(i,:,:,5)-0.5d0*(U_h(i,:,:,2)**2+U_h(i,:,:,3)**2+U_h(i,:,:,4)**2)/U_h(i,:,:,1)
@@ -913,8 +912,10 @@ if (flag_damp.eq.3) then
 		U_m(i,:,:,4)=(U_m(i,:,:,4))*damp_time_x
 		U_m(i,:,:,5)=U_m(i,:,:,5)+0.5d0*(U_m(i,:,:,2)**2+U_m(i,:,:,3)**2+U_m(i,:,:,4)**2)/U_m(i,:,:,1)	
 		i=i+1
-	enddo
 
+!		print*,U_m(i,1,1,:)
+	enddo
+	endif
 endif
 
   end subroutine vel_damp

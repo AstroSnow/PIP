@@ -7,7 +7,7 @@ module boundary_rot
 ! Second version - 2013/06/27 (New labelling for boundaries)
 !====================================================================
   use globalvar,only:ix,jx,kx,ndim,flag_pip,flag_mhd,nvar_h,nvar_m,&
-       flag_mpi,flag_bnd,margin,neighbor,flag_divb,time,x,gm,dt,nt,t_order,beta
+       flag_mpi,flag_bnd,margin,neighbor,flag_divb,time,x,gm,dt,nt,t_order, beta, n_fraction
   use mpi_rot,only:mpi_bnd,mpi_bnd_onevar
   use parameters,only:pi !for the periodic drivers
 
@@ -107,7 +107,7 @@ end subroutine PIPbnd
        endif
        if(neighbor(i).eq.-1) then
 	if(flag_bnd(i) .EQ. 20) then
-          call boundary_control_custom_hd(U_h,ix,jx,kx,nvar_h,dir,istep)
+          call boundary_control_custom_hd(U_h,ix,jx,kx,nvar_h,upper_lower,istep)
 	else
           call boundary_control(U_h,&
                ix,jx,kx,nvar_h,margin,dir,upper_lower, &
@@ -472,6 +472,8 @@ integer,intent(in)::dir,ix,jx,kx,nvar,istep
 double precision,intent(inout)::U(ix,jx,kx,nvar) 
 double precision :: vxpert,vdxpert,period,ppert,vamp
 double precision :: rodxpert,ropert,cs,pdxpert,pr0,ro0
+double precision :: f_n,f_p,f_p_p,f_p_n
+double precision :: mach,rcom,rpres
 
 period=0.5d0 
 vamp=2.0e-1
@@ -480,30 +482,107 @@ pr0=82.853565d0 !xi_n=0.9
 !ro0=3037.9641d0 !xi_n=0.99
 !pr0=911.38922d0 !xi_n=0.99
 
-if(dir.eq.1) then 
-	if ((time .le. 0.5d0*period) .and. (istep .eq. 0)) then
-		cs=sqrt(gm*pr0/ro0)
-		vxpert=vamp*dsin(time*2.0d0*pi/period)
-		vdxpert=vamp*2.0d0*pi/period*dcos(time*2.0d0*pi/period)
-		ppert=pr0*gm/cs*vxpert 
-		pdxpert=pr0*gm/cs*vdxpert
-		ropert=ro0/cs*vxpert
-		rodxpert=ro0/cs*vdxpert
-	else
-		vxpert=0.0d0
-		vdxpert=0.0d0
-		ppert=0.0d0
-		pdxpert=0.0d0
-		ropert=0.0d0
-		rodxpert=0.0d0
-	endif
+!if(dir.eq.1) then 
+!	if ((time .le. 0.5d0*period) .and. (istep .eq. 0)) then
+!		cs=sqrt(gm*pr0/ro0)
+!		vxpert=vamp*dsin(time*2.0d0*pi/period)
+!		vdxpert=vamp*2.0d0*pi/period*dcos(time*2.0d0*pi/period)
+!		ppert=pr0*gm/cs*vxpert 
+!		pdxpert=pr0*gm/cs*vdxpert
+!		ropert=ro0/cs*vxpert
+!		rodxpert=ro0/cs*vdxpert
+!	else
+!		vxpert=0.0d0
+!		vdxpert=0.0d0
+!		ppert=0.0d0
+!		pdxpert=0.0d0
+!		ropert=0.0d0
+!		rodxpert=0.0d0
+!	endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!!
 !	Drive velocity, density and pressure
-	u(1,:,:,1)=u(1,:,:,1)+rodxpert*dt
-	u(1,:,:,2)=u(1,:,:,2)+(rodxpert*vxpert+(ropert+ro0)*vdxpert)*dt
-	u(1,:,:,3)=u(1,:,:,3) !vy momentum 
-	u(1,:,:,4)=u(1,:,:,4) !vz momentum 
-	u(1,:,:,5)=u(1,:,:,5) +(0.5d0*vxpert**2.0d0*rodxpert+(ropert+ro0)*vxpert*vdxpert+pdxpert/(gm-1.0d0))*dt
+!	u(1,:,:,1)=u(1,:,:,1)+rodxpert*dt
+!	u(1,:,:,2)=u(1,:,:,2)+(rodxpert*vxpert+(ropert+ro0)*vdxpert)*dt
+!	u(1,:,:,3)=u(1,:,:,3) !vy momentum 
+!	u(1,:,:,4)=u(1,:,:,4) !vz momentum 
+!	u(1,:,:,5)=u(1,:,:,5) +(0.5d0*vxpert**2.0d0*rodxpert+!(ropert+ro0)*vxpert*vdxpert+pdxpert/(gm-1.0d0))*dt
+!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!endif
+
+  !set ionization fraction-----------------
+  if(flag_pip.eq.0) then
+     f_n=1.0d0
+     f_p=1.0d0
+     f_p_n=1.0d0
+     f_p_p=1.0d0
+  else
+     f_n=n_fraction
+     f_p=1.0d0-n_fraction     
+     f_p_n=f_n/(f_n+2.0d0*f_p)
+     f_p_p=2.0d0*f_p/(f_n+2.0d0*f_p)
+  endif
+
+if(dir.eq.0) then 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!	Fix boundary values - parallel shock
+	mach=2.d0
+	rcom=(gm+1.d0)*mach**2/(2.d0+(gm-1.d0)*mach**2)
+	rpres=1.d0+gm*mach**2*(1.d0-1.d0/rcom)
+
+	u(1,:,:,1)=f_n*rcom
+	u(1,:,:,2)=-mach*f_n
+	u(1,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
+	u(1,:,:,4)=0.0d0 !vz momentum 
+	u(1,:,:,5)=(f_p_n*rpres/gm)/(gm-1.d0)+0.5d0*(f_n*mach**2)/rcom! +0.5d0*(2.d0/gm/beta)
+
+	u(2,:,:,1)=f_n*rcom
+	u(2,:,:,2)=-mach*f_n
+	u(2,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
+	u(2,:,:,4)=0.0d0 !vz momentum 
+	u(2,:,:,5)=(f_p_n*rpres/gm)/(gm-1.d0)+0.5d0*(f_n*mach**2)/rcom !+0.5d0*(2.d0/gm/beta)
+
+	u(3,:,:,1)=f_n*rcom
+	u(3,:,:,2)=-f_n*mach
+	u(3,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
+	u(3,:,:,4)=0.0d0 !vz momentum 
+	u(3,:,:,5)=(f_p_n*rpres/gm)/(gm-1.d0)+0.5d0*(f_n*mach**2)/rcom !+0.5d0*(2.d0/gm/beta)
+
+	u(4,:,:,1)=f_n*rcom
+	u(4,:,:,2)=-f_n*mach
+	u(4,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
+	u(4,:,:,4)=0.0d0 !vz momentum 
+	u(4,:,:,5)=(f_p_n*rpres/gm)/(gm-1.d0)+0.5d0*(f_n*mach**2)/rcom !+0.5d0*(2.d0/gm/beta)
+
+endif
+
+if (dir .eq. 1) then 
+	mach=2.d0
+	rcom=(gm+1.d0)*mach**2/(2.d0+(gm-1.d0)*mach**2)
+	rpres=1.d0+gm*mach**2*(1.d0-1.d0/rcom)
+
+	u(ix,:,:,1)=f_n*1.0d0
+	u(ix,:,:,2)=-f_n*mach
+	u(ix,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
+	u(ix,:,:,4)=0.0d0 !vz momentum 
+	u(ix,:,:,5)=(f_p_n*1.d0/gm)/(gm-1.d0)+0.5d0*f_n*mach**2 !+0.5d0*(2.d0/gm/beta)
+
+	u(ix-1,:,:,1)=f_n*1.0d0
+	u(ix-1,:,:,2)=-f_n*mach
+	u(ix-1,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
+	u(ix-1,:,:,4)=0.0d0 !vz momentum 
+	u(ix-1,:,:,5)=(f_p_n*1.d0/gm)/(gm-1.d0)+0.5d0*f_n*mach**2!+0.5d0*(2.d0/gm/beta)
+
+	u(ix-2,:,:,1)=f_n*1.0d0
+	u(ix-2,:,:,2)=-f_n*mach
+	u(ix-2,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
+	u(ix-2,:,:,4)=0.0d0 !vz momentum 
+	u(ix-2,:,:,5)=(f_p_n*1.d0/gm)/(gm-1.d0)+0.5d0*f_n*mach**2!+0.5d0*(2.d0/gm/beta)
+
+	u(ix-3,:,:,1)=f_n*1.0d0
+	u(ix-3,:,:,2)=-f_n*mach
+	u(ix-3,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
+	u(ix-3,:,:,4)=0.0d0 !vz momentum 
+	u(ix-3,:,:,5)=(f_p_n*1.d0/gm)/(gm-1.d0)+0.5d0*f_n*mach**2!+0.5d0*(2.d0/gm/beta)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!
 endif
 end subroutine boundary_control_custom_hd
@@ -518,7 +597,8 @@ integer,intent(in)::dir,ix,jx,kx,nvar,istep
 double precision,intent(inout)::U(ix,jx,kx,nvar) 
 double precision :: vxpert,vdxpert,period,ppert,vamp
 double precision :: rodxpert,ropert,cs,pdxpert,pr0,ro0
-  double precision mach,rcom,rpres,alf,ang, byrat,vyrat,vu,bxu,byu,rou,pru,vxu
+double precision mach,rcom,rpres,alf,ang, byrat,vyrat, vu,bxu,byu,rou,pru,vxu
+double precision :: f_n,f_p,f_p_p,f_p_n
 
 period=0.5d0 
 vamp=1.0e-2
@@ -526,6 +606,19 @@ vamp=1.0e-2
 ro0=30.686506d0
 !pr0=0.6d0
 pr0=18.411901d0
+
+  !set ionization fraction-----------------
+  if(flag_pip.eq.0) then
+     f_n=1.0d0
+     f_p=1.0d0
+     f_p_n=1.0d0
+     f_p_p=1.0d0
+  else
+     f_n=n_fraction
+     f_p=1.0d0-n_fraction     
+     f_p_n=f_n/(f_n+2.0d0*f_p)
+     f_p_p=2.0d0*f_p/(f_n+2.0d0*f_p)
+  endif
 
 if(dir.eq.0) then 
 !	if ((time .le. 0.5d0*period) .and. (istep .eq. 0)) then
@@ -587,38 +680,38 @@ if(dir.eq.0) then
 !     v_l=(/rcom,rpres/gm,-mach/rcom,0.0d0,0.0d0,dsqrt(2.d0/gm/beta),0.0d0,0.0d0/) !Use this one!
 !     v_r=(/1.0d0,1.0d0/gm,mach,0.0d0,0.0d0,dsqrt(2.d0/gm/beta),0.0d0,0.0d0/)  
 
-	u(1,:,:,1)=rcom
-	u(1,:,:,2)=-mach
+	u(1,:,:,1)=f_p*rcom
+	u(1,:,:,2)=-f_p*mach
 	u(1,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
 	u(1,:,:,4)=0.0d0 !vz momentum 
-	u(1,:,:,5)=(rpres/gm)/(gm-1.d0)+0.5d0*(mach**2)/rcom +0.5d0*(2.d0/gm/beta)
+	u(1,:,:,5)=(f_p_p*rpres/gm)/(gm-1.d0)+0.5d0*(f_p*mach**2)/rcom +0.5d0*(2.d0/gm/beta)
 	u(1,:,:,6)=dsqrt(2.d0/gm/beta) !bx
 	u(1,:,:,7)=0.d0!u(1,:,:,7) !by
 	u(1,:,:,8)=0.d0!u(1,:,:,8) !bz
 
-	u(2,:,:,1)=rcom
-	u(2,:,:,2)=-mach
+	u(2,:,:,1)=f_p*rcom
+	u(2,:,:,2)=-f_p*mach
 	u(2,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
 	u(2,:,:,4)=0.0d0 !vz momentum 
-	u(2,:,:,5)=(rpres/gm)/(gm-1.d0)+0.5d0*(mach**2)/rcom +0.5d0*(2.d0/gm/beta)
+	u(2,:,:,5)=(f_p_p*rpres/gm)/(gm-1.d0)+0.5d0*(f_p*mach**2)/rcom +0.5d0*(2.d0/gm/beta)
 	u(2,:,:,6)=dsqrt(2.d0/gm/beta) !bx
 	u(2,:,:,7)=0.d0!u(1,:,:,7) !by
 	u(2,:,:,8)=0.d0!u(1,:,:,8) !bz
 
-	u(3,:,:,1)=rcom
-	u(3,:,:,2)=-mach
+	u(3,:,:,1)=f_p*rcom
+	u(3,:,:,2)=-f_p*mach
 	u(3,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
 	u(3,:,:,4)=0.0d0 !vz momentum 
-	u(3,:,:,5)=(rpres/gm)/(gm-1.d0)+0.5d0*(mach**2)/rcom +0.5d0*(2.d0/gm/beta)
+	u(3,:,:,5)=(f_p_p*rpres/gm)/(gm-1.d0)+0.5d0*(f_p*mach**2)/rcom +0.5d0*(2.d0/gm/beta)
 	u(3,:,:,6)=dsqrt(2.d0/gm/beta) !bx
 	u(3,:,:,7)=0.d0!u(1,:,:,7) !by
 	u(3,:,:,8)=0.d0!u(1,:,:,8) !bz
 
-	u(4,:,:,1)=rcom
-	u(4,:,:,2)=-mach
+	u(4,:,:,1)=f_p*rcom
+	u(4,:,:,2)=-f_p*mach
 	u(4,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
 	u(4,:,:,4)=0.0d0 !vz momentum 
-	u(4,:,:,5)=(rpres/gm)/(gm-1.d0)+0.5d0*(mach**2)/rcom +0.5d0*(2.d0/gm/beta)
+	u(4,:,:,5)=(f_p_p*rpres/gm)/(gm-1.d0)+0.5d0*(f_p*mach**2)/rcom +0.5d0*(2.d0/gm/beta)
 	u(4,:,:,6)=dsqrt(2.d0/gm/beta) !bx
 	u(4,:,:,7)=0.d0!u(1,:,:,7) !by
 	u(4,:,:,8)=0.d0!u(1,:,:,8) !bz
@@ -632,38 +725,38 @@ if (dir .eq. 1) then
 !     v_l=(/rcom,rpres/gm,-mach/rcom,0.0d0,0.0d0,dsqrt(2.d0/gm/beta),0.0d0,0.0d0/) !Use this one!
 !     v_r=(/1.0d0,1.0d0/gm,mach,0.0d0,0.0d0,dsqrt(2.d0/gm/beta),0.0d0,0.0d0/)  
 !print*,rpres/gm
-	u(ix,:,:,1)=1.0d0
-	u(ix,:,:,2)=-mach
+	u(ix,:,:,1)=1.0d0*f_p
+	u(ix,:,:,2)=-f_p*mach
 	u(ix,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
 	u(ix,:,:,4)=0.0d0 !vz momentum 
-	u(ix,:,:,5)=(1.d0/gm)/(gm-1.d0)+0.5d0*mach**2 +0.5d0*(2.d0/gm/beta)
+	u(ix,:,:,5)=(f_p_p*1.d0/gm)/(gm-1.d0)+0.5d0*f_p*mach**2 +0.5d0*(2.d0/gm/beta)
 	u(ix,:,:,6)=dsqrt(2.d0/gm/beta) !bx
 	u(ix,:,:,7)=0.d0!u(1,:,:,7) !by
 	u(ix,:,:,8)=0.d0!u(1,:,:,8) !bz
 
-	u(ix-1,:,:,1)=1.0d0
-	u(ix-1,:,:,2)=-mach
+	u(ix-1,:,:,1)=f_p*1.0d0
+	u(ix-1,:,:,2)=-f_p*mach
 	u(ix-1,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
 	u(ix-1,:,:,4)=0.0d0 !vz momentum 
-	u(ix-1,:,:,5)=(1.d0/gm)/(gm-1.d0)+0.5d0*mach**2+0.5d0*(2.d0/gm/beta)
+	u(ix-1,:,:,5)=(f_p_p*1.d0/gm)/(gm-1.d0)+0.5d0*f_p*mach**2+0.5d0*(2.d0/gm/beta)
 	u(ix-1,:,:,6)=dsqrt(2.d0/gm/beta) !bx
 	u(ix-1,:,:,7)=0.d0!u(1,:,:,7) !by
 	u(ix-1,:,:,8)=0.d0!u(1,:,:,8) !bz
 
-	u(ix-2,:,:,1)=1.0d0
-	u(ix-2,:,:,2)=-mach
+	u(ix-2,:,:,1)=f_p*1.0d0
+	u(ix-2,:,:,2)=-f_p*mach
 	u(ix-2,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
 	u(ix-2,:,:,4)=0.0d0 !vz momentum 
-	u(ix-2,:,:,5)=(1.d0/gm)/(gm-1.d0)+0.5d0*mach**2+0.5d0*(2.d0/gm/beta)
+	u(ix-2,:,:,5)=(f_p_p*1.d0/gm)/(gm-1.d0)+0.5d0*f_p*mach**2+0.5d0*(2.d0/gm/beta)
 	u(ix-2,:,:,6)=dsqrt(2.d0/gm/beta) !bx
 	u(ix-2,:,:,7)=0.d0!u(1,:,:,7) !by
 	u(ix-2,:,:,8)=0.d0!u(1,:,:,8) !bz
 
-	u(ix-3,:,:,1)=1.0d0
-	u(ix-3,:,:,2)=-mach
+	u(ix-3,:,:,1)=f_p*1.0d0
+	u(ix-3,:,:,2)=-f_p*mach
 	u(ix-3,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
 	u(ix-3,:,:,4)=0.0d0 !vz momentum 
-	u(ix-3,:,:,5)=(1.d0/gm)/(gm-1.d0)+0.5d0*mach**2+0.5d0*(2.d0/gm/beta)
+	u(ix-3,:,:,5)=(f_p_p*1.d0/gm)/(gm-1.d0)+0.5d0*f_p*mach**2+0.5d0*(2.d0/gm/beta)
 	u(ix-3,:,:,6)=dsqrt(2.d0/gm/beta) !bx
 	u(ix-3,:,:,7)=0.d0!u(1,:,:,7) !by
 	u(ix-3,:,:,8)=0.d0!u(1,:,:,8) !bz
