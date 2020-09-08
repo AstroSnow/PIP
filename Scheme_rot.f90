@@ -894,9 +894,12 @@ if (flag_damp.eq.3) then
 	rcom=(gm+1.d0)*mach**2/(2.d0+(gm-1.d0)*mach**2)
 	rpres=1.d0+gm*mach**2*(1.d0-1.d0/rcom)
 
-	damp_time1=spread(spread((tanh((x+40.d0)/2.0d0)+1.0d0)/2.0d0&
-+(1.0d0-tanh((x-40.0d0)/2.0d0))/2.0d0-1.0d0,2,jx),3,kx)
+	damp_time1=spread(spread((tanh((x+70.d0)/10.0d0)+1.0d0)/2.0d0&
++(1.0d0-tanh((x-70.0d0)/10.0d0))/2.0d0-1.0d0,2,jx),3,kx)
 
+!print*,damp_time1(:,1,1)
+!print*,damp_time1(:,2,1)
+!stop
 f_n=0.0d0
 
 if (flag_pip .eq. 1) then
