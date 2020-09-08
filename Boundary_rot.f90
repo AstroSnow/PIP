@@ -474,6 +474,7 @@ double precision :: vxpert,vdxpert,period,ppert,vamp
 double precision :: rodxpert,ropert,cs,pdxpert,pr0,ro0
 double precision :: f_n,f_p,f_p_p,f_p_n
 double precision :: mach,rcom,rpres
+integer :: bci
 
 period=0.5d0 
 vamp=2.0e-1
@@ -529,29 +530,13 @@ if(dir.eq.0) then
 	rcom=(gm+1.d0)*mach**2/(2.d0+(gm-1.d0)*mach**2)
 	rpres=1.d0+gm*mach**2*(1.d0-1.d0/rcom)
 
-	u(1,:,:,1)=f_n*rcom
-	u(1,:,:,2)=-mach*f_n
-	u(1,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
-	u(1,:,:,4)=0.0d0 !vz momentum 
-	u(1,:,:,5)=(f_p_n*rpres/gm)/(gm-1.d0)+0.5d0*(f_n*mach**2)/rcom! +0.5d0*(2.d0/gm/beta)
-
-	u(2,:,:,1)=f_n*rcom
-	u(2,:,:,2)=-mach*f_n
-	u(2,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
-	u(2,:,:,4)=0.0d0 !vz momentum 
-	u(2,:,:,5)=(f_p_n*rpres/gm)/(gm-1.d0)+0.5d0*(f_n*mach**2)/rcom !+0.5d0*(2.d0/gm/beta)
-
-	u(3,:,:,1)=f_n*rcom
-	u(3,:,:,2)=-f_n*mach
-	u(3,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
-	u(3,:,:,4)=0.0d0 !vz momentum 
-	u(3,:,:,5)=(f_p_n*rpres/gm)/(gm-1.d0)+0.5d0*(f_n*mach**2)/rcom !+0.5d0*(2.d0/gm/beta)
-
-	u(4,:,:,1)=f_n*rcom
-	u(4,:,:,2)=-f_n*mach
-	u(4,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
-	u(4,:,:,4)=0.0d0 !vz momentum 
-	u(4,:,:,5)=(f_p_n*rpres/gm)/(gm-1.d0)+0.5d0*(f_n*mach**2)/rcom !+0.5d0*(2.d0/gm/beta)
+	do bci=1,4 
+	u(bci,:,:,1)=f_n*rcom
+	u(bci,:,:,2)=-mach*f_n
+	u(bci,:,:,3)=0.0d0 
+	u(bci,:,:,4)=0.0d0
+	u(bci,:,:,5)=(f_p_n*rpres/gm)/(gm-1.d0)+0.5d0*(f_n*mach**2)/rcom
+	enddo
 
 endif
 
@@ -560,30 +545,14 @@ if (dir .eq. 1) then
 	rcom=(gm+1.d0)*mach**2/(2.d0+(gm-1.d0)*mach**2)
 	rpres=1.d0+gm*mach**2*(1.d0-1.d0/rcom)
 
-	u(ix,:,:,1)=f_n*1.0d0
-	u(ix,:,:,2)=-f_n*mach
-	u(ix,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
-	u(ix,:,:,4)=0.0d0 !vz momentum 
-	u(ix,:,:,5)=(f_p_n*1.d0/gm)/(gm-1.d0)+0.5d0*f_n*mach**2 !+0.5d0*(2.d0/gm/beta)
+	do bci=ix-3,ix 
+	u(bci,:,:,1)=f_n*1.0d0
+	u(bci,:,:,2)=-f_n*mach
+	u(bci,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
+	u(bci,:,:,4)=0.0d0 !vz momentum 
+	u(bci,:,:,5)=(f_p_n*1.d0/gm)/(gm-1.d0)+0.5d0*f_n*mach**2
+	enddo
 
-	u(ix-1,:,:,1)=f_n*1.0d0
-	u(ix-1,:,:,2)=-f_n*mach
-	u(ix-1,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
-	u(ix-1,:,:,4)=0.0d0 !vz momentum 
-	u(ix-1,:,:,5)=(f_p_n*1.d0/gm)/(gm-1.d0)+0.5d0*f_n*mach**2!+0.5d0*(2.d0/gm/beta)
-
-	u(ix-2,:,:,1)=f_n*1.0d0
-	u(ix-2,:,:,2)=-f_n*mach
-	u(ix-2,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
-	u(ix-2,:,:,4)=0.0d0 !vz momentum 
-	u(ix-2,:,:,5)=(f_p_n*1.d0/gm)/(gm-1.d0)+0.5d0*f_n*mach**2!+0.5d0*(2.d0/gm/beta)
-
-	u(ix-3,:,:,1)=f_n*1.0d0
-	u(ix-3,:,:,2)=-f_n*mach
-	u(ix-3,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
-	u(ix-3,:,:,4)=0.0d0 !vz momentum 
-	u(ix-3,:,:,5)=(f_p_n*1.d0/gm)/(gm-1.d0)+0.5d0*f_n*mach**2!+0.5d0*(2.d0/gm/beta)
-!!!!!!!!!!!!!!!!!!!!!!!!!!!
 endif
 end subroutine boundary_control_custom_hd
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -598,7 +567,8 @@ double precision,intent(inout)::U(ix,jx,kx,nvar)
 double precision :: vxpert,vdxpert,period,ppert,vamp
 double precision :: rodxpert,ropert,cs,pdxpert,pr0,ro0
 double precision mach,rcom,rpres,alf,ang, byrat,vyrat, vu,bxu,byu,rou,pru,vxu
-double precision :: f_n,f_p,f_p_p,f_p_n
+double precision :: f_n,f_p,f_p_p,f_p_n,sdamp
+integer :: bci
 
 period=0.5d0 
 vamp=1.0e-2
@@ -680,41 +650,22 @@ if(dir.eq.0) then
 !     v_l=(/rcom,rpres/gm,-mach/rcom,0.0d0,0.0d0,dsqrt(2.d0/gm/beta),0.0d0,0.0d0/) !Use this one!
 !     v_r=(/1.0d0,1.0d0/gm,mach,0.0d0,0.0d0,dsqrt(2.d0/gm/beta),0.0d0,0.0d0/)  
 
-	u(1,:,:,1)=f_p*rcom
-	u(1,:,:,2)=-f_p*mach
-	u(1,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
-	u(1,:,:,4)=0.0d0 !vz momentum 
-	u(1,:,:,5)=(f_p_p*rpres/gm)/(gm-1.d0)+0.5d0*(f_p*mach**2)/rcom +0.5d0*(2.d0/gm/beta)
-	u(1,:,:,6)=dsqrt(2.d0/gm/beta) !bx
-	u(1,:,:,7)=0.d0!u(1,:,:,7) !by
-	u(1,:,:,8)=0.d0!u(1,:,:,8) !bz
-
-	u(2,:,:,1)=f_p*rcom
-	u(2,:,:,2)=-f_p*mach
-	u(2,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
-	u(2,:,:,4)=0.0d0 !vz momentum 
-	u(2,:,:,5)=(f_p_p*rpres/gm)/(gm-1.d0)+0.5d0*(f_p*mach**2)/rcom +0.5d0*(2.d0/gm/beta)
-	u(2,:,:,6)=dsqrt(2.d0/gm/beta) !bx
-	u(2,:,:,7)=0.d0!u(1,:,:,7) !by
-	u(2,:,:,8)=0.d0!u(1,:,:,8) !bz
-
-	u(3,:,:,1)=f_p*rcom
-	u(3,:,:,2)=-f_p*mach
-	u(3,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
-	u(3,:,:,4)=0.0d0 !vz momentum 
-	u(3,:,:,5)=(f_p_p*rpres/gm)/(gm-1.d0)+0.5d0*(f_p*mach**2)/rcom +0.5d0*(2.d0/gm/beta)
-	u(3,:,:,6)=dsqrt(2.d0/gm/beta) !bx
-	u(3,:,:,7)=0.d0!u(1,:,:,7) !by
-	u(3,:,:,8)=0.d0!u(1,:,:,8) !bz
-
-	u(4,:,:,1)=f_p*rcom
-	u(4,:,:,2)=-f_p*mach
-	u(4,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
-	u(4,:,:,4)=0.0d0 !vz momentum 
-	u(4,:,:,5)=(f_p_p*rpres/gm)/(gm-1.d0)+0.5d0*(f_p*mach**2)/rcom +0.5d0*(2.d0/gm/beta)
-	u(4,:,:,6)=dsqrt(2.d0/gm/beta) !bx
-	u(4,:,:,7)=0.d0!u(1,:,:,7) !by
-	u(4,:,:,8)=0.d0!u(1,:,:,8) !bz
+!PML boundary layer
+u(1,:,:,2)=-f_p*mach
+u(2,:,:,2)=-f_p*mach
+	do bci=1,21 
+	sdamp=3.0d0/(x(2)-x(1))*((x(bci)-x(21))/20.d0)**2
+!	sdamp=sdamp/(3.0d0/(x(2)-x(1))*((x(1)-x(20))/20.d0)**2) !to normalise to 1
+	u(bci,:,:,1)=f_p*rcom +(1.d0-sdamp)*(u(bci,:,:,1)-f_p*rcom)
+	u(bci,:,:,2)=-f_p*mach +(1.d0-sdamp)*(u(bci,:,:,2)+f_p*mach)
+	u(bci,:,:,3)=0.0d0+(1.d0-sdamp)*(u(bci,:,:,3))
+	u(bci,:,:,4)=0.0d0+(1.d0-sdamp)*(u(bci,:,:,4)) !vz momentum 
+	u(bci,:,:,5)=(f_p_p*rpres/gm)/(gm-1.d0)+0.5d0*(f_p*mach**2)/rcom +0.5d0*(2.d0/gm/beta) &
++(1.d0-sdamp)*(u(bci,:,:,5)-((f_p_p*rpres/gm)/(gm-1.d0)+0.5d0*(f_p*mach**2)/rcom +0.5d0*(2.d0/gm/beta)))
+	u(bci,:,:,6)=dsqrt(2.d0/gm/beta)+(1.d0-sdamp)*(u(bci,:,:,6)-dsqrt(2.d0/gm/beta)) !bx
+	u(bci,:,:,7)=0.d0+(1.d0-sdamp)*(u(bci,:,:,7))
+	u(bci,:,:,8)=0.d0+(1.d0-sdamp)*(u(bci,:,:,8))
+	enddo
 
 endif
 
@@ -725,41 +676,34 @@ if (dir .eq. 1) then
 !     v_l=(/rcom,rpres/gm,-mach/rcom,0.0d0,0.0d0,dsqrt(2.d0/gm/beta),0.0d0,0.0d0/) !Use this one!
 !     v_r=(/1.0d0,1.0d0/gm,mach,0.0d0,0.0d0,dsqrt(2.d0/gm/beta),0.0d0,0.0d0/)  
 !print*,rpres/gm
-	u(ix,:,:,1)=1.0d0*f_p
-	u(ix,:,:,2)=-f_p*mach
-	u(ix,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
-	u(ix,:,:,4)=0.0d0 !vz momentum 
-	u(ix,:,:,5)=(f_p_p*1.d0/gm)/(gm-1.d0)+0.5d0*f_p*mach**2 +0.5d0*(2.d0/gm/beta)
-	u(ix,:,:,6)=dsqrt(2.d0/gm/beta) !bx
-	u(ix,:,:,7)=0.d0!u(1,:,:,7) !by
-	u(ix,:,:,8)=0.d0!u(1,:,:,8) !bz
 
-	u(ix-1,:,:,1)=f_p*1.0d0
-	u(ix-1,:,:,2)=-f_p*mach
-	u(ix-1,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
-	u(ix-1,:,:,4)=0.0d0 !vz momentum 
-	u(ix-1,:,:,5)=(f_p_p*1.d0/gm)/(gm-1.d0)+0.5d0*f_p*mach**2+0.5d0*(2.d0/gm/beta)
-	u(ix-1,:,:,6)=dsqrt(2.d0/gm/beta) !bx
-	u(ix-1,:,:,7)=0.d0!u(1,:,:,7) !by
-	u(ix-1,:,:,8)=0.d0!u(1,:,:,8) !bz
+!PML boundary layer
+u(ix,:,:,2)=-f_p*mach
+u(ix-1,:,:,2)=-f_p*mach
+	do bci=ix-21,ix 
+	sdamp=3.0d0/(x(2)-x(1))*((x(bci)-x(ix-21))/20.d0)**2
+!	sdamp=sdamp/(3.0d0/(x(2)-x(1))*((x(1)-x(20))/20.d0)**2) !to normalise to 1
+	u(bci,:,:,1)=f_p +(1.d0-sdamp)*(u(bci,:,:,1)-f_p)
+	u(bci,:,:,2)=-f_p*mach +(1.d0-sdamp)*(u(bci,:,:,2)+f_p*mach)
+	u(bci,:,:,3)=0.0d0+(1.d0-sdamp)*(u(bci,:,:,3))
+	u(bci,:,:,4)=0.0d0+(1.d0-sdamp)*(u(bci,:,:,4)) !vz momentum 
+	u(bci,:,:,5)=(f_p_p*1.d0/gm)/(gm-1.d0)+0.5d0*f_p*mach**2 +0.5d0*(2.d0/gm/beta) &
++(1.d0-sdamp)*(u(bci,:,:,5)-((f_p_p*1.d0/gm)/(gm-1.d0)+0.5d0*f_p*mach**2 +0.5d0*(2.d0/gm/beta)))
+	u(bci,:,:,6)=dsqrt(2.d0/gm/beta)+(1.d0-sdamp)*(u(bci,:,:,6)-dsqrt(2.d0/gm/beta)) !bx
+	u(bci,:,:,7)=0.d0+(1.d0-sdamp)*(u(bci,:,:,7))
+	u(bci,:,:,8)=0.d0+(1.d0-sdamp)*(u(bci,:,:,8))
+	enddo
 
-	u(ix-2,:,:,1)=f_p*1.0d0
-	u(ix-2,:,:,2)=-f_p*mach
-	u(ix-2,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
-	u(ix-2,:,:,4)=0.0d0 !vz momentum 
-	u(ix-2,:,:,5)=(f_p_p*1.d0/gm)/(gm-1.d0)+0.5d0*f_p*mach**2+0.5d0*(2.d0/gm/beta)
-	u(ix-2,:,:,6)=dsqrt(2.d0/gm/beta) !bx
-	u(ix-2,:,:,7)=0.d0!u(1,:,:,7) !by
-	u(ix-2,:,:,8)=0.d0!u(1,:,:,8) !bz
-
-	u(ix-3,:,:,1)=f_p*1.0d0
-	u(ix-3,:,:,2)=-f_p*mach
-	u(ix-3,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
-	u(ix-3,:,:,4)=0.0d0 !vz momentum 
-	u(ix-3,:,:,5)=(f_p_p*1.d0/gm)/(gm-1.d0)+0.5d0*f_p*mach**2+0.5d0*(2.d0/gm/beta)
-	u(ix-3,:,:,6)=dsqrt(2.d0/gm/beta) !bx
-	u(ix-3,:,:,7)=0.d0!u(1,:,:,7) !by
-	u(ix-3,:,:,8)=0.d0!u(1,:,:,8) !bz
+!	do bci=ix-3,ix 
+!	u(bci,:,:,1)=1.0d0*f_p
+!	u(bci,:,:,2)=-f_p*mach
+!	u(bci,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
+!	u(bci,:,:,4)=0.0d0 !vz momentum 
+!	u(bci,:,:,5)=(f_p_p*1.d0/gm)/(gm-1.d0)+0.5d0*f_p*mach**2 +0.5d0*(2.d0/gm/beta)
+!	u(bci,:,:,6)=dsqrt(2.d0/gm/beta) !bx
+!	u(bci,:,:,7)=0.d0!u(1,:,:,7) !by
+!	u(bci,:,:,8)=0.d0!u(1,:,:,8) !bz
+!	enddo
 !!!!!!!!!!!!!!!!!!!!!!!!!!!
 endif
 end subroutine boundary_control_custom_mhd
