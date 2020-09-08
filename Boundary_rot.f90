@@ -654,8 +654,9 @@ if(dir.eq.0) then
 u(1,:,:,2)=-f_p*mach
 u(2,:,:,2)=-f_p*mach
 	do bci=1,21 
-	sdamp=3.0d0/(x(2)-x(1))*((x(bci)-x(21))/20.d0)**2
-!	sdamp=sdamp/(3.0d0/(x(2)-x(1))*((x(1)-x(20))/20.d0)**2) !to normalise to 1
+	sdamp=1.0d0/(x(2)-x(1))*((x(bci)-x(21))/20.d0)**2
+	sdamp=sdamp/(1.0d0/(x(2)-x(1))*((x(1)-x(21))/20.d0)**2) !to normalise to 1
+	sdamp=sdamp*0.3d0
 	u(bci,:,:,1)=f_p*rcom +(1.d0-sdamp)*(u(bci,:,:,1)-f_p*rcom)
 	u(bci,:,:,2)=-f_p*mach +(1.d0-sdamp)*(u(bci,:,:,2)+f_p*mach)
 	u(bci,:,:,3)=0.0d0+(1.d0-sdamp)*(u(bci,:,:,3))
@@ -681,8 +682,9 @@ if (dir .eq. 1) then
 u(ix,:,:,2)=-f_p*mach
 u(ix-1,:,:,2)=-f_p*mach
 	do bci=ix-21,ix 
-	sdamp=3.0d0/(x(2)-x(1))*((x(bci)-x(ix-21))/20.d0)**2
-!	sdamp=sdamp/(3.0d0/(x(2)-x(1))*((x(1)-x(20))/20.d0)**2) !to normalise to 1
+	sdamp=1.0d0/(x(2)-x(1))*((x(bci)-x(ix-21))/20.d0)**2
+	sdamp=sdamp/(1.0d0/(x(2)-x(1))*((x(ix)-x(ix-21))/20.d0)**2) !to normalise to 1
+	sdamp=sdamp*0.3d0
 	u(bci,:,:,1)=f_p +(1.d0-sdamp)*(u(bci,:,:,1)-f_p)
 	u(bci,:,:,2)=-f_p*mach +(1.d0-sdamp)*(u(bci,:,:,2)+f_p*mach)
 	u(bci,:,:,3)=0.0d0+(1.d0-sdamp)*(u(bci,:,:,3))
