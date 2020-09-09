@@ -651,11 +651,20 @@ if(dir.eq.0) then
 !     v_r=(/1.0d0,1.0d0/gm,mach,0.0d0,0.0d0,dsqrt(2.d0/gm/beta),0.0d0,0.0d0/)  
 
 !PML boundary layer
-u(1,:,:,2)=-f_p*mach
-u(2,:,:,2)=-f_p*mach
-	do bci=1,21 
-	sdamp=1.0d0/(x(2)-x(1))*((x(bci)-x(21))/20.d0)**2
-	sdamp=sdamp/(1.0d0/(x(2)-x(1))*((x(1)-x(21))/20.d0)**2) !to normalise to 1
+	do bci=1,3 
+	u(bci,:,:,1)=f_p*rcom
+	u(bci,:,:,2)=-f_p*mach
+	u(bci,:,:,3)=0.0d0
+	u(bci,:,:,4)=0.0d0
+	u(bci,:,:,5)=(f_p_p*rpres/gm)/(gm-1.d0)+0.5d0*(f_p*mach**2)/rcom +0.5d0*(2.d0/gm/beta)
+	u(bci,:,:,6)=dsqrt(2.d0/gm/beta)
+	u(bci,:,:,7)=0.d0
+	u(bci,:,:,8)=0.d0
+	enddo
+
+	do bci=3,23 
+	sdamp=1.0d0/(x(2)-x(1))*((x(bci)-x(23))/20.d0)**2
+	sdamp=sdamp/(1.0d0/(x(2)-x(1))*((x(3)-x(23))/20.d0)**2) !to normalise to 1
 	sdamp=sdamp*0.3d0
 	u(bci,:,:,1)=f_p*rcom +(1.d0-sdamp)*(u(bci,:,:,1)-f_p*rcom)
 	u(bci,:,:,2)=-f_p*mach +(1.d0-sdamp)*(u(bci,:,:,2)+f_p*mach)
@@ -679,11 +688,20 @@ if (dir .eq. 1) then
 !print*,rpres/gm
 
 !PML boundary layer
-u(ix,:,:,2)=-f_p*mach
-u(ix-1,:,:,2)=-f_p*mach
-	do bci=ix-21,ix 
-	sdamp=1.0d0/(x(2)-x(1))*((x(bci)-x(ix-21))/20.d0)**2
-	sdamp=sdamp/(1.0d0/(x(2)-x(1))*((x(ix)-x(ix-21))/20.d0)**2) !to normalise to 1
+	do bci=ix-2,ix 
+	u(bci,:,:,1)=f_p
+	u(bci,:,:,2)=-f_p*mach
+	u(bci,:,:,3)=0.0d0
+	u(bci,:,:,4)=0.0d0
+	u(bci,:,:,5)=(f_p_p*1.d0/gm)/(gm-1.d0)+0.5d0*f_p*mach**2 +0.5d0*(2.d0/gm/beta)
+	u(bci,:,:,6)=dsqrt(2.d0/gm/beta)
+	u(bci,:,:,7)=0.d0
+	u(bci,:,:,8)=0.d0
+	enddo
+
+	do bci=ix-23,ix-2 
+	sdamp=1.0d0/(x(2)-x(1))*((x(bci)-x(ix-23))/20.d0)**2
+	sdamp=sdamp/(1.0d0/(x(2)-x(1))*((x(ix-2)-x(ix-23))/20.d0)**2) !to normalise to 1
 	sdamp=sdamp*0.3d0
 	u(bci,:,:,1)=f_p +(1.d0-sdamp)*(u(bci,:,:,1)-f_p)
 	u(bci,:,:,2)=-f_p*mach +(1.d0-sdamp)*(u(bci,:,:,2)+f_p*mach)
