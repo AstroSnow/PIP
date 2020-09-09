@@ -473,7 +473,7 @@ double precision,intent(inout)::U(ix,jx,kx,nvar)
 double precision :: vxpert,vdxpert,period,ppert,vamp
 double precision :: rodxpert,ropert,cs,pdxpert,pr0,ro0
 double precision :: f_n,f_p,f_p_p,f_p_n
-double precision :: mach,rcom,rpres
+double precision :: mach,rcom,rpres,sdamp
 integer :: bci
 
 period=0.5d0 
@@ -530,12 +530,33 @@ if(dir.eq.0) then
 	rcom=(gm+1.d0)*mach**2/(2.d0+(gm-1.d0)*mach**2)
 	rpres=1.d0+gm*mach**2*(1.d0-1.d0/rcom)
 
-	do bci=1,4 
+!	do bci=1,4 
+!	u(bci,:,:,1)=f_n*rcom
+!	u(bci,:,:,2)=-mach*f_n
+!	u(bci,:,:,3)=0.0d0 
+!	u(bci,:,:,4)=0.0d0
+!	u(bci,:,:,5)=(f_p_n*rpres/gm)/(gm-1.d0)+0.5d0*(f_n*mach**2)/rcom
+!	enddo
+
+!PML boundary layer
+	do bci=1,3 
 	u(bci,:,:,1)=f_n*rcom
-	u(bci,:,:,2)=-mach*f_n
-	u(bci,:,:,3)=0.0d0 
+	u(bci,:,:,2)=-f_n*mach
+	u(bci,:,:,3)=0.0d0
 	u(bci,:,:,4)=0.0d0
 	u(bci,:,:,5)=(f_p_n*rpres/gm)/(gm-1.d0)+0.5d0*(f_n*mach**2)/rcom
+	enddo
+
+	do bci=3,23 
+	sdamp=1.0d0/(x(2)-x(1))*((x(bci)-x(23))/20.d0)**2
+	sdamp=sdamp/(1.0d0/(x(2)-x(1))*((x(3)-x(23))/20.d0)**2) !to normalise to 1
+	sdamp=sdamp*0.3d0
+	u(bci,:,:,1)=f_n*rcom +(1.d0-sdamp)*(u(bci,:,:,1)-f_n*rcom)
+	u(bci,:,:,2)=-f_n*mach +(1.d0-sdamp)*(u(bci,:,:,2)+f_n*mach)
+	u(bci,:,:,3)=0.0d0+(1.d0-sdamp)*(u(bci,:,:,3))
+	u(bci,:,:,4)=0.0d0+(1.d0-sdamp)*(u(bci,:,:,4)) !vz momentum 
+	u(bci,:,:,5)=(f_p_n*rpres/gm)/(gm-1.d0)+0.5d0*(f_n*mach**2)/rcom &
++(1.d0-sdamp)*(u(bci,:,:,5)-((f_p_n*rpres/gm)/(gm-1.d0)+0.5d0*(f_n*mach**2)/rcom))
 	enddo
 
 endif
@@ -545,12 +566,33 @@ if (dir .eq. 1) then
 	rcom=(gm+1.d0)*mach**2/(2.d0+(gm-1.d0)*mach**2)
 	rpres=1.d0+gm*mach**2*(1.d0-1.d0/rcom)
 
-	do bci=ix-3,ix 
-	u(bci,:,:,1)=f_n*1.0d0
+!	do bci=ix-3,ix 
+!	u(bci,:,:,1)=f_n*1.0d0
+!	u(bci,:,:,2)=-f_n*mach
+!	u(bci,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
+!	u(bci,:,:,4)=0.0d0 !vz momentum 
+!	u(bci,:,:,5)=(f_p_n*1.d0/gm)/(gm-1.d0)+0.5d0*f_n*mach**2
+!	enddo
+
+!PML boundary layer
+	do bci=ix-2,ix 
+	u(bci,:,:,1)=f_n
 	u(bci,:,:,2)=-f_n*mach
-	u(bci,:,:,3)=0.0d0!-0.1d0*u(1,:,:,1) 
-	u(bci,:,:,4)=0.0d0 !vz momentum 
+	u(bci,:,:,3)=0.0d0
+	u(bci,:,:,4)=0.0d0
 	u(bci,:,:,5)=(f_p_n*1.d0/gm)/(gm-1.d0)+0.5d0*f_n*mach**2
+	enddo
+
+	do bci=ix-23,ix-2 
+	sdamp=1.0d0/(x(2)-x(1))*((x(bci)-x(ix-23))/20.d0)**2
+	sdamp=sdamp/(1.0d0/(x(2)-x(1))*((x(ix-2)-x(ix-23))/20.d0)**2) !to normalise to 1
+	sdamp=sdamp*0.3d0
+	u(bci,:,:,1)=f_n +(1.d0-sdamp)*(u(bci,:,:,1)-f_n)
+	u(bci,:,:,2)=-f_n*mach +(1.d0-sdamp)*(u(bci,:,:,2)+f_n*mach)
+	u(bci,:,:,3)=0.0d0+(1.d0-sdamp)*(u(bci,:,:,3))
+	u(bci,:,:,4)=0.0d0+(1.d0-sdamp)*(u(bci,:,:,4)) !vz momentum 
+	u(bci,:,:,5)=(f_p_n*1.d0/gm)/(gm-1.d0)+0.5d0*f_n*mach**2 &
++(1.d0-sdamp)*(u(bci,:,:,5)-((f_p_n*1.d0/gm)/(gm-1.d0)+0.5d0*f_n*mach**2))
 	enddo
 
 endif
