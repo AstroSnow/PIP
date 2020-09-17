@@ -92,6 +92,11 @@ contains
          -0.5d0*(U(:,:,:,2)*U(:,:,:,2) &
          +U(:,:,:,3)*U(:,:,:,3) &
          +U(:,:,:,4)*U(:,:,:,4))/U(:,:,:,1))
+!HD PRESSURE FIXES
+   if(minval(pr).le.pr_lim) pr=max(pr,pr_lim)  
+    U(:,:,:,5)=pr/(gm-1.0d0)+0.5d0*((U(:,:,:,2)*U(:,:,:,2)&
+         +U(:,:,:,3)*U(:,:,:,3)&
+         +U(:,:,:,4)*U(:,:,:,4))/U(:,:,:,1))
   end subroutine get_Pr_HD
 
   subroutine get_Te_MHD(U,Te)
