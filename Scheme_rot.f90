@@ -130,7 +130,16 @@ contains
     vx=u_h(:,:,:,2)/de
     vy=u_h(:,:,:,3)/de
     vz=u_h(:,:,:,4)/de
-    pr=(gm-1.0d0)*(u_h(:,:,:,5)-0.5d0*de*(vx**2+vy**2+vz**2))    
+    pr=(gm-1.0d0)*(u_h(:,:,:,5)-0.5d0*de*(vx**2+vy**2+vz**2))
+!!!!!!FIXES FOR HD DENSITY, PRESSURE AND ENERGY !!!!!!!  
+    if(minval(pr).le.pr_lim) pr=max(pr,pr_lim)
+    if(minval(de).le.ro_lim) de=max(de,ro_lim)
+    u_h(:,:,:,1)=de
+    u_h(:,:,:,2)=vx*de
+    u_h(:,:,:,3)=vy*de
+    u_h(:,:,:,4)=vz*de
+    u_h(:,:,:,5)=pr/(gm-1.0d0)+0.5d0*de*(vx**2+vy**2+vz**2)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  
   end subroutine cq2pv_hd
 
   !Convert physical variables to conserved quantity for MHD
