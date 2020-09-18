@@ -42,7 +42,7 @@ subroutine shock_tube_stab3
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=-50.0d0 ;end(1)=50.d0!1200.0d0          !400.0d0/f_p
+  start(1)=-25.0d0 ;end(1)=25.d0!1200.0d0          !400.0d0/f_p
   start(2)=0.0d0 ;end(2)=10.0d0
   start(3)=-1.0d0 ;end(3)=1.0d0
   call set_coordinate(start,end)
@@ -107,7 +107,7 @@ subroutine shock_tube_stab3
      b_perp=v_r(7)
   end where
 !  wtr=0.001d0
-  wtr=0.0d0!0.001d0!dx(1)*1.d0
+  wtr=0.0d0!dx(1)*2.d0!0.001d0
   wtrf=0.0d0!dx(1)*4.d0
 !0.001d0
   do k=1,kx;do j=1,jx;do i=1,ix
