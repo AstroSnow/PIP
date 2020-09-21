@@ -11,7 +11,8 @@ program main
   ! First version - 2014/07/08 NN
   !====================================================================
   !  use globalvar,only:U_h,U_m,nt,time,dt,flag_stop,tend,nmax
-  use globalvar,only:U_h,U_m,nt,time,dt,flag_stop,tend,nmax,nout,my_rank, flag_IR,flag_PIP  
+  use globalvar,only:U_h,U_m,nt,time,dt,flag_stop,tend,nmax,nout,my_rank, flag_IR,flag_PIP,&
+	esav,emsavtime  
   use initial_rot,only:prologue
   use io_rot,only:output,stop_sim,epilogue
   use solver_rot,only:run_solver

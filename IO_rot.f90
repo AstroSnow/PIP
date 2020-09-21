@@ -13,7 +13,7 @@ module io_rot
        flag_ir,nvar_h,nvar_m,flag_resi,nt,nout,margin,gm,flag_restart,&
        flag_bnd,flag_col,flag_grav,tend,mpi_pos,xi_n,mu,flag_visc,&
        total_iter,flag_amb,dtout,mpi_siz,nt,nmax,output_type,flag_ps,flag_divb,&
-       flag_damp,damp_time,flag_rad,flag_ir_type,arb_heat,visc
+       flag_damp,damp_time,flag_rad,flag_ir_type,arb_heat,visc,esav,emsavtime
   use mpi_rot,only:end_mpi
   use IOT_rot,only:initialize_IOT,get_next_output
   use Util_rot,only:get_word,get_value_integer
@@ -35,7 +35,7 @@ contains
 !  subroutine output(nout,time)
   subroutine output(out)
     integer,intent(in)::out
-    integer i,j,k
+    integer i,j,k,outesav
 !    integer j
     double precision total_divB,cx,cy,max_C,divb
 !    double precision,intent(in)::time
@@ -52,8 +52,15 @@ contains
        call initialize_IOT(dtout,tend,output_type)
     endif
     !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+!Check for physical-time save
+end_time=MPI_Wtime()
+outesav=-1 
+if (((end_time-start_time) .ge. emsavtime) .and. (esav .eq. 1)) then
+	outesav=1
+	esav=2
+endif  
     !output variables 
-  if(time.ge.get_next_output(nout,time).or. out.eq.1) then
+  if((time.ge.get_next_output(nout,time,esav)) .or. (out.eq.1) .or. (outesav.eq.1)) then
      !     if(flag_mpi.eq.0 .or.my_rank.eq.0) write(6,*) 'Time,dt,nout,nt,total_iter: ',time,dt,nout,nt,total_iter
     end_time=MPI_Wtime() 
      if(flag_mpi.eq.0 .or.my_rank.eq.0) &

@@ -20,7 +20,7 @@ module model_rot
        flag_bnd,dsc,output_type,flag_hll,flag_time,hc_integ,hc_type,ro_lim,pr_lim, &
        flag_hc_test,safety_cnd,nsub_max,b_cr,flag_ps,flag_cyl, &
        vd_cri,j_cri,flag_damp,damp_time,flag_rad, T0, n0, L0,flag_IR_type, &
-       flag_visc, nu_0
+       flag_visc, nu_0, esav, emsavtime
   use scheme_rot,only:pv2cq_mhd,pv2cq_hd
   use HC_rot,only:initialize_HC
   use Res_rot,only:initialize_resistivity
@@ -207,6 +207,10 @@ subroutine get_parameters
         read(tmp(1:ind_e-1),*)n0
      else if(key.eq.'L_norm') then
         read(tmp(1:ind_e-1),*)L0
+     else if(key.eq.'esav') then
+        read(tmp(1:ind_e-1),*)esav
+     else if(key.eq.'emsavtime') then
+        read(tmp(1:ind_e-1),*)emsavtime
      endif
      
      !Make config is delegated to mod.IO_rot sub.mk_config
