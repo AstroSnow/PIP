@@ -89,4 +89,7 @@ double precision,save :: emsavtime
 
 !Normalisation values
   double precision, save :: T0, n0, L0
+
+!optional save parameters
+  integer, save :: ac_sav, xi_sav, ion_sav, rec_sav, col_sav, gr_sav, vs_sav, heat_sav, et_sav, ps_sav
 end module globalvar

@@ -13,7 +13,8 @@ module io_rot
        flag_ir,nvar_h,nvar_m,flag_resi,nt,nout,margin,gm,flag_restart,&
        flag_bnd,flag_col,flag_grav,tend,mpi_pos,xi_n,mu,flag_visc,&
        total_iter,flag_amb,dtout,mpi_siz,nt,nmax,output_type,flag_ps,flag_divb,&
-       flag_damp,damp_time,flag_rad,flag_ir_type,arb_heat,visc,esav,emsavtime
+       flag_damp,damp_time,flag_rad,flag_ir_type,arb_heat,visc,esav,emsavtime,&
+       ac_sav, xi_sav, ion_sav, rec_sav, col_sav, gr_sav, vs_sav, heat_sav, et_sav, ps_sav
   use mpi_rot,only:end_mpi
   use IOT_rot,only:initialize_IOT,get_next_output
   use Util_rot,only:get_word,get_value_integer
@@ -58,6 +59,8 @@ outesav=-1
 if (((end_time-start_time) .ge. emsavtime) .and. (esav .eq. 1)) then
 	outesav=1
 	esav=2
+     if(flag_mpi.eq.0 .or.my_rank.eq.0) &
+          write(6,*) 'calling emergency save'
 endif  
     !output variables 
   if((time.ge.get_next_output(nout,time,esav)) .or. (out.eq.1) .or. (outesav.eq.1)) then
@@ -139,28 +142,30 @@ endif
     
 
     if(flag_pip.eq.1.or.flag_amb.eq.1) then
-       call save1param(ac,tno//'ac.dac.',1)
-       call save1param(xi_n,tno//'xi.dac.',1)
+!print*,'ac_sav',ac_sav
+!print*,'xi_sav',xi_sav
+       if(ac_sav.eq.1) call save1param(ac,tno//'ac.dac.',1)
+       if(xi_sav.eq.1) call save1param(xi_n,tno//'xi.dac.',1)
     endif
     if(flag_pip.eq.1.and.flag_ir.eq.1) then
-       call save1param(Gm_ion,tno//'ion.dac.',1)
-       call save1param(Gm_rec,tno//'rec.dac.',1)
+       if(ion_sav.eq.1) call save1param(Gm_ion,tno//'ion.dac.',1)
+       if(rec_sav.eq.1) call save1param(Gm_rec,tno//'rec.dac.',1)
     endif
     if(flag_mhd.eq.1.and.flag_resi.eq.1) then
-       call save1param(eta,tno//'et.dac.',1)
+       if(et_sav.eq.1) call save1param(eta,tno//'et.dac.',1)
     endif
     if(flag_col.eq.1) then
-       call save1param(ac,tno//'col.dac.',1)
+       if(col_sav.eq.1) call save1param(ac,tno//'col.dac.',1)
     endif
      
     if(flag_grav.eq.1) then
-       call save1param(gra,tno//'gr.dac.',3)
+       if(gr_sav.eq.1) call save1param(gra,tno//'gr.dac.',3)
     endif
     if(flag_visc.eq.1) then
-       call save1param(mu,tno//'vs.dac.',1)
+       if(vs_sav.eq.1) call save1param(mu,tno//'vs.dac.',1)
     endif
     if(flag_pip.eq.1.and.flag_ir_type.eq.0.and.flag_IR.ne.0) then
-       call save1param(arb_heat,tno//'aheat.dac.',1)
+       if(heat_sav.eq.1) call save1param(arb_heat,tno//'aheat.dac.',1)
     endif
 
 
@@ -240,14 +245,14 @@ endif
           call save1param(U_m(:,:,:,i),tno//trim(file_m(i)),1)
        enddo
        if(flag_resi.ge.2) then
-          call save1param(eta,tno//"et.dac.",1)
+          if(et_sav.eq.1) call save1param(eta,tno//"et.dac.",1)
        endif
        if(flag_ir.ge.1) then
 !	print*,gm_ion
-          call save1param(Gm_ion,tno//'ion.dac.',1)
-          call save1param(Gm_rec,tno//'rec.dac.',1)
+          if(ion_sav.eq.1) call save1param(Gm_ion,tno//'ion.dac.',1)
+          if(rec_sav.eq.1) call save1param(Gm_rec,tno//'rec.dac.',1)
        endif
-       if(flag_visc.ge.1) then
+       if((flag_visc.ge.1).and.(vs_sav.eq.1)) then
           call save1param(visc(:,:,:,1),tno//"viscx.dac.",1)
           call save1param(visc(:,:,:,2),tno//"viscy.dac.",1)
           call save1param(visc(:,:,:,3),tno//"viscz.dac.",1)
@@ -258,7 +263,7 @@ endif
           call save1param(U_h(:,:,:,i),tno//trim(file_h(i)),1)
        enddo
     endif
-    if(flag_divb.eq.1 .and. flag_mhd.eq.1) then    
+    if(flag_divb.eq.1 .and. flag_mhd.eq.1 .and. ps_sav .eq.1) then    
        call save1param(U_m(:,:,:,9),tno//trim(file_m(9)),1)
     endif
     

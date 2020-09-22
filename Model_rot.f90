@@ -20,7 +20,8 @@ module model_rot
        flag_bnd,dsc,output_type,flag_hll,flag_time,hc_integ,hc_type,ro_lim,pr_lim, &
        flag_hc_test,safety_cnd,nsub_max,b_cr,flag_ps,flag_cyl, &
        vd_cri,j_cri,flag_damp,damp_time,flag_rad, T0, n0, L0,flag_IR_type, &
-       flag_visc, nu_0, esav, emsavtime
+       flag_visc, nu_0, esav, emsavtime, &
+	ac_sav, xi_sav, ion_sav, rec_sav, col_sav, gr_sav, vs_sav, heat_sav, et_sav, ps_sav
   use scheme_rot,only:pv2cq_mhd,pv2cq_hd
   use HC_rot,only:initialize_HC
   use Res_rot,only:initialize_resistivity
@@ -211,8 +212,27 @@ subroutine get_parameters
         read(tmp(1:ind_e-1),*)esav
      else if(key.eq.'emsavtime') then
         read(tmp(1:ind_e-1),*)emsavtime
-     endif
-     
+     else if(key.eq.'ac_sav') then
+        read(tmp(1:ind_e-1),*)ac_sav
+     else if(key.eq.'xi_sav') then
+        read(tmp(1:ind_e-1),*)xi_sav
+     else if(key.eq.'ion_sav') then
+        read(tmp(1:ind_e-1),*)ion_sav
+     else if(key.eq.'rec_sav') then
+        read(tmp(1:ind_e-1),*)rec_sav
+     else if(key.eq.'col_sav') then
+        read(tmp(1:ind_e-1),*)col_sav
+     else if(key.eq.'gr_sav') then
+        read(tmp(1:ind_e-1),*)gr_sav
+     else if(key.eq.'vs_sav') then
+        read(tmp(1:ind_e-1),*)vs_sav
+     else if(key.eq.'heat_sav') then
+        read(tmp(1:ind_e-1),*)heat_sav
+     else if(key.eq.'et_sav') then
+        read(tmp(1:ind_e-1),*)et_sav
+     else if(key.eq.'ps_sav') then
+        read(tmp(1:ind_e-1),*)ps_sav
+     endif    
      !Make config is delegated to mod.IO_rot sub.mk_config
 !     if(flag_mpi.eq.0 .or. my_rank.eq.0) then
 !        if(r_count.eq.0) then
