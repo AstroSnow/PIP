@@ -88,14 +88,14 @@ shock_tube_stab2:flag_ini; flag for initial setting
 10000.0d0 :T_norm; Temperature in K (13.6 eV = 157814.4 K)
 1.0d15  :n_norm; number density
 3.d5    :L_norm; Length scale
-==Optional save flags TOGGLE AT YOUR PERIL! MAY PREVENT RESTARTS==;
-1:ac_sav;collisional coefficient
-1:xi_sav;neutral fraction
-1:ion_sav;ionisation
-1:rec_sav;recombination
-1:col_sav;collisional coefficient
-1:gr_sav;gravity
-1:vs_sav;viscosity
-1:heat_sav;arbitrary heating
-1:et_sav;resistivity
-1:ps_sav;ps
+==Optional save flags (0 on, -1 off) TOGGLE AT YOUR PERIL! MAY PREVENT RESTARTS==;
+0:ac_sav;collisional coefficient
+0:xi_sav;neutral fraction
+0:ion_sav;ionisation
+0:rec_sav;recombination
+0:col_sav;collisional coefficient
+0:gr_sav;gravity
+0:vs_sav;viscosity
+0:heat_sav;arbitrary heating
+0:et_sav;resistivity
+0:ps_sav;ps

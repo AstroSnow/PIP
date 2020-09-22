@@ -144,28 +144,28 @@ endif
     if(flag_pip.eq.1.or.flag_amb.eq.1) then
 !print*,'ac_sav',ac_sav
 !print*,'xi_sav',xi_sav
-       if(ac_sav.eq.1) call save1param(ac,tno//'ac.dac.',1)
-       if(xi_sav.eq.1) call save1param(xi_n,tno//'xi.dac.',1)
+       if(ac_sav.eq.0) call save1param(ac,tno//'ac.dac.',1)
+       if(xi_sav.eq.0) call save1param(xi_n,tno//'xi.dac.',1)
     endif
     if(flag_pip.eq.1.and.flag_ir.eq.1) then
-       if(ion_sav.eq.1) call save1param(Gm_ion,tno//'ion.dac.',1)
-       if(rec_sav.eq.1) call save1param(Gm_rec,tno//'rec.dac.',1)
+       if(ion_sav.eq.0) call save1param(Gm_ion,tno//'ion.dac.',1)
+       if(rec_sav.eq.0) call save1param(Gm_rec,tno//'rec.dac.',1)
     endif
     if(flag_mhd.eq.1.and.flag_resi.eq.1) then
-       if(et_sav.eq.1) call save1param(eta,tno//'et.dac.',1)
+       if(et_sav.eq.0) call save1param(eta,tno//'et.dac.',1)
     endif
     if(flag_col.eq.1) then
-       if(col_sav.eq.1) call save1param(ac,tno//'col.dac.',1)
+       if(col_sav.eq.0) call save1param(ac,tno//'col.dac.',1)
     endif
      
     if(flag_grav.eq.1) then
-       if(gr_sav.eq.1) call save1param(gra,tno//'gr.dac.',3)
+       if(gr_sav.eq.0) call save1param(gra,tno//'gr.dac.',3)
     endif
     if(flag_visc.eq.1) then
-       if(vs_sav.eq.1) call save1param(mu,tno//'vs.dac.',1)
+       if(vs_sav.eq.0) call save1param(mu,tno//'vs.dac.',1)
     endif
     if(flag_pip.eq.1.and.flag_ir_type.eq.0.and.flag_IR.ne.0) then
-       if(heat_sav.eq.1) call save1param(arb_heat,tno//'aheat.dac.',1)
+       if(heat_sav.eq.0) call save1param(arb_heat,tno//'aheat.dac.',1)
     endif
 
 
@@ -245,14 +245,14 @@ endif
           call save1param(U_m(:,:,:,i),tno//trim(file_m(i)),1)
        enddo
        if(flag_resi.ge.2) then
-          if(et_sav.eq.1) call save1param(eta,tno//"et.dac.",1)
+          if(et_sav.eq.0) call save1param(eta,tno//"et.dac.",1)
        endif
        if(flag_ir.ge.1) then
 !	print*,gm_ion
-          if(ion_sav.eq.1) call save1param(Gm_ion,tno//'ion.dac.',1)
-          if(rec_sav.eq.1) call save1param(Gm_rec,tno//'rec.dac.',1)
+          if(ion_sav.eq.0) call save1param(Gm_ion,tno//'ion.dac.',1)
+          if(rec_sav.eq.0) call save1param(Gm_rec,tno//'rec.dac.',1)
        endif
-       if((flag_visc.ge.1).and.(vs_sav.eq.1)) then
+       if((flag_visc.ge.1).and.(vs_sav.eq.0)) then
           call save1param(visc(:,:,:,1),tno//"viscx.dac.",1)
           call save1param(visc(:,:,:,2),tno//"viscy.dac.",1)
           call save1param(visc(:,:,:,3),tno//"viscz.dac.",1)
@@ -263,7 +263,7 @@ endif
           call save1param(U_h(:,:,:,i),tno//trim(file_h(i)),1)
        enddo
     endif
-    if(flag_divb.eq.1 .and. flag_mhd.eq.1 .and. ps_sav .eq.1) then    
+    if(flag_divb.eq.1 .and. flag_mhd.eq.1 .and. ps_sav .eq.0) then    
        call save1param(U_m(:,:,:,9),tno//trim(file_m(9)),1)
     endif
     
