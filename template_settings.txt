@@ -14,7 +14,7 @@ MHD:flag_eqs;flag_for equation (HD,MHD, PIP)
 5.0    :gm_d; 
 3.0    :gm_n;
 0.3  :safety;  safety factor
-shock_tube_stab2:flag_ini; flag for initial setting   
+shock_tube:flag_ini; flag for initial setting   
 0:flag_sch;  flag for numerical scheme (0:HLL-branch, 1:SLW)
 2:flag_hll; flag for HLL branch (0:HLL,1:Rusanov,2:HLLD)
 1:s_order;order of space for HLL branch (1, 2)
