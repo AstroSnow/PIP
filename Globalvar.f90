@@ -25,6 +25,9 @@ module globalvar
 
   double precision,allocatable,save::arb_heat(:,:,:)
 
+!6 level collisional rates
+  double precision,allocatable,save::Colrat(:,:,:,:,:),Nexcite(:,:,:,:)
+
 !These are the variables for heat condution, viscosity, resistivity and gravity
 
 ! for numerical calculation
@@ -89,6 +92,9 @@ double precision,save :: emsavtime
 
 !Normalisation values
   double precision, save :: T0, n0, L0
+
+!Other useful values
+  double precision, save :: f_p_ini,f_p_p_ini,n0fac,Gm_rec_ref !Constants for ionisation and recombination
 
 !optional save parameters
   integer, save :: ac_sav, xi_sav, ion_sav, rec_sav, col_sav, gr_sav, vs_sav, heat_sav, et_sav, ps_sav

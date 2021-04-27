@@ -1,10 +1,12 @@
 subroutine shock_tube_ion
   use parameters,only:pi
   use globalvar,only:ix,jx,kx,U_h,U_m,flag_bnd,col,beta,flag_b_stg,dtout,&
-       flag_mhd,flag_mpi,my_rank,flag_pip,gm,beta,tend,&
-       x,y,z,dx,dy,dz,n_fraction,debug_direction,debug_option,T0
-  use scheme_rot,only:pv2cq_mhd,pv2cq_hd
+       flag_mhd,flag_mpi,my_rank,flag_pip,gm,beta,tend,flag_ir,&
+       x,y,z,dx,dy,dz,n_fraction,debug_direction,debug_option,T0,n0,Nexcite,&
+       f_p_ini,f_p_p_ini,n0fac,Gm_rec_ref
+  use scheme_rot,only:pv2cq_mhd,pv2cq_hd,get_Te_MHD
   use model_rot, only:set_coordinate,setcq
+  use PIP_rot, only:get_col_ion_coeff
   implicit none
   double precision :: ro_h(1:ix,1:jx,1:kx),ro_m(1:ix,1:jx,1:kx)
   double precision :: vx_h(1:ix,1:jx,1:kx),vx_m(1:ix,1:jx,1:kx)
@@ -20,17 +22,47 @@ subroutine shock_tube_ion
   double precision ::v_b_para(ix,jx,kx),b_b_para(ix,jx,kx)
   double precision ::v_theta(ix,jx,kx),v_phi(ix,jx,kx)
   double precision ::b_theta(ix,jx,kx),b_phi(ix,jx,kx)
+  double precision ::Te_p(ix,jx,kx),Gm_ion0(ix,jx,kx),Gm_rec0(ix,jx,kx)
+  double precision::Eion(6) !Energy to ionise
   double precision f_n,f_p,f_p_n,f_p_p,start(3),end(3),B0
-  double precision theta_p,phi_p,tmp,v_L(8),v_R(8),wtr,ioneq,Te_0
+  double precision theta_p,phi_p,tmp,v_L(8),v_R(8),wtr,ioneq,Te_0,tfac
+  double precision,parameter::kbhat=1.38064852,mehat=9.10938356,hhat=6.62607004
+  double precision,parameter::kboltz=1.38064852e-23 !Boltzmann Constant [m^2 kg s^-2 K^-1]
   integer i,j,k
 
   !Find the equilibrium neutral fraction
-  Te_0=T0/1.1604e4
-  ioneq=(2.6e-19/dsqrt(Te_0))/(2.91e-14/(0.232+13.6/Te_0)*(13.6/Te_0)**0.39*dexp(-13.6/Te_0))
-  f_n=ioneq/(ioneq+1.0d0)
-  f_p=1.0d0-f_n
-  f_p_n=f_n/(f_n+2.0d0*f_p)
-  f_p_p=2.0d0*f_p/(f_n+2.0d0*f_p)
+  if(flag_IR .eq. 4) then
+      print*,'Calculating LTE excitation state'
+      allocate(Nexcite(ix,jx,kx,6)) !Allocate the fractional array
+      Eion=[13.6,3.4,1.51,0.85,0.54,0.0] !in eV
+      Eion=Eion/13.6*2.18e-18 !Convert to joules (to be dimensionally correct)
+      Nexcite(:,:,:,6)=n0
+      Nexcite(:,:,:,1)=(2.0/n0/2.d0*(2.0*pi*mehat*kbhat*T0/hhat/hhat*1.0e14)**(3.0/2.0)*exp(-Eion(1)/kboltz/T0))
+      Nexcite(:,:,:,2)=(2.0/n0/8.d0*(2.0*pi*mehat*kbhat*T0/hhat/hhat*1.0e14)**(3.0/2.0)*exp(-Eion(2)/kboltz/T0))
+      Nexcite(:,:,:,3)=(2.0/n0/18.d0*(2.0*pi*mehat*kbhat*T0/hhat/hhat*1.0e14)**(3.0/2.0)*exp(-Eion(3)/kboltz/T0))
+      Nexcite(:,:,:,4)=(2.0/n0/32.d0*(2.0*pi*mehat*kbhat*T0/hhat/hhat*1.0e14)**(3.0/2.0)*exp(-Eion(4)/kboltz/T0))
+      Nexcite(:,:,:,5)=(2.0/n0/50.d0*(2.0*pi*mehat*kbhat*T0/hhat/hhat*1.0e14)**(3.0/2.0)*exp(-Eion(5)/kboltz/T0))
+      Nexcite(:,:,:,1:5)=n0/Nexcite(:,:,:,1:5)
+      Nexcite=Nexcite/n0
+      Nexcite=Nexcite/sum(Nexcite(1,1,1,:))
+      f_n=sum(Nexcite(1,1,1,1:5))
+      f_p=Nexcite(1,1,1,6)
+      f_p_n=f_n/(f_n+2.0d0*f_p)
+      f_p_p=2.0d0*f_p/(f_n+2.0d0*f_p)
+      f_p_ini=f_p
+      f_p_p_ini=f_p_p
+      n0fac=Nexcite(1,1,1,6)
+!      print*,Nexcite(1,1,1,:)
+!      print*,f_n,f_p
+!      stop
+  else 
+      Te_0=T0/1.1604e4
+      ioneq=(2.6e-19/dsqrt(Te_0))/(2.91e-14/(0.232+13.6/Te_0)*(13.6/Te_0)**0.39*dexp(-13.6/Te_0))
+      f_n=ioneq/(ioneq+1.0d0)
+      f_p=1.0d0-f_n
+      f_p_n=f_n/(f_n+2.0d0*f_p)
+      f_p_p=2.0d0*f_p/(f_n+2.0d0*f_p)
+  endif
 
   if (my_rank.eq.0) print*,'Neutral fraction = ',f_n
 
@@ -135,7 +167,7 @@ subroutine shock_tube_ion
 !     v_l=(/1.0d0,1.0d0,0.0d0,0.0d0,0.0d0,B0*0.75d0,B0,0.0d0/)
 !     v_r=(/0.125d0,0.1d0,0.0d0,0.0d0,0.0d0,B0*0.75d0,-B0,0.0d0/)
      v_l=(/1.0d0,beta*B0**2/2.d0,0.0d0,0.0d0,0.0d0,B0*0.3d0,B0,0.0d0/)
-     v_r=(/1.0d0,beta*B0**2/2.d0,0.0d0,0.0d0,0.0d0,B0*0.3d0,-B0,0.0d0/)
+     v_r=(/1.0d0,beta*B0**2/2.d0,0.0d0,0.0d0,0.0d0,B0*0.3d0,B0,0.0d0/)
 !     Density, pressure, velocity * 3, magnetic field *3
 
 
@@ -200,6 +232,20 @@ subroutine shock_tube_ion
   call setcq(ro_m,vx_m,vy_m,vz_m,p_m,B_x,B_y,B_z, &
        ro_h,vx_h,vy_h,vz_h,p_h)
   !---------------------------------------------------------------------
+
+  !Set the reference recombination rate
+!  if (flag_IR .eq. 4) then
+!        call get_Te_MHD(U_m,Te_p)
+!        tfac=beta/2.0d0*f_p_p_ini*5.0d0/6.0d0/f_p_ini
+!print*,'Te_p',Te_p
+!print*,'T0',T0
+!print*,'tfac',tfac
+!print*,U_m(:,:,:,1)
+!print*,n0
+!print*,n0fac
+!        call get_col_ion_coeff(Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion0,Gm_rec0)
+!        Gm_rec_ref=Gm_rec0(1,1,1) 
+!  endif
 
   !set default output period and time duration--------------------------
   if(tend.lt.0.0) then

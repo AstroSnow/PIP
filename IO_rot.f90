@@ -14,7 +14,8 @@ module io_rot
        flag_bnd,flag_col,flag_grav,tend,mpi_pos,xi_n,mu,flag_visc,&
        total_iter,flag_amb,dtout,mpi_siz,nt,nmax,output_type,flag_ps,flag_divb,&
        flag_damp,damp_time,flag_rad,flag_ir_type,arb_heat,visc,esav,emsavtime,&
-       ac_sav, xi_sav, ion_sav, rec_sav, col_sav, gr_sav, vs_sav, heat_sav, et_sav, ps_sav
+       ac_sav, xi_sav, ion_sav, rec_sav, col_sav, gr_sav, vs_sav, heat_sav, et_sav, ps_sav,&
+       Nexcite
   use mpi_rot,only:end_mpi
   use IOT_rot,only:initialize_IOT,get_next_output
   use Util_rot,only:get_word,get_value_integer
@@ -252,6 +253,14 @@ endif
           if(ion_sav.eq.0) call save1param(Gm_ion,tno//'ion.dac.',1)
           if(rec_sav.eq.0) call save1param(Gm_rec,tno//'rec.dac.',1)
        endif
+      if(flag_ir.eq.4) then 
+        call save1param(Nexcite(:,:,:,1),tno//'nexcite1.dac.',1)
+        call save1param(Nexcite(:,:,:,2),tno//'nexcite2.dac.',1)
+        call save1param(Nexcite(:,:,:,3),tno//'nexcite3.dac.',1)
+        call save1param(Nexcite(:,:,:,4),tno//'nexcite4.dac.',1)
+        call save1param(Nexcite(:,:,:,5),tno//'nexcite5.dac.',1)
+        call save1param(Nexcite(:,:,:,6),tno//'nexcite6.dac.',1)
+      endif
        if((flag_visc.ge.1).and.(vs_sav.eq.0)) then
           call save1param(visc(:,:,:,1),tno//"viscx.dac.",1)
           call save1param(visc(:,:,:,2),tno//"viscy.dac.",1)

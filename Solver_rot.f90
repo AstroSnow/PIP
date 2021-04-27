@@ -27,7 +27,7 @@ module solver_rot
        divb_cleaning_Dedner_source,divb_cleaning_Dedner_iter,derivative,vel_damp!,divb_flux_tmp
   use Res_rot,only:set_resistivity
   use Visc_rot,only:source_visc,initialize_visc
-  use PIP_rot,only:set_xin,set_IR,set_collisional,source_PIP
+  use PIP_rot,only:set_xin,set_IR,set_collisional,source_PIP,hydrogen_excitation_update
   use Gra_rot,only:set_gravity,source_gravity
   use HC_rot,only:HC,HC_STS,HC_SUBCYCLE
   use Util_rot,only:get_rotation
@@ -296,6 +296,11 @@ contains
           call HC(U_m,nvar_m,1)
        end select
     endif
+
+    if (flag_IR .eq. 4) then
+        call hydrogen_excitation_update(dt_sub)
+    endif
+
   end subroutine post_step
 
   
