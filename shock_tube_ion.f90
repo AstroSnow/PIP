@@ -77,7 +77,7 @@ subroutine shock_tube_ion
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=0.0d0/f_p ;end(1)=30000.0d0          !400.0d0/f_p
+  start(1)=0.0d0/f_p ;end(1)=600.d0!30000.0d0          !400.0d0/f_p
   start(2)=-1.0d0 ;end(2)=1.0d0
   start(3)=-1.0d0 ;end(3)=1.0d0
   call set_coordinate(start,end)
@@ -167,7 +167,7 @@ subroutine shock_tube_ion
 !     v_l=(/1.0d0,1.0d0,0.0d0,0.0d0,0.0d0,B0*0.75d0,B0,0.0d0/)
 !     v_r=(/0.125d0,0.1d0,0.0d0,0.0d0,0.0d0,B0*0.75d0,-B0,0.0d0/)
      v_l=(/1.0d0,beta*B0**2/2.d0,0.0d0,0.0d0,0.0d0,B0*0.3d0,B0,0.0d0/)
-     v_r=(/1.0d0,beta*B0**2/2.d0,0.0d0,0.0d0,0.0d0,B0*0.3d0,B0,0.0d0/)
+     v_r=(/1.0d0,beta*B0**2/2.d0,0.0d0,0.0d0,0.0d0,B0*0.3d0,-B0,0.0d0/)
 !     Density, pressure, velocity * 3, magnetic field *3
 
 

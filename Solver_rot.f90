@@ -214,6 +214,11 @@ contains
              call divb_cleaning_Dedner_source(dt_sub,U_m) !! original Dedner's 9-wave method
           endif                    
        endif
+
+    if (flag_IR .eq. 4) then
+        call hydrogen_excitation_update(dt_sub,U_m(:,:,:,1),U_h(:,:,:,1))
+    endif
+
     case(1) !! optimal Strong Stability Preserving RK (SSPRK) Ref:Gottlieb+2009
        if(istep.eq.1) then
           c1 = 1.d0
@@ -295,10 +300,6 @@ contains
        case(1)
           call HC(U_m,nvar_m,1)
        end select
-    endif
-
-    if (flag_IR .eq. 4) then
-        call hydrogen_excitation_update(dt_sub)
     endif
 
   end subroutine post_step

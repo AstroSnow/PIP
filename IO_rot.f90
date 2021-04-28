@@ -254,6 +254,7 @@ endif
           if(rec_sav.eq.0) call save1param(Gm_rec,tno//'rec.dac.',1)
        endif
       if(flag_ir.eq.4) then 
+        !print*,Nexcite(1,1,1,:)
         call save1param(Nexcite(:,:,:,1),tno//'nexcite1.dac.',1)
         call save1param(Nexcite(:,:,:,2),tno//'nexcite2.dac.',1)
         call save1param(Nexcite(:,:,:,3),tno//'nexcite3.dac.',1)
