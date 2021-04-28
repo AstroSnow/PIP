@@ -499,30 +499,63 @@ contains
   double precision,intent(in)::dt,rom(ix,jx,kx),roh(ix,jx,kx)
   double precision::dneut(6)
   double precision::dntot
+  double precision::dneutv(ix,jx,kx,6)
+  double precision::dntotv(ix,jx,kx)
   integer::i,j,k,ii,jj,nmaxloc
+!Slow form
+    !The new number of electrons/protons is:
+!        Nexcite(:,:,:,6)=rom
+!        do k=1,kx;do j=1,jx; do i=1,ix
+                ! Calculate the change in each neutral species
+!                dntot=0.d0
+!                do ii=1,5
+!                    do jj=1,6 
+!                        dneut(ii)=Nexcite(i,j,k,jj)*colrat(i,j,k,jj,ii) - Nexcite(i,j,k,ii)*colrat(i,j,k,ii,jj)
+!                    enddo
+!                enddo
+    !print*,dneut
+    !print*,colrat(i,j,k,:,:)
+    !print*,Nexcite(i,j,k,:)
+!                Nexcite(i,j,k,1:5)=Nexcite(i,j,k,1:5)+dt*dneut(1:5)/n0
+!                where (Nexcite>=0.d0)
+!                    Nexcite = Nexcite
+!                elsewhere
+!                    Nexcite = 0.d0
+!                end where
+    !print*,Nexcite(i,j,k,:)
+!                dntot=sum(Nexcite(i,j,k,1:5))
+!                Nexcite(i,j,k,1:5)=roh(i,j,k)*Nexcite(i,j,k,1:5)/dntot
+!        enddo;enddo;enddo
+    !print*,Nexcite(1,1,1,6),rom(1,1,1),sum(Nexcite(1,1,1,1:5)),roh(1,1,1)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!Vector form
 !The new number of electrons/protons is:
     Nexcite(:,:,:,6)=rom
-    do k=1,kx;do j=1,jx; do i=1,ix
+!    do k=1,kx;do j=1,jx; do i=1,ix
             ! Calculate the change in each neutral species
-            dntot=0.d0
+            dntotv(:,:,:)=0.d0
             do ii=1,5
                 do jj=1,6 
-                    dneut(ii)=Nexcite(i,j,k,jj)*colrat(i,j,k,jj,ii) - Nexcite(i,j,k,ii)*colrat(i,j,k,ii,jj)
+                    dneutv(:,:,:,ii)=Nexcite(:,:,:,jj)*colrat(:,:,:,jj,ii) - Nexcite(:,:,:,ii)*colrat(:,:,:,ii,jj)
                 enddo
             enddo
 !print*,dneut
 !print*,colrat(i,j,k,:,:)
 !print*,Nexcite(i,j,k,:)
-            Nexcite(i,j,k,1:5)=Nexcite(i,j,k,1:5)+dt*dneut(1:5)/n0
+            Nexcite(:,:,:,1:5)=Nexcite(:,:,:,1:5)+dt*dneutv(:,:,:,1:5)/n0
             where (Nexcite>=0.d0)
                 Nexcite = Nexcite
             elsewhere
                 Nexcite = 0.d0
             end where
 !print*,Nexcite(i,j,k,:)
-            dntot=sum(Nexcite(i,j,k,1:5))
-            Nexcite(i,j,k,1:5)=roh(i,j,k)*Nexcite(i,j,k,1:5)/dntot
-    enddo;enddo;enddo
+            dntotv(:,:,:)=sum(Nexcite(:,:,:,1:5),DIM=4)
+            Nexcite(:,:,:,1)=roh(:,:,:)*Nexcite(:,:,:,1)/dntotv(:,:,:)
+            Nexcite(:,:,:,2)=roh(:,:,:)*Nexcite(:,:,:,2)/dntotv(:,:,:)
+            Nexcite(:,:,:,3)=roh(:,:,:)*Nexcite(:,:,:,3)/dntotv(:,:,:)
+            Nexcite(:,:,:,4)=roh(:,:,:)*Nexcite(:,:,:,4)/dntotv(:,:,:)
+            Nexcite(:,:,:,5)=roh(:,:,:)*Nexcite(:,:,:,5)/dntotv(:,:,:)
+!    enddo;enddo;enddo
 !print*,Nexcite(1,1,1,6),rom(1,1,1),sum(Nexcite(1,1,1,1:5)),roh(1,1,1)
   end subroutine hydrogen_excitation_update
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
