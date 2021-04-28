@@ -496,38 +496,10 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine hydrogen_excitation_update(dt,rom,roh)
 ! update the hydrogen excitation states
-!This routine doesn't work because it ignore other effects that raise the density
   double precision,intent(in)::dt,rom(ix,jx,kx),roh(ix,jx,kx)
   double precision::dneut(6)
   double precision::dntot
   integer::i,j,k,ii,jj,nmaxloc
-!    do k=1,kx;do j=1,jx; do i=1,ix
-!            ! Calculate the change in each species
-!            dntot=0.d0
-!            do ii=1,6
-!                do jj=1,6 
-!                    dneut(ii)=Nexcite(i,j,k,jj)*colrat(i,j,k,jj,ii) -Nexcite(i,j,k,ii)*colrat(i,j,k,ii,jj)
-!                enddo
-
-!                    if (Nexcite(i,j,k,ii) .ne. maxval(Nexcite(i,j,k,:))) then 
-!                        dntot=dntot+dneut(ii)
-!                    endif
-!            enddo
-!            nmaxloc=maxloc(Nexcite(i,j,k,:),DIM=1)
-!            dneut(nmaxloc)=-dntot
-!print*,dneut
-!print*,colrat(i,j,k,:,:)
-!print*,Nexcite(i,j,k,:)
-!            Nexcite(i,j,k,:)=Nexcite(i,j,k,:)+dt*dneut/n0
-!            where (Nexcite>=0.d0)
-!                Nexcite = Nexcite
-!            elsewhere
-!                Nexcite = 0.d0
-!            end where
-!print*,Nexcite(i,j,k,:)
-!    enddo;enddo;enddo
-
-!Attempt 2
 !The new number of electrons/protons is:
     Nexcite(:,:,:,6)=rom
     do k=1,kx;do j=1,jx; do i=1,ix
