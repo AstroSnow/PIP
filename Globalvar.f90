@@ -28,6 +28,9 @@ module globalvar
 !6 level collisional rates
   double precision,allocatable,save::Colrat(:,:,:,:,:),Nexcite(:,:,:,:)
 
+!Table for the exponential integral
+  double precision,allocatable,save::expinttab(:,:) !columns for input and i=0,1,2
+
 !These are the variables for heat condution, viscosity, resistivity and gravity
 
 ! for numerical calculation

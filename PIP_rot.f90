@@ -1,7 +1,7 @@
 module PIP_rot
   use globalvar,only:ix,jx,kx,ac,xi_n,gm_rec,gm_ion,nvar_h,nvar_m,&
        flag_pip_imp,gm,n_fraction,t_ir,col,x,y,z,beta,T0, n0,my_rank,flag_IR_type,flag_col,arb_heat,nout,flag_restart,Colrat,&
-        Nexcite,n0,f_p_ini,f_p_p_ini,n0fac,Gm_rec_ref
+        Nexcite,n0,f_p_ini,f_p_p_ini,n0fac,Gm_rec_ref,expinttab
   use scheme_rot,only:get_Te_HD,get_Te_MHD,cq2pv_HD,cq2pv_MHD,get_vel_diff
   use parameters,only:T_r_p,deg1,deg2,pi
   implicit none
@@ -242,6 +242,10 @@ contains
 	endif
 
     if(nout .eq. 0 .and. flag_restart.eq.-1) then
+
+        allocate(expinttab(4,1000)) !table for the exponential integral table
+        call expintread
+ 
 	    allocate(Colrat(ix,jx,kx,6,6)) !Allocate the rate array
         call get_col_ion_coeff(Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion,Gm_rec)
         Gm_rec_ref=Gm_rec(1,1,1)  !Get the normalisation recombination rates
@@ -267,9 +271,243 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine expintread
+    !Read the exponential integral data calculated using IDL code
+    double precision::ytemp,i0temp,i1temp,i2temp
+    integer::i
+
+    open (unit=17, file='exptab2_i0.txt', status='old', action='read')
+    open (unit=18, file='exptab2_i1.txt', status='old', action='read')
+    open (unit=19, file='exptab2_i2.txt', status='old', action='read')
+
+    do i=1,1000
+        read(17,*) ytemp, i0temp
+        read(18,*) ytemp, i1temp
+        read(19,*) ytemp, i2temp
+        expinttab(1,i)=ytemp
+        expinttab(2,i)=i0temp
+        expinttab(3,i)=i1temp
+        expinttab(4,i)=i2temp
+        !print*,expinttab(:,i)
+    enddo
+
+  end subroutine expintread
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine get_col_ion_coeff(Telec,Nelec,Gm_ion,Gm_rec)
     !Calculate the excitation and ionisation coefficients from Johnson 1972
     !Assume a 6 level hydrogen atom (1=ground, 2=1st excitation, ...., 6=ionised) 
+    double precision,intent(in)::Telec(ix,jx,kx),Nelec(ix,jx,kx)
+    double precision,intent(out)::Gm_ion(ix,jx,kx),Gm_rec(ix,jx,kx)
+    !Universal constants
+    double precision,parameter::melec=9.10938356e-31 !Electron mass [kg]
+    double precision,parameter::kboltz=1.38064852e-23 !Boltzmann Constant [m^2 kg s^-2 K^-1]
+    double precision,parameter::a0bohr=5.29e-11 !Bohr's radius [m] 
+    double precision,parameter::hplank=6.62607004e-34 !Planks constant [m2 kg s^-1]
+    double precision,parameter::kbhat=1.38064852d0,mehat=9.10938356d0,hhat=6.62607004d0
+    double precision::gweight(6) !Statistical weighting of excitation states
+    double precision::Eion(6) !Energy to ionise
+    double precision::garr(3)
+    double precision::Colex(6,6),dneut(6)
+    integer::k,j,i,ii,jj
+    double precision::rn(6),bn(6),xrat(5,5),Enn(5,5),yhat,rnn(5,5),zhat,gauntfac(5,5),fnn(5,5)
+    double precision::Ann(5,5),Bnn(5,5),E0y,E1y,E2y,E0z,E1z,E2z
+    double precision::yn,zn,ziyn,zizn,An0,Bn0
+    double precision::dntot
+    integer::nmaxloc
+    !This is all consant so can be moved somewhere else?
+!    gweight(1)=2.0*1.0**2 !ground state
+!    gweight(2)=2.0*2.0**2 !1st level excitation
+!    gweight(3)=2.0*3.0**2 !2nd level excitation
+!    gweight(4)=2.0*4.0**2 !3rd level excitation
+!    gweight(5)=2.0*5.0**2 !4th level excitation
+!    gweight(6)=1.0 !Ionised hydrogen
+    gweight(1)=2.d0 !ground state
+    gweight(2)=8.d0 !1st level excitation
+    gweight(3)=18.d0 !2nd level excitation
+    gweight(4)=32.d0 !3rd level excitation
+    gweight(5)=50.d0 !4th level excitation
+    gweight(6)=1.d0 !Ionised hydrogen
+
+    Eion=[13.6d0,3.4d0,1.51d0,0.85d0,0.54d0,0.0d0] !in eV
+    Eion=Eion/13.6d0*2.18e-18 !Convert to joules (to be dimensionally correct)
+
+    rn(1)=0.45d0 !Equation 31
+    rn(2)=1.94d0*2.d0**(-1.57d0) !Equation 32
+    rn(3)=1.94d0*3.d0**(-1.57d0) !Equation 32
+    rn(4)=1.94d0*4.d0**(-1.57d0) !Equation 32
+    rn(5)=1.94d0*5.d0**(-1.57d0) !Equation 32
+    rn(6)=1.94d0*6.d0**(-1.57d0) !Equation 32
+
+    bn(1)=-0.603d0 !Equation 25
+    bn(2)=(1.0d0/2.d0)*(4.0d0-18.63d0/2.d0+36.24d0/(2.d0**2)-&
+                    28.09d0/(2.d0**3)) !Equation 26
+    bn(3)=(1.0d0/3.d0)*(4.0d0-18.63d0/3.d0+36.24d0/(3.d0**2)-&
+                    28.09d0/(3.d0**3)) !Equation 26
+    bn(4)=(1.0d0/4.d0)*(4.0d0-18.63d0/4.d0+36.24d0/(4.d0**2)-&
+                    28.09d0/(4.d0**3)) !Equation 26
+    bn(5)=(1.0d0/5.d0)*(4.0d0-18.63d0/5.d0+36.24d0/(5.d0**2)-&
+                    28.09d0/(5.d0**3)) !Equation 26
+    bn(6)=(1.0d0/6.d0)*(4.0d0-18.63d0/6.d0+36.24d0/(6.d0**2)-&
+                    28.09d0/(6.d0**3)) !Equation 26
+
+    do ii=1,5; do jj=ii+1,5
+        xrat(ii,jj)=1.0d0-(dble(ii)/dble(jj))**2 !ratio of transition energy to ionisation energy of lower level
+        Enn(ii,jj)=Eion(ii)-Eion(jj) !Difference in ionisation energies
+        rnn(ii,jj)=rn(ii)*xrat(ii,jj) !Equation 30
+
+        !Gaunt factors from table 1 and equation 4
+        !Constants so can be moved for speed
+        if (ii .eq. 1) then 
+            gauntfac(ii,jj)=1.1330d0-0.4059d0/xrat(ii,jj)+0.07014d0/(xrat(ii,jj)**2)
+        else if (ii .eq. 2) then 
+            gauntfac(ii,jj)=1.0785d0-0.2319d0/xrat(ii,jj)+0.02947d0/(xrat(ii,jj)**2)
+        else
+            gauntfac(ii,jj)=0.9935d0+0.2328d0/dble(ii)-0.1296d0/(dble(ii)**2)&
+                -(1.0d0/xrat(ii,jj))*(1.0d0/dble(ii))*(0.6282d0-0.5598d0/dble(ii)+0.5299d0/(dble(ii)**2))&
+                +(1.0d0/xrat(ii,jj))**2*(1.0d0/dble(ii)**2)*(0.3887d0-1.181d0/dble(ii)+1.470d0/(dble(ii)**2))
+        endif
+
+        fnn(ii,jj)=32.0d0/3.0d0/dsqrt(3.d0)/pi*dble(ii)/dble(jj)**3/(xrat(ii,jj)**3)*gauntfac(ii,jj) !Equation 3
+
+        Ann(ii,jj)=2.0d0*dble(ii)**2/xrat(ii,jj)*fnn(ii,jj) !Equation 11
+        Bnn(ii,jj)=4.0d0*dble(ii)**4/(dble(jj)**3)/(xrat(ii,jj)**2)*(1.0d0+4.0d0/3.0d0/xrat(ii,jj)+bn(ii)/(xrat(ii,jj)**2)) !Equation 23
+    enddo;enddo
+
+    !set colex to zero initially
+    colex(:,:)=0.d0
+    !Loop over the grid
+    do k=1,kx;do j=1,jx; do i=1,ix
+        !loop over the Excitation states
+            do ii=1,5
+
+                do jj=ii+1,5
+
+                    yhat=Enn(ii,jj)/kboltz/Telec(i,j,k) !Equation 37
+
+                    zhat=rnn(ii,jj)+Enn(ii,jj)/kboltz/Telec(i,j,k)   !Equation 38
+
+                    !Exponential fits (THESE NEED WORK)
+                    call ionexpfittest(yhat,1.d0,0.001d0,0.0001d0,E1y)   !Equation 8
+                    call ionexpfittest(zhat,1.d0,0.001d0,0.0001d0,E1z)
+                    call ionexpfittest(yhat,2.d0,0.001d0,0.0001d0,E2y)
+                    call ionexpfittest(zhat,2.d0,0.001d0,0.0001d0,E2z)
+
+!                    print*,E1y,E1z,E2y,E2z
+
+                    !Rate coefficient for excitation Equation 36 using electron mass
+                    Colex(ii,jj)=Nelec(i,j,k)*dsqrt(8.d0*kboltz*Telec(i,j,k)/pi/melec)*2.0d0*&
+                        dble(ii)**2/xrat(ii,jj)*pi*a0bohr**2*yhat**2*&
+                              (Ann(ii,jj)*((1.0d0/yhat+0.5d0)*E1y-(1.0d0/zhat+0.5d0)*E1z)+&
+                              (Bnn(ii,jj)-Ann(ii,jj)*dlog(2.d0*dble(ii)**2/xrat(ii,jj)))*(E2y/yhat-E2z/zhat))
+
+                enddo
+
+                !now do the ionisation states
+
+                !Ionisation coefficient
+                yn=Eion(ii)/kboltz/Telec(i,j,k) 
+                zn=rn(ii)+Eion(ii)/kboltz/Telec(i,j,k)
+
+                !Call the hokey exponential integral
+                call ionexpfittest(yn,1.d0,0.001d0,0.0001d0,E1y)   !Equation 8
+                call ionexpfittest(zn,1.d0,0.001d0,0.0001d0,E1z)
+                call ionexpfittest(yn,2.d0,0.001d0,0.0001d0,E2y)
+                call ionexpfittest(zn,2.d0,0.001d0,0.0001d0,E2z)
+                call ionexpfittest(yn,0.d0,0.001d0,0.0001d0,E0y)
+                call ionexpfittest(zn,0.d0,0.001d0,0.0001d0,E0z)
+
+                ziyn=E0y-2.0d0*E1y+E2y !Equation 42
+                zizn=E0z-2.0d0*E1z+E2z !Equation 42
+
+                if (ii .eq. 1) then 
+                    garr(1)= 1.1330d0
+                    garr(2)=-0.4059d0
+                    garr(3)= 0.07014d0
+                else if (ii .eq. 2) then 
+                    garr(1)= 1.0785d0
+                    garr(2)=-0.2319d0
+                    garr(3)= 0.02947d0
+                else
+                    garr(1)=0.9935d0+0.2328d0/dble(ii)-0.1296d0/(dble(ii)**2)
+                    garr(2)=(-1.0d0/dble(ii))*(0.6282d0-0.5598d0/dble(ii)+0.5299d0/(dble(ii)**2))
+                    garr(3)=(1.0d0/dble(ii))**2*(0.3887d0-1.181d0/dble(ii)+1.470d0/(dble(ii)**2))
+                endif
+                
+                !Equation 20
+                An0=32.0d0/3.0d0/dsqrt(3.d0)/pi*dble(ii)+garr(1)/3.0d0+garr(2)/4.0d0+garr(3)/5.0d0
+                Bn0=2.0d0/3.0d0*dble(ii)**2*(5.0d0+bn(ii)) !Equation 24
+
+                !Ionisation coefficients Equation 35 using electron mass
+                Colex(ii,6)=Nelec(i,j,k)*dsqrt(8.d0*kboltz*Telec(i,j,k)/pi/melec)&
+                    *2.0d0*dble(ii)**2*pi*a0bohr**2*yn**2*&
+                    (An0*(E1y/yn-E1z/zn)+&
+                    (Bn0-An0*dlog(2.d0*dble(ii)**2))*(ziyn-zizn))
+            enddo
+
+            !Rates
+            do ii=1,5
+                !Excitation rates
+                do jj=1,5
+                    if (ii .eq. jj) then 
+                        colrat(i,j,k,ii,jj)=0.d0
+                    else if (jj .gt. ii) then 
+                        colrat(i,j,k,ii,jj)=gweight(ii)/gweight(jj)*Colex(ii,jj)*dsqrt(Telec(i,j,k)) 
+                    else
+                        colrat(i,j,k,ii,jj)=Colex(jj,ii)*dsqrt(Telec(i,j,k))*&
+                            exp(-(Eion(jj)-Eion(ii))/kboltz/Telec(i,j,k))
+                    endif
+                enddo
+                !Ionisation rates
+                colrat(i,j,k,ii,6)=Colex(ii,6)*dsqrt(Telec(i,j,k))*exp(-(Eion(6)-Eion(ii))/kboltz/Telec(i,j,k))
+            enddo
+
+            do ii=1,5
+                colrat(i,j,k,6,ii)=nelec(i,j,k)*colrat(i,j,k,ii,6)*gweight(ii)/gweight(6)&
+                    /2.0d0*(2.0d0*pi*mehat*kbhat*Telec(i,j,k)/hhat/hhat*1.0e14)**(-3.0d0/2.0d0)*&
+                    exp(Eion(ii)/kboltz/Telec(i,j,k))
+            enddo
+!print*,nelec(i,j,k),Telec(i,j,k)
+!print*,colex
+!print*,colrat(i,j,k,:,:)
+!stop
+            ! Calculate the change in each species
+            dntot=0.d0
+            do ii=1,6
+                do jj=1,6 
+                    dneut(ii)=Nexcite(i,j,k,jj)*colrat(i,j,k,jj,ii) - Nexcite(i,j,k,ii)*colrat(i,j,k,ii,jj)
+                enddo
+
+                    if (Nexcite(i,j,k,ii) .ne. maxval(Nexcite(i,j,k,:))) then 
+                        dntot=dntot+dneut(ii)
+                    endif
+            enddo
+            nmaxloc=maxloc(Nexcite(i,j,k,:),DIM=1)
+            dneut(nmaxloc)=-dntot
+
+            Gm_ion(i,j,k)=0.d0
+            Gm_rec(i,j,k)=0.d0
+            do ii=1,5
+                Gm_ion(i,j,k)=Gm_ion(i,j,k)+Nexcite(i,j,k,ii)*colrat(i,j,k,ii,6)
+                Gm_rec(i,j,k)=Gm_rec(i,j,k)+Nexcite(i,j,k,6)*colrat(i,j,k,6,ii)
+            enddo
+!print*,gm_ion(1,1,1),gm_rec(1,1,1)
+!stop
+            !divide rates by total neutral/plasma density for consistency
+            Gm_ion(i,j,k)=Gm_ion(i,j,k)/(Nexcite(i,j,k,1)+Nexcite(i,j,k,2)+Nexcite(i,j,k,3)&
+                          +Nexcite(i,j,k,4)+Nexcite(i,j,k,5))        
+            Gm_rec(i,j,k)=Gm_rec(i,j,k)/Nexcite(i,j,k,6)
+    enddo;enddo;enddo
+
+  end subroutine get_col_ion_coeff  
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine get_col_ion_coeff_slow(Telec,Nelec,Gm_ion,Gm_rec)
+    !Calculate the excitation and ionisation coefficients from Johnson 1972
+    !Assume a 6 level hydrogen atom (1=ground, 2=1st excitation, ...., 6=ionised) 
+    !THIS IS THE SLOW FORM. To be deleted when vector form works
     double precision,intent(in)::Telec(ix,jx,kx),Nelec(ix,jx,kx)
     double precision,intent(out)::Gm_ion(ix,jx,kx),Gm_rec(ix,jx,kx)
     !Universal constants
@@ -460,7 +698,7 @@ contains
             Gm_rec(i,j,k)=Gm_rec(i,j,k)/Nexcite(i,j,k,6)
     enddo;enddo;enddo
 
-  end subroutine get_col_ion_coeff  
+  end subroutine get_col_ion_coeff_slow  
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
