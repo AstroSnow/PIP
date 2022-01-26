@@ -21,10 +21,16 @@ contains
 
     double precision dU(ix,jx,kx,nvar)
     integer ::dif(3)
-
+    double precision :: phitol
+    double precision :: al0(ix,jx,kx,nvar),al1(ix,jx,kx,nvar),al2(ix,jx,kx,nvar)
+    double precision :: phia(ix,jx,kx,nvar),phib(ix,jx,kx,nvar),phic(ix,jx,kx,nvar)
+    double precision :: phid(ix,jx,kx,nvar),phi0(ix,jx,kx,nvar),phi2(ix,jx,kx,nvar)
+    double precision :: phin(ix,jx,kx,nvar)
     U_L = 0.d0 ; U_R = 0.d0
 
     dif(:)=0
+
+    phitol=1.0e-6
     if(s_order.eq.1) then
        U_L=U
        dif(direction)=1

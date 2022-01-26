@@ -16,6 +16,7 @@ module solver_rot
   ! This is the HLLD solver routines
   use HLL_rot,only:hll_fluxes_ideal_hd,hll_fluxes_ideal_mhd, &
        hllc_fluxes_ideal,hlld_fluxes_ideal
+  use WENO_rot,only:WENO_fluxes
 !  use MLW_rot        ! This is the MLW solver routines
 !  use SLW_rot        ! This is the SLW solver routines
   use boundary_rot,only:PIPbnd    ! here all the boundary routines are called
@@ -87,6 +88,8 @@ contains
        dt_coll(:)=dt*(/0.5d0,1.0d0/6.0d0,1.d0/12.d0,0.25d0/)   
     else if(t_order.eq.2) then
        dt_coll(:)=dt*(/0.5d0,0.5d0/)
+    else if(t_order.eq.3) then
+       dt_coll(:)=dt*(/0.5d0,0.5d0,0.5d0/)
     else
        dt_coll(:)=dt
     end if
@@ -142,7 +145,9 @@ contains
        end select
     case(1)!SLW 
        if(flag_mhd.eq.1) call mhd_fluxes(F_m,U_m)
-       if(flag_mhd.eq.0.or.flag_pip.eq.1) call hd_fluxes(F_h,U_h)       
+       if(flag_mhd.eq.0.or.flag_pip.eq.1) call hd_fluxes(F_h,U_h)  
+    case(2)!WENO 
+       if(flag_mhd.eq.1) call WENO_fluxes(F_m,U_m)      
     end select
     !-------------------------------------------------------
     if(flag_mhd.eq.1) then
@@ -202,13 +207,13 @@ contains
     select case(flag_time)
     case(0) !! standard RK
        dt_sub=dt/float(t_order-istep+1)       
-       
+
        if(flag_mhd.eq.0 .or. flag_pip.eq.1) then
-          call add_flux_rk(F_h,U_h0,U_h,nvar_h,dt_sub)
+          call add_flux_rk(F_h,U_h0,U_h,nvar_h,dt_sub,istep)
           call add_source(S_h,U_h,nvar_h,dt_sub)
        endif
        if(flag_mhd.eq.1) then 
-          call add_flux_rk(F_m,U_m0,U_m,nvar_m,dt_sub)
+          call add_flux_rk(F_m,U_m0,U_m,nvar_m,dt_sub,istep)
           call add_source(S_m,U_m,nvar_m,dt_sub)
           if(flag_mhd.eq.1.and.flag_divb.eq.1) then
              call divb_cleaning_Dedner_source(dt_sub,U_m) !! original Dedner's 9-wave method
@@ -330,11 +335,11 @@ contains
 
   end subroutine set_artvis
   
-  subroutine add_flux_rk(F,U0,U,nvar,dt)  
+  subroutine add_flux_rk(F,U0,U,nvar,dt,istep)  
     double precision,intent(inout)::U0(ix,jx,kx,nvar),U(ix,jx,kx,nvar)
     double precision,intent(inout)::F(ix,jx,kx,nvar,3)
     double precision,intent(inout)::dt
-    integer,intent(in)::nvar
+    integer,intent(in)::nvar,istep
     integer i,j,dir!k,l 
     !for SLW centrer difference
     if(flag_sch.eq.1) then       
@@ -374,10 +379,85 @@ contains
              enddo
           endif
        endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!3rd order TVD RK scheme 
+    elseif (flag_sch.eq.2) then !WENO
+!print*,dt
+       select case(istep)
+!Step 1
+       case(1)
+          dir=1
+          do i=3,ig(dir)-2
+!             U(i,:,:,:)=U0(i,:,:,:) &
+!                  - (dt/dsc(i,dir))*(F(i,:,:,:,dir))
+             U(i,:,:,:)=U0(i,:,:,:) &
+                  - (dt/dsc(i,dir))*(F(i,:,:,:,dir))
+          enddo
+           if (ndim .ge. 2) then
+              dir=2
+              do i=3,ig(dir)-2
+                 U(:,i,:,:)=U0(:,i,:,:) &
+                      - (dt/dsc(i,dir))*(F(:,i,:,:,dir))
+              enddo
+              
+              if (ndim .ge. 3) then
+                 dir=3
+                 do i=3,ig(dir)-2
+                    U(:,:,i,:)=U0(:,:,i,:) &
+                       - (dt/dsc(i,dir))*(F(:,:,i,:,dir))     
+                 enddo
+              endif
+           endif
+!Step 2
+       case(2)
+          dir=1
+          do i=3,ig(dir)
+             U(i,:,:,:)=0.75d0*U0(i,:,:,:) + 0.25d0*(U(i,:,:,:) &
+                  - (dt/dsc(i,dir))*(F(i,:,:,:,dir)))
+          enddo 
+           if (ndim .ge. 2) then
+              dir=2
+              do i=3,ig(dir)-2
+                 U(:,i,:,:)=0.75d0*U0(:,i,:,:) + 0.25d0*(U(:,i,:,:) &
+                      - (dt/dsc(i,dir))*(F(:,i,:,:,dir)))
+              enddo
+              
+              if (ndim .ge. 3) then
+                 dir=3
+                 do i=3,ig(dir)-2
+                     U(:,:,i,:)=0.75d0*U0(:,:,i,:) + 0.25d0*(U(:,:,i,:) &
+                          - (dt/dsc(i,dir))*(F(:,:,i,:,dir)))  
+                 enddo
+              endif
+           endif 
+!Step 3
+       case(3)
+          dir=1
+          do i=3,ig(dir)
+             U(i,:,:,:)=(U0(i,:,:,:) + 2.d0*(U(i,:,:,:) &
+                  - (dt/dsc(i,dir))*(F(i,:,:,:,dir))))/3.d0
+          enddo  
+       if (ndim .ge. 2) then
+          dir=2
+          do i=3,ig(dir)-2
+             U(:,i,:,:)=(U0(:,i,:,:) + 2.d0*(U(:,i,:,:) &
+                  - (dt/dsc(i,dir))*(F(:,i,:,:,dir))))/3.d0
+          enddo
+          
+          if (ndim .ge. 3) then
+             dir=3
+             do i=3,ig(dir)-2
+                 U(:,:,i,:)=(U0(:,:,i,:) + 2.d0*(U(:,:,i,:) &
+                      - (dt/dsc(i,dir))*(F(:,:,i,:,dir))))/3.d0
+             enddo
+          endif
+       endif 
+        end select
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     else
        dir=1
 !       do i=margin(dir)+1,ig(dir)-margin(dir)
-       do i=2,ig(dir)
+       do i=3,ix-3
           U(i,:,:,:)=U0(i,:,:,:) &
                - (dt/dsc(i,dir))*(F(i,:,:,:,dir) -F(i-1,:,:,:,dir))
        enddo
@@ -455,6 +535,79 @@ contains
              enddo
           endif
        endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!3rd order TVD RK scheme 
+    elseif (flag_sch.eq.2) then !WENO
+!print*,dt
+       select case(istep)
+!Step 1
+       case(1)
+          dir=1
+          do i=3,ig(dir)-2
+             U(i,:,:,:)=U0(i,:,:,:) &
+                  - (dt/dsc(i,dir))*(F(i,:,:,:,dir))
+          enddo
+           if (ndim .ge. 2) then
+              dir=2
+              do i=3,ig(dir)-2
+                 U(:,i,:,:)=U0(:,i,:,:) &
+                      - (dt/dsc(i,dir))*(F(:,i,:,:,dir))
+              enddo
+              
+              if (ndim .ge. 3) then
+                 dir=3
+                 do i=3,ig(dir)-2
+                    U(:,:,i,:)=U0(:,:,i,:) &
+                       - (dt/dsc(i,dir))*(F(:,:,i,:,dir))     
+                 enddo
+              endif
+           endif
+!Step 2
+       case(2)
+          dir=1
+          do i=3,ig(dir)
+             U(i,:,:,:)=0.75d0*U0(i,:,:,:) + 0.25d0*(U(i,:,:,:) &
+                  - (dt/dsc(i,dir))*(F(i,:,:,:,dir)))
+          enddo 
+           if (ndim .ge. 2) then
+              dir=2
+              do i=3,ig(dir)-2
+                 U(:,i,:,:)=0.75d0*U0(:,i,:,:) + 0.25d0*(U(:,i,:,:) &
+                      - (dt/dsc(i,dir))*(F(:,i,:,:,dir)))
+              enddo
+              
+              if (ndim .ge. 3) then
+                 dir=3
+                 do i=3,ig(dir)-2
+                     U(:,:,i,:)=0.75d0*U0(:,:,i,:) + 0.25d0*(U(:,:,i,:) &
+                          - (dt/dsc(i,dir))*(F(:,:,i,:,dir)))  
+                 enddo
+              endif
+           endif 
+!Step 3
+       case(3)
+          dir=1
+          do i=3,ig(dir)
+             U(i,:,:,:)=(U0(i,:,:,:) + 2.d0*(U(i,:,:,:) &
+                  - (dt/dsc(i,dir))*(F(i,:,:,:,dir))))/3.d0
+          enddo  
+       if (ndim .ge. 2) then
+          dir=2
+          do i=3,ig(dir)-2
+             U(:,i,:,:)=(U0(:,i,:,:) + 2.d0*(U(:,i,:,:) &
+                  - (dt/dsc(i,dir))*(F(:,i,:,:,dir))))/3.d0
+          enddo
+          
+          if (ndim .ge. 3) then
+             dir=3
+             do i=3,ig(dir)-2
+                 U(:,:,i,:)=(U0(:,:,i,:) + 2.d0*(U(:,:,i,:) &
+                      - (dt/dsc(i,dir))*(F(:,:,i,:,dir))))/3.d0
+             enddo
+          endif
+       endif 
+        end select
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     else !! HLL-branch
        select case(istep)
        case(1)

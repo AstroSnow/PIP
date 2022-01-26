@@ -294,10 +294,11 @@ subroutine get_parameters
       if(flag_artvis.eq.-1)flag_artvis=1
       margin(1)=s_order+min(flag_resi,1)+min(flag_amb,1)+flag_artvis*2
       if(flag_divb.gt.2) flag_divb=1	!ORIGINALLY 1, SHOULD BE 2 for iterative
-   case(2)
-      margin(1)=4+flag_amb*2
-      if(flag_divb.gt.2) flag_divb=1	!ORIGINALLY 1, SHOULD BE 2 for iterative
-      t_order=4
+   case(2) !WENO
+      flag_artvis=0
+      margin(1)=3
+      if(flag_divb.gt.2) flag_divb=1
+      t_order=3
    end select
    !modification for divb cleaning
    if(ndim.eq.1) flag_divb=0

@@ -124,6 +124,8 @@ contains
           call Complete_spectrum
        case('kink_wave')
           call kink_wave
+       case('sod_tube')
+          call sod_tube
        end select
        call set_coefficients(U_h,U_m,0)              
        start_t=0.d0

@@ -60,7 +60,7 @@ subroutine shock_tube_stab3
   !!!========================================================
   !parameters---------------------
 !  B0=sqrt(2.0*gm/beta)
-  B0=1.0d0
+  B0=0.0d0
 !/sqrt(2.0)
   !-------------------------
      mask=spread(spread(pi*x,2,jx),3,kx)
@@ -74,8 +74,8 @@ subroutine shock_tube_stab3
 	rpres=1.d0+gm*mach**2*(1.d0-1.d0/rcom)
 !     v_l=(/rcom,rpres,10.0d0*sqrt(gm)/rcom+10.0d0*sqrt(gm),0.0d0,0.0d0,2.0d0*sqrt(gm)*mach,0.0d0,0.0d0/)
 !     v_r=(/1.0d0,1.0d0,0.0d0,0.0d0,0.0d0,2.0d0*sqrt(gm)*mach,0.0d0,0.0d0/)  
-     v_l=(/rcom,rpres/gm,-mach/rcom,0.0d0,0.0d0,dsqrt(2.d0/gm/beta),0.0d0,0.0d0/) !Use this one!
-     v_r=(/1.0d0,1.0d0/gm,-mach,0.0d0,0.0d0,dsqrt(2.d0/gm/beta),0.0d0,0.0d0/)  
+     v_l=(/rcom,rpres/gm,-mach/rcom,0.0d0,0.0d0,B0*dsqrt(2.d0/gm/beta),0.0d0,0.0d0/) !Use this one!
+     v_r=(/1.0d0,1.0d0/gm,-mach,0.0d0,0.0d0,B0*dsqrt(2.d0/gm/beta),0.0d0,0.0d0/)  
 !v_l=v_r
 !print*,'r',rpres
 
@@ -127,17 +127,17 @@ subroutine shock_tube_stab3
 call srand(81728)
 wtr=1.d0
 
-	if ((x(i) .GE. 10.0d0) .AND. (x(i) .LE. 20.0d0)) then	
-		do dpl=1,10
-		rorand1=rand()
-		rorand2=rand()
-		ro_m(i,j,k)=ro_m(i,j,k)+f_p*0.1d0*rorand1*&
- dsin((x(i)-10.0d0)*3.14d0/10.0d0)* dcos((y(j)-rorand2*10.d0)*3.14d0/10.0d0*2.d0*wtr)
-		ro_h(i,j,k)=ro_h(i,j,k)+f_n*0.1d0*rorand1*&
- dsin((x(i)-10.0d0)*3.14d0/10.0d0)* dcos((y(j)-rorand2*10.d0)*3.14d0/10.0d0*2.d0*wtr)
-		wtr=wtr+1.d0
-		enddo
-	endif
+!	if ((x(i) .GE. 10.0d0) .AND. (x(i) .LE. 20.0d0)) then	
+!		do dpl=1,10
+!		rorand1=rand()
+!		rorand2=rand()
+!		ro_m(i,j,k)=ro_m(i,j,k)+f_p*0.1d0*rorand1*&
+! dsin((x(i)-10.0d0)*3.14d0/10.0d0)* dcos((y(j)-rorand2*10.d0)*3.14d0/10.0d0*2.d0*wtr)
+!		ro_h(i,j,k)=ro_h(i,j,k)+f_n*0.1d0*rorand1*&
+! dsin((x(i)-10.0d0)*3.14d0/10.0d0)* dcos((y(j)-rorand2*10.d0)*3.14d0/10.0d0*2.d0*wtr)
+!		wtr=wtr+1.d0
+!		enddo
+!	endif
   enddo;enddo;enddo
 !print*,f_p_p,rpres/gm,p_m(1,1,1)
 !print*,f_p,rcom,ro_m(1,1,1)

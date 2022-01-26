@@ -40,14 +40,14 @@ subroutine shock_tube
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=0.0d0/f_p ;end(1)=4000.0d0          !400.0d0/f_p
+  start(1)=-4000.0d0 ;end(1)=4000.0d0          !400.0d0/f_p
   start(2)=-1.0d0 ;end(2)=1.0d0
   start(3)=-1.0d0 ;end(3)=1.0d0
   call set_coordinate(start,end)
   !---------------------------------------
   
   !!default boundary condition----------------------
-  if (flag_bnd(1) .eq.-1) flag_bnd(1)=3
+  if (flag_bnd(1) .eq.-1) flag_bnd(1)=10
   if (flag_bnd(2) .eq.-1) flag_bnd(2)=10
   if (flag_bnd(3) .eq.-1) flag_bnd(3)=10
   if (flag_bnd(4) .eq.-1) flag_bnd(4)=10
@@ -122,7 +122,15 @@ subroutine shock_tube
      tmp=0.0
   endif  
   select case(debug_option)
-  case (2)  !Switch-off shock (Falle et al.1998)
+  case (1)  !Sod shock tube
+     print*,'Sod Shock Tube (HD)'
+     v_l=(/1.0d0  ,1.0d0,0.0d0,0.0d0,0.0d0,1.0d0,0.0d0,0.0d0/)
+     v_r=(/0.125d0,0.1d0,0.0d0,0.0d0,0.0d0,1.0d0,0.0d0,0.0d0/)  
+  case (2)  !Brio-Wu shock tube
+     print*,'Brio-Wu Shock Tube (MHD): gamma=2 to compare!'
+     v_l=(/1.0d0  ,1.0d0,0.0d0,0.0d0,0.0d0,0.75d0, 1.0d0,0.0d0/)
+     v_r=(/0.125d0,0.1d0,0.0d0,0.0d0,0.0d0,0.75d0,-1.0d0,0.0d0/)   
+  case (9)  !Switch-off shock (Falle et al.1998)
      v_l=(/1.368d0,1.769d0,0.269d0,1.0d0,0.0d0,1.0d0,0.0d0,0.0d0/)
      v_r=(/1.0d0,1.0d0,0.0d0,0.0d0,0.0d0,1.0d0,1.0d0,0.0d0/)     
   case default
