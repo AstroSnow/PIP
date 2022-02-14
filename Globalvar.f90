@@ -28,6 +28,9 @@ module globalvar
 !6 level collisional rates
   double precision,allocatable,save::Colrat(:,:,:,:,:),Nexcite(:,:,:,:)
 
+!MHD radiative losses
+  double precision,allocatable,save::edref(:,:,:)
+
 !Table for the exponential integral
   double precision,allocatable,save::expinttab(:,:) !columns for input and i=0,1,2
 
@@ -57,6 +60,7 @@ module globalvar
   double precision,save :: cmax
 ! Radiative losses
   integer,save :: flag_rad
+  double precision :: rad_ts,radrhoref
   
 !for coordinate system
   integer,save::ix,jx,kx,nvar_h,nvar_m,margin(3),ndim,ig(3)

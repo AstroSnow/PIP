@@ -2,7 +2,7 @@ TARGET = a.out
 OBJECTS = Util_rot.o BMP_rot.o Matrix_rot.o \
 	Globalvar.o Parameters.o MPI_rot.o Boundary_rot.o Scheme_rot.o \
 	HC_rot.o \
-	Res_rot.o Gra_rot.o PIP_rot.o Visc_rot.o\
+	Res_rot.o Gra_rot.o PIP_rot.o Visc_rot.o Rad_cooling.o\
 	IOT_rot.o IO_rot.o   \
 	HLL_rot.o Model_rot.o \
 	Solver_rot.o\
@@ -16,7 +16,8 @@ OBJECTS = Util_rot.o BMP_rot.o Matrix_rot.o \
 	Alfven_Damping.o cnd_tube.o shock_tube_ion.o\
 	MRI.o disk_flare.o mass_load_prom.o \
 	Initial_rot.o  main.o relax_prom.o relax_prom2.o procedures.o hsstatic.o\
-	resonator.o ionrectest.o  Complete_spectrum.o shock_tube_stab.o shock_tube_stab2.o shock_tube_stab3.o kink_wave.o
+	resonator.o ionrectest.o  Complete_spectrum.o shock_tube_stab.o shock_tube_stab2.o\
+    shock_tube_stab3.o kink_wave.o downflowshock.o
 MOD_FILES = util_rot.mod globalvar.mod parameters.mod \
 	scheme_rot.mod hc_rot.mod \
 	res_rot.mod gra_rot.mod pip_rot.mod visc_rot.mod\
