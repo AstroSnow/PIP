@@ -168,9 +168,9 @@ endif
     if(flag_pip.eq.1.and.flag_ir_type.eq.0.and.flag_IR.ne.0) then
        if(heat_sav.eq.0) call save1param(arb_heat,tno//'aheat.dac.',1)
     endif
-    if (flag_rad .ge. 1) then
-        call save1param(edref,tno//'edref.dac.',1)
-    endif
+!    if (flag_rad .ge. 1) then
+!        call save1param(edref,tno//'edref.dac.',1)
+!    endif
 
 
     if(flag_mpi.eq.0 .or.my_rank.eq.0)      &         
@@ -270,6 +270,10 @@ endif
           call save1param(visc(:,:,:,2),tno//"viscy.dac.",1)
           call save1param(visc(:,:,:,3),tno//"viscz.dac.",1)
        endif
+    endif
+    if (flag_rad .ge. 1) then
+        call save1param(edref(:,:,:,1),tno//'edref_m.dac.',1)
+        if (flag_pip .eq. 1) call save1param(edref(:,:,:,2),tno//'edref_h.dac.',1)
     endif
     if(flag_pip.eq.1 .or.flag_mhd.eq.0) then
        do i=1,nvar_h
@@ -533,7 +537,8 @@ endif
     endif
 
     if (flag_rad .ge. 1) then
-        call dacget(11,trim(indir)//step_char//'edref.dac.'//cno,nvar*3,gra,3)
+        call dacget(11,trim(indir)//step_char//'edref_m.dac.'//cno,nvar,edref(:,:,:,1))
+        if (flag_pip .eq. 1) call dacget(11,trim(indir)//step_char//'edref_h.dac.'//cno,nvar,edref(:,:,:,2))
     endif
 
     !! read time (by Tak)

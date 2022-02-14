@@ -31,7 +31,7 @@ module solver_rot
   use Gra_rot,only:set_gravity,source_gravity
   use HC_rot,only:HC,HC_STS,HC_SUBCYCLE
   use Util_rot,only:get_rotation
-  use Rad_cooling,only:source_rad_cooling
+  use Rad_cooling,only:source_rad_cooling,set_ref_rad_ed
 
   implicit none
   integer n,order,ii
@@ -112,12 +112,13 @@ contains
     if(flag_IR.ge.2.or.(flag.eq.0.and.flag_IR.eq.1)) then
        call set_IR(U_h,U_m)       
     endif
+
+!   set the radiative loss function (assuming constant)
+    if((flag_rad.ge.1).and.(flag.eq.0)) then
+        call set_ref_rad_ed(U_h,U_m)
+    endif
 !    if(flag_visc.ge.1) then
 !       call initialize_visc()       
-!    endif
-!    if(flag_rad.ge.1) then
-!	print*,'RADIATIVE LOSSES ARE NOT YET FINISHED'
-!	stop    
 !    endif
   end subroutine set_coefficients
 

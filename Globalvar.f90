@@ -29,7 +29,7 @@ module globalvar
   double precision,allocatable,save::Colrat(:,:,:,:,:),Nexcite(:,:,:,:)
 
 !MHD radiative losses
-  double precision,allocatable,save::edref(:,:,:)
+  double precision,allocatable,save::edref(:,:,:,:)
 
 !Table for the exponential integral
   double precision,allocatable,save::expinttab(:,:) !columns for input and i=0,1,2
