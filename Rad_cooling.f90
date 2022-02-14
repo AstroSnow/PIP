@@ -15,7 +15,7 @@ subroutine source_rad_cooling(S_h,S_m,U_h,U_m)
 	if (flag_rad .eq. 1) then
 
 		rad_time=(U_m(:,:,:,1)/radrhoref)**(-1.7)
-		S_m(:,:,:,5)=S_m(:,:,:,5)-(U_m(:,:,:,5)-edref)/rad_time/rad_ts
+		S_m(:,:,:,5)=S_m(:,:,:,5)-(U_m(:,:,:,5)-edref(:,:,:))/rad_time/rad_ts
 
 		if (flag_pip .eq. 1) then
 			print*,'ONLY MHD, CODE THIS UP!'

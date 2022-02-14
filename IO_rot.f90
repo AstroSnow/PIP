@@ -15,7 +15,7 @@ module io_rot
        total_iter,flag_amb,dtout,mpi_siz,nt,nmax,output_type,flag_ps,flag_divb,&
        flag_damp,damp_time,flag_rad,flag_ir_type,arb_heat,visc,esav,emsavtime,&
        ac_sav, xi_sav, ion_sav, rec_sav, col_sav, gr_sav, vs_sav, heat_sav, et_sav, ps_sav,&
-       Nexcite
+       Nexcite,edref,flag_rad
   use mpi_rot,only:end_mpi
   use IOT_rot,only:initialize_IOT,get_next_output
   use Util_rot,only:get_word,get_value_integer
@@ -167,6 +167,9 @@ endif
     endif
     if(flag_pip.eq.1.and.flag_ir_type.eq.0.and.flag_IR.ne.0) then
        if(heat_sav.eq.0) call save1param(arb_heat,tno//'aheat.dac.',1)
+    endif
+    if (flag_rad .ge. 1) then
+        call save1param(edref,tno//'edref.dac.',1)
     endif
 
 
@@ -527,6 +530,10 @@ endif
 !      do i=1,3
           call dacget(11,trim(indir)//step_char//'gr.dac.'//cno,nvar*3,gra,3)
 !       enddo
+    endif
+
+    if (flag_rad .ge. 1) then
+        call dacget(11,trim(indir)//step_char//'edref.dac.'//cno,nvar*3,gra,3)
     endif
 
     !! read time (by Tak)

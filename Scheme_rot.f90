@@ -890,14 +890,14 @@ if ((flag_damp.eq.1).or.(flag_damp.eq.2)) then
     U_m(:,:,:,2:4)=U_m(:,:,:,2:4)-spread(damp_time1,4,3)*dt*U_m(:,:,:,2:4)
     U_m(:,:,:,5)=U_m(:,:,:,5)-damp_time1*dt*(U_m(:,:,:,2)**2+U_m(:,:,:,3)**2 &
       +U_m(:,:,:,4)**2)/U_m(:,:,:,1)/2.d0
+    oldke_damp=0.9d0*maxval(U_m(:,:,:,5)-(U_m(:,:,:,2)**2+U_m(:,:,:,3)**2+U_m(:,:,:,4)**2)/U_m(:,:,:,1)/2.0d0)
     endif
     if(flag_mhd.eq.0.or.flag_pip.eq.1) then
     U_h(:,:,:,2:4)=U_h(:,:,:,2:4)-spread(damp_time1,4,3)*dt*U_h(:,:,:,2:4)
     U_h(:,:,:,5)=U_h(:,:,:,5)-damp_time1*dt*(U_h(:,:,:,2)**2+U_h(:,:,:,3)**2 &
       +U_h(:,:,:,4)**2)/U_h(:,:,:,1)/2.d0
+    oldke_damp=0.9d0*maxval(U_h(:,:,:,5)-(U_h(:,:,:,2)**2+U_h(:,:,:,3)**2+U_h(:,:,:,4)**2)/U_h(:,:,:,1)/2.0d0)
     endif
-
-    oldke_damp=0.9d0*maxval(U_h(:,:,:,5)-(U_h(:,:,:,2)**2+U_h(:,:,:,2)**2+U_h(:,:,:,2)**2)/U_h(:,:,:,1)/2.0d0)
 
 
 endif
