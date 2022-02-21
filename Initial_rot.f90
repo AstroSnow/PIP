@@ -47,7 +47,7 @@ contains
     if ((x(i) .ge. 1.0) .and. (x(i) .lt. 1.2)) then 
 !    	ro_h(i,:,:)=ro_h(i,:,:)+10.0
 	if (ndim .eq. 1) then
-        	U_h(i,:,:,1)=U_h(i,:,:,1)+100.0*(1.0-(dcos(x(i)*2.0*pi/0.2)+1.0)/2.0)
+        	U_h(i,:,:,1)=U_h(i,:,:,1)+20.0*(1.0-(dcos(x(i)*2.0*pi/0.2)+1.0)/2.0)
 	elseif (ndim .eq. 2) then
 		do j=1,jx
 			U_h(i,j,:,1)=U_h(i,j,:,1)+50.0*(1.0-(dcos(x(i)*2.0*pi/0.2)+1.0)/2.0)*&
