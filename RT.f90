@@ -70,7 +70,8 @@ subroutine RT
   !density of lower fluid is unity
   Atwood=0.5
   ro_l=1.0d0
-  ro_u=ro_l+16.0d0
+!  ro_u=ro_l+16.0d0
+  ro_u=1.5d0
 !(1.0+Atwood)/(1.0-Atwood)
   w_lay=0.00003d0
   kw = 4.d0*pi
@@ -96,7 +97,7 @@ subroutine RT
 
 
   P_h=f_n*spread(spread(p_tot,1,ix),3,kx)
-  P_h=f_p*spread(spread(p_tot,1,ix),3,kx)
+  P_m=f_p*spread(spread(p_tot,1,ix),3,kx)
 
 
   vx_h=0.0d0;vy_h=0.0d0;vz_h=0.0d0
