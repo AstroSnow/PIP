@@ -58,7 +58,7 @@ if(debug_direction.eq.1) then
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=-2.0e7 ;end(1)=1.0e8
+  start(1)=-8.0e6 ;end(1)=1.0e8
   start(2)=-1.0d6 ;end(2)=1.0d6
   start(3)=-1.0d0 ;end(3)=1.0d0
   rng=end(1)-start(1)
@@ -88,8 +88,8 @@ print*,'setting gravity'
 grah1=9.0e7!x(ix-1)-x(ix-1)/3.d0
 grah2=10.0e7!x(ix-3)
 !Lower limits for the gravity reduction
-grah3=-1.0e6
-grah4=-2.0e6
+grah3=-3.0e6
+grah4=-4.0e6
   do i=1,ix
 	if (x(i) .GT. grah2) then
 		gra(i,:,:,1)=0.0d0
@@ -124,7 +124,7 @@ grah4=-2.0e6
 !	read(101,*) h_temp,t_temp
 !	h_model(i)=h_temp*165264.d0
 !	t_model(i)=t_temp*6583.d0
-    t_model(i)=1.0e4+(1.0e6-1.0e4)*0.5d0*(tanh(x(i)/5.d0/(x(2)-x(1)))+1.d0)
+    t_model(i)=6.0e3+(1.0e6-6.0e3)*0.5d0*(tanh(x(i)/5.d0/(x(2)-x(1)))+1.d0)
 !	print*,h_read(i),t_read(i)
 !	gra_read(i)=gra0 !ROLE DOWN GRAVITY NEAR TOP
   enddo
@@ -227,7 +227,7 @@ print*,'Photospheric temperature',T0*p_h(2,1,1)/ro_h(2,1,1)*5.0d0/3.0d0
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !write initial atmosphere
 !OPEN(UNIT=102, FILE="downflowshock_PIP_hr.txt", ACTION="write", STATUS="replace")
-OPEN(UNIT=102, FILE="df_PIP_xi0_05.txt", ACTION="write", STATUS="replace")
+OPEN(UNIT=102, FILE="df_PIP_xi0_9.txt", ACTION="write", STATUS="replace")
 write(102,*) ix, start(1), end(1), L0, T0 , ro0, P0, gran
 do i=1,ix 
 	write(102,*) x(i), ro_h(i,1,1), ro_m(i,1,1), p_h(i,1,1), p_m(i,1,1), gra(i,1,1,1)
@@ -296,7 +296,7 @@ elseif(debug_direction.eq.10) then
 !  open(unit=102,file='const_rev.txt',status='old')
 !  open(unit=102,file='const_PIP_xin_0.99_xlong_c.txt',status='old')
 !open(unit=102,file='downflowshock_PIP_hr.txt',status='old') !xi0=0.9, corona still ionised
-open(unit=102,file='df_PIP_xi0_05.txt',status='old') !xi0=0.5
+open(unit=102,file='df_PIP_xi0_9.txt',status='old') !xi0=0.5
   read(102,*) nxt, h0, hn, L0, Tn , ro0, P0, gran
 !h0=0.0d0
 !print*,'Overwriting h0 as:',h0
