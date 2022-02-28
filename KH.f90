@@ -68,7 +68,7 @@ subroutine KH
   !!!========================================================
   !density of lower fluid is unity
   ro_l=1.0d0
-  ro_u=10.0d0
+  ro_u=1.0e4!10.0d0
   vx_l=ro_u/(ro_u+ro_l)*dsqrt(1.d0/10.d0)
 !  if(flag_mhd.eq.1) then
 !  vx_l=vx_l*sqrt(1.d0+2.d0/(gm*beta))
