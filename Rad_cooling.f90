@@ -39,15 +39,15 @@ subroutine source_rad_cooling(S_h,S_m,U_h,U_m)
 !        edref(:,:,:,1)=1.d0-dtanh(dlog10(U_m(:,:,:,1)/100.0)/2.d0*pi/0.5)**2  
 
 !Set rad_time to 1. May want to change
-        rad_time=1.0e6!(U_m(:,:,:,1)/radrhoref)**(-1.7)
+        rad_time=1.0!(U_m(:,:,:,1)/radrhoref)**(-1.7)
 
 !Cool based of temperature. Centered on a temperature of 0.1
         call get_Te_MHD(U_m,Te_m) !This assumes a factor of 1/2 in temperature so put 2*Te in next line
-        edref(:,:,:,1)=U_m(:,:,:,1)**2*(1.d0-dtanh(dlog10(2.0*Te_m(:,:,:)/0.01)/2.d0*pi/0.5)**2 )/rad_time/rad_ts
+        edref(:,:,:,1)=(1.d0-dtanh(dlog10(2.0*Te_m(:,:,:)/0.01)/2.d0*pi/0.3)**2 )/rad_time/rad_ts
 !print*,maxval(edref(:,:,:,1)),minval(Te_m)
 !Apply the energy sink of the form ro^2*Lambda
 !		S_m(:,:,:,5)=S_m(:,:,:,5)-(U_m(:,:,:,5)-edref(:,:,:,1))/rad_time/rad_ts
-		S_m(:,:,:,5)=S_m(:,:,:,5)-(edref(:,:,:,1))
+		S_m(:,:,:,5)=S_m(:,:,:,5)-U_m(:,:,:,1)**2*(edref(:,:,:,1))
 
 		if (flag_pip .eq. 1) then
             edref(:,:,:,2)=1.d0-dtanh((U_h(:,:,:,1)-1.25d0)*pi/0.1)**2
