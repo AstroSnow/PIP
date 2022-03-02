@@ -39,7 +39,7 @@ subroutine source_rad_cooling(S_h,S_m,U_h,U_m)
 !        edref(:,:,:,1)=1.d0-dtanh(dlog10(U_m(:,:,:,1)/100.0)/2.d0*pi/0.5)**2  
 
 !Set rad_time to 1. May want to change
-        rad_time=1.0e8!(U_m(:,:,:,1)/radrhoref)**(-1.7)
+        rad_time=1.0e6!(U_m(:,:,:,1)/radrhoref)**(-1.7)
 
 !Cool based of temperature. Centered on a temperature of 0.1
         call get_Te_MHD(U_m,Te_m) !This assumes a factor of 1/2 in temperature so put 2*Te in next line
