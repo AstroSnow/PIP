@@ -6,8 +6,8 @@ MHD:flag_eqs;flag_for equation (HD,MHD, PIP)
 64:ix; grid number for x-direction
 64:jx; grid number for y-direction
 2:kx; grid number for z-direction
-100.0 :dtout;  output period 100 
-1000.0:tend;tend time for simulation (if lt 0 then default value is set) 20000
+10.0 :dtout;  output period 100 
+400.0:tend;tend time for simulation (if lt 0 then default value is set) 20000
 0:esav; flag for save after given physical time
 600.d0:emsavtime; Physical time to save for esav
 0 :flag_cyl; set to 1 when you use Cylindrical coordinates (x=>r,y=>z,z=>phi) NB: Only ndim=2 is allowed (rz-plane)
@@ -68,8 +68,8 @@ KH:flag_ini; flag for initial setting
 1.0:sor_omega; SOR-omega parameter (for iterative method)
 ==For MPI====;
 1     :flag_mpi;flag for mpi
-4     :mpi_x;node number for x-direction
-2     :mpi_y;node number for y-direction
+2     :mpi_x;node number for x-direction
+3     :mpi_y;node number for y-direction
 1     :mpi_z;node number for z-direction
 1     :flag_mpi_split;flag for splitting domain (Activated ONLY WHEN A=mpi_x*mpi_y*mpi_z=0 or A ne total_prc)
 ==For debug==;
@@ -83,7 +83,7 @@ KH:flag_ini; flag for initial setting
 0     :flag_damp; flag for damping
 100000.0   :damp_time; timescale for damping
 ==Radiative losses==;
-2     :flag_rad; radiative losses
+0     :flag_rad; radiative losses
 1.0e6:rad_ts; Time scale for radiative losses
 1.0d0:radrhoref; Reference density for losses
 ==Normalisation parameters==
