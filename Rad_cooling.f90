@@ -43,7 +43,8 @@ subroutine source_rad_cooling(S_h,S_m,U_h,U_m)
 
 !Cool based of temperature. Centered on a temperature of 0.1
         call get_Te_MHD(U_m,Te_m) !This assumes a factor of 1/2 in temperature so put 2*Te in next line
-        edref(:,:,:,1)=(1.d0-dtanh(dlog10(2.0*Te_m(:,:,:)/0.01)/2.d0*pi/0.3)**2 )/rad_time/rad_ts
+        edref(:,:,:,1)=(1.d0-dtanh(dlog10(2.0*Te_m(:,:,:)/0.1)/2.d0*pi/0.2)**2 )/rad_time/rad_ts
+!        edref=max(edref-1.0e-5,0.d0)+1.0e-5 !This line doesn't work for some reason
 !print*,maxval(edref(:,:,:,1)),minval(Te_m)
 !Apply the energy sink of the form ro^2*Lambda
 !		S_m(:,:,:,5)=S_m(:,:,:,5)-(U_m(:,:,:,5)-edref(:,:,:,1))/rad_time/rad_ts
