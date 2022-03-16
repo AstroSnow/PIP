@@ -21,7 +21,9 @@ module globalvar
 !other variables
   double precision,allocatable,save ::kap(:,:,:),mu(:,:,:),eta(:,:,:)
   double precision,allocatable,save::ac(:,:,:),xi_n(:,:,:),GM_rec(:,:,:),Gm_ion(:,:,:)
-  double precision,allocatable,save::gra(:,:,:,:)
+  double precision,allocatable,save::gra(:,:,:,:),visc(:,:,:,:)
+
+  double precision,allocatable,save::arb_heat(:,:,:)
 
 !These are the variables for heat condution, viscosity, resistivity and gravity
 
@@ -32,10 +34,10 @@ module globalvar
   integer,save::flag_b_stg,flag_divb,flag_pip_imp
   integer,save::flag_cc,flag_ex,flag_restart,flag_debug,flag_ps
   character*200,save :: flag_ini
-  integer,save::flag_damp, flag_ir
+  integer,save::flag_damp, flag_ir, flag_ir_type
   integer,save::flag_cyl
   integer,save::debug_option,debug_direction,flag_col
-  double precision,save::safety,gm,beta,col,t_ir
+  double precision,save::safety,gm,beta,col,t_ir,nu_0
   !for heat conduction
   integer,save::hc_split,hc_sch,hc_max,hc_integ,hc_type,nsub_max
   double precision,save::kapper,sor_omega
@@ -81,7 +83,13 @@ module globalvar
 !For damping across time MAKE ALLOCATABLE??, CHOOSE SENSIBLE VALUE?
   double precision,save :: oldke_damp=1.0d0
   
+!Emergency save procedure
+integer,save :: esav
+double precision,save :: emsavtime
 
 !Normalisation values
   double precision, save :: T0, n0, L0
+
+!optional save parameters
+  integer, save :: ac_sav, xi_sav, ion_sav, rec_sav, col_sav, gr_sav, vs_sav, heat_sav, et_sav, ps_sav
 end module globalvar

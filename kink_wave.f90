@@ -1,8 +1,8 @@
-subroutine field_diffusion
+subroutine kink_wave
   use parameters,only:pi
   use globalvar,only:ix,jx,kx,U_h,U_m,flag_bnd,beta,flag_b_stg,dtout,&
        flag_mhd,flag_mpi,my_rank,flag_pip,gm,beta,tend,&
-       x,y,z,dx,dy,dz,n_fraction,ndim,debug_direction,margin,debug_parameter,T0
+       x,y,z,dx,dy,dz,n_fraction,ndim,debug_direction,margin
   use scheme_rot,only:pv2cq_mhd,pv2cq_hd
   use model_rot, only:set_coordinate,setcq
   implicit none
@@ -12,78 +12,63 @@ subroutine field_diffusion
   double precision :: vz_h(1:ix,1:jx,1:kx),vz_m(1:ix,1:jx,1:kx) 
   double precision :: P_h (1:ix,1:jx,1:kx),P_m (1:ix,1:jx,1:kx)
   double precision :: B_x (1:ix,1:jx,1:kx)
-  double precision :: B_y (1:ix,1:jx,1:kx),mask(1:ix,1:jx,1:kx)
-  double precision :: B_z (1:ix,1:jx,1:kx),p_tot(1:ix,1:jx,1:kx)
-  double precision f_n,f_p,f_p_n,f_p_p,start(3),end(3),wtr,b0,ioneq,Te_0
+  double precision :: B_y (1:ix,1:jx,1:kx)
+  double precision :: B_z (1:ix,1:jx,1:kx)
+  double precision f_n,f_p,f_p_n,f_p_p,start(3),end(3),r
+  integer i,j,k
 
-
-  !Find the equilibrium neutral fraction
-  Te_0=T0/1.1604e4
-  ioneq=(2.6e-19/dsqrt(Te_0))/(2.91e-14/(0.232+13.6/Te_0)*(13.6/Te_0)**0.39*dexp(-13.6/Te_0))
-  f_n=ioneq/(ioneq+1.0d0)
-  f_p=1.0d0-f_n
-  f_p_n=f_n/(f_n+2.0d0*f_p)
-  f_p_p=2.0d0*f_p/(f_n+2.0d0*f_p)
-
-  if (my_rank.eq.0) print*,'Neutral fraction = ',f_n
-
-!  !set ionization fraction-----------------
+  !set ionization fraction-----------------
   if(flag_pip.eq.0) then
      f_n=1.0d0
      f_p=1.0d0
      f_p_n=1.0d0
      f_p_p=1.0d0
+  else
+     f_n=n_fraction
+     f_p=1.0d0-n_fraction     
+     f_p_n=f_n/(f_n+2.0d0*f_p)
+     f_p_p=2.0d0*f_p/(f_n+2.0d0*f_p)
   endif
-  
-  !set ionization fraction-----------------
-!  if(flag_pip.eq.0) then
-!     f_n=1.0d0
-!     f_p=1.0d0
-!     f_p_n=1.0d0
-!     f_p_p=1.0d0
-!  else
-!     f_n=n_fraction
-!     f_p=1.0d0-n_fraction     
-!     f_p_n=f_n/(f_n+2.0d0*f_p)
-!     f_p_p=2.0d0*f_p/(f_n+2.0d0*f_p)
-!  endif
   !----------------------------------------
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=-2.0d0 ;end(1)=2.0d0
-  start(2)=-1.0d0 ;end(2)=1.0d0
-  start(3)=-1.0d0 ;end(3)=1.0d0
+  start(1)=-1.0d0 ;end(1)=1.0d0
+  start(2)=0.0d0 ;end(2)=1.0d0
+  start(3)=0.0d0 ;end(3)=10.0d0
   call set_coordinate(start,end)
   !---------------------------------------
   
   !!default boundary condition----------------------
-  if (flag_bnd(1) .eq.-1) flag_bnd(1)=11
-  if (flag_bnd(2) .eq.-1) flag_bnd(2)=11 !in precedenza c'era boundary 2
-  if (flag_bnd(3) .eq.-1) flag_bnd(3)=1
-  if (flag_bnd(4) .eq.-1) flag_bnd(4)=1
-  if (flag_bnd(5) .eq.-1) flag_bnd(5)=1
-  if (flag_bnd(6) .eq.-1) flag_bnd(6)=1
+  if (flag_bnd(1) .eq.-1) flag_bnd(1)=1
+  if (flag_bnd(2) .eq.-1) flag_bnd(2)=1
+  if (flag_bnd(3) .eq.-1) flag_bnd(3)=2
+  if (flag_bnd(4) .eq.-1) flag_bnd(4)=2
+  if (flag_bnd(5) .eq.-1) flag_bnd(5)=4
+  if (flag_bnd(6) .eq.-1) flag_bnd(6)=6
   !-------------------------------------------------
 
   !!!========================================================
   !write some code to set physical variables
-  wtr=0.1d0
-  mask=spread(spread(x,2,jx),3,kx)
-  ro_h=f_n*1.0d0
-  ro_m=f_p*1.0d0
   
-  B0=sqrt(2.0d0/gm/beta)
-  b_x=0.0d0
-  b_y=B0*(tanh(mask/wtr)) 			!*0.5d0
-  b_z=0.0d0
-  vx_h=0.0d0;vy_h=0.0d0;vz_h=0.0d0
-  vx_m=0.0d0;vy_m=0.0d0;vz_m=0.0d0
+  do k=1,kx;do j=1,jx;do i=1,ix     
+     r=sqrt(x(i)**2+y(j)**2)
+       ro_m(i,j,k)=(1.d0+2.d0*(0.5d0*(1.d0-tanh((r/0.1d0-1.d0)*16.d0))))*f_p
+       ro_h(i,j,k)=(1.d0+2.d0*(0.5d0*(1.d0-tanh((r/0.1d0-1.d0)*16.d0))))*f_n
+       vx_m(i,j,k)=0.15d0*sin(pi*z(k)/20.d0)*(0.5d0*(1.d0-tanh((r/0.1d0-1.d0)*16.d0)))
+       vx_h(i,j,k)=0.15d0*sin(pi*z(k)/20.d0)*(0.5d0*(1.d0-tanh((r/0.1d0-1.d0)*16.d0)))
+  enddo;enddo;enddo
 
-  p_tot=1.0d0/gm        ! + 0.5d0*(B0**2-b_y**2)
-  p_h=f_p_n*p_tot
-  p_m=f_p_p*p_tot
- 
+     P_h(:,:,:)=1.0/gm*f_p_n
+     P_m(:,:,:)=1.0/gm*f_p_p
+
+     B_z=sqrt(2.0d0/(gm*beta))
+     B_x=0.0d0
+     B_y=0.0d0
+
+     vy_h=0.0d0;vz_h=0.0d0
+     vy_m=0.0d0;vz_m=0.0d0
+
 
   !!!========================================================
 
@@ -100,4 +85,4 @@ subroutine field_diffusion
   endif
   !---------------------------------------------------------------------
 
-end subroutine field_diffusion
+end subroutine kink_wave

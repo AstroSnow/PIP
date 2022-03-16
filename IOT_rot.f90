@@ -15,8 +15,8 @@ contains
   end subroutine initialize_IOT
 
 
-  function get_next_output(nout,time)
-    integer,intent(in)::nout    
+  function get_next_output(nout,time,esav)
+    integer,intent(in)::nout,esav    
     double precision,intent(in)::time
     double precision get_next_output
     if(type.eq.0) then
@@ -25,6 +25,7 @@ contains
 !       if (my_rank.eq.0) print *,get_next_output,start_t
        else
          get_next_output=nout*dt
+	if (esav .eq. 2) get_next_output=(nout-1)*dt
        endif
     else if(type.eq.1) then
        if(nout.eq.0) then

@@ -88,6 +88,10 @@ contains
           call blob
        case('field_diffusion')          
           call field_diffusion
+       case('field_compression')          
+          call field_compression
+       case('temperature_equilibrium')          
+          call temperature_equilibrium
        case('CS_collapse')          
           call CS_collapse
        case('asym_currentsheet')          
@@ -114,6 +118,18 @@ contains
           call ionrectest
        case('shock_tube_ion')
           call shock_tube_ion
+       case('shock_tube_stab')
+          call shock_tube_stab
+       case('shock_tube_stab2')
+          call shock_tube_stab2
+       case('shock_tube_stab3')
+          call shock_tube_stab3
+       case('com_spec')
+          call Complete_spectrum
+       case('kink_wave')
+          call kink_wave
+       case('kink_instability')
+          call kink_instability
        end select
        call set_coefficients(U_h,U_m,0)              
        start_t=0.d0
@@ -135,7 +151,7 @@ contains
     endif
 !    start_time=0.d0
     !Boundary conditions to IC
-    call PIPbnd(U_h,U_m)
+    call PIPbnd(U_h,U_m,0)
 !    if(flag_grav.eq.1) call bnd_grav
     
     

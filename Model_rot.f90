@@ -19,11 +19,14 @@ module model_rot
        n_fraction,hc_sch,hc_max,gm,flag_restart,flag_debug,mpi_siz,mpi_pos,&
        flag_bnd,dsc,output_type,flag_hll,flag_time,hc_integ,hc_type,ro_lim,pr_lim, &
        flag_hc_test,safety_cnd,nsub_max,b_cr,flag_ps,flag_cyl, &
-       vd_cri,j_cri,flag_damp,damp_time,flag_rad, T0, n0, L0
+       vd_cri,j_cri,flag_damp,damp_time,flag_rad, T0, n0, L0,flag_IR_type, &
+       flag_visc, nu_0, esav, emsavtime, &
+	ac_sav, xi_sav, ion_sav, rec_sav, col_sav, gr_sav, vs_sav, heat_sav, et_sav, ps_sav
   use scheme_rot,only:pv2cq_mhd,pv2cq_hd
   use HC_rot,only:initialize_HC
   use Res_rot,only:initialize_resistivity
   use Gra_rot,only:initialize_gravity
+  use visc_rot,only:initialize_visc
   use PIP_rot,only:initialize_collisional,initialize_IR,initialize_xin
   use Util_rot,only:get_word
   implicit none
@@ -81,6 +84,10 @@ subroutine get_parameters
         read(tmp(1:ind_e-1),*)t_order
      else if(key.eq.'flag_grav') then
         read(tmp(1:ind_e-1),*)flag_grav
+     else if(key.eq.'flag_visc') then
+        read(tmp(1:ind_e-1),*)flag_visc
+     else if(key.eq.'nu_0') then
+        read(tmp(1:ind_e-1),*)nu_0
      else if(key.eq.'flag_bnd_x_l') then
         read(tmp(1:ind_e-1),*)flag_bnd(1)
      else if(key.eq.'flag_bnd_x_r') then
@@ -133,6 +140,8 @@ subroutine get_parameters
         read(tmp(1:ind_e-1),*)flag_col
      else if(key.eq.'flag_IR') then
         read(tmp(1:ind_e-1),*)flag_IR
+     else if(key.eq.'flag_IR_type') then
+        read(tmp(1:ind_e-1),*)flag_IR_type
      else if(key.eq.'t_IR') then
         read(tmp(1:ind_e-1),*)t_ir
      else if(key.eq.'pip_imp_factor') then
@@ -199,8 +208,31 @@ subroutine get_parameters
         read(tmp(1:ind_e-1),*)n0
      else if(key.eq.'L_norm') then
         read(tmp(1:ind_e-1),*)L0
-     endif
-     
+     else if(key.eq.'esav') then
+        read(tmp(1:ind_e-1),*)esav
+     else if(key.eq.'emsavtime') then
+        read(tmp(1:ind_e-1),*)emsavtime
+     else if(key.eq.'ac_sav') then
+        read(tmp(1:ind_e-1),*)ac_sav
+     else if(key.eq.'xi_sav') then
+        read(tmp(1:ind_e-1),*)xi_sav
+     else if(key.eq.'ion_sav') then
+        read(tmp(1:ind_e-1),*)ion_sav
+     else if(key.eq.'rec_sav') then
+        read(tmp(1:ind_e-1),*)rec_sav
+     else if(key.eq.'col_sav') then
+        read(tmp(1:ind_e-1),*)col_sav
+     else if(key.eq.'gr_sav') then
+        read(tmp(1:ind_e-1),*)gr_sav
+     else if(key.eq.'vs_sav') then
+        read(tmp(1:ind_e-1),*)vs_sav
+     else if(key.eq.'heat_sav') then
+        read(tmp(1:ind_e-1),*)heat_sav
+     else if(key.eq.'et_sav') then
+        read(tmp(1:ind_e-1),*)et_sav
+     else if(key.eq.'ps_sav') then
+        read(tmp(1:ind_e-1),*)ps_sav
+     endif    
      !Make config is delegated to mod.IO_rot sub.mk_config
 !     if(flag_mpi.eq.0 .or. my_rank.eq.0) then
 !        if(r_count.eq.0) then
@@ -349,7 +381,8 @@ subroutine get_parameters
    call initialize_IR(flag_IR)
    call initialize_resistivity(flag_resi)
    call initialize_HC(flag_heat)   
-   call initialize_gravity(flag_grav)     
+   call initialize_gravity(flag_grav)   
+   call initialize_visc(flag_visc)         
  end subroutine allocate_vars
  
  subroutine set_coordinate(start,end)
@@ -446,14 +479,14 @@ subroutine get_parameters
 
  subroutine setcq(ro_m,vx_m,vy_m,vz_m,p_m,B_x,B_y,B_z, &
           ro_h,vx_h,vy_h,vz_h,p_h)
-   double precision,intent(in) :: ro_h(1:ix,1:jx,1:kx),ro_m(1:ix,1:jx,1:kx)
-   double precision,intent(in) :: vx_h(1:ix,1:jx,1:kx),vx_m(1:ix,1:jx,1:kx)
-   double precision,intent(in) :: vy_h(1:ix,1:jx,1:kx),vy_m(1:ix,1:jx,1:kx)
-   double precision,intent(in) :: vz_h(1:ix,1:jx,1:kx),vz_m(1:ix,1:jx,1:kx) 
-   double precision,intent(in) :: P_h (1:ix,1:jx,1:kx),P_m (1:ix,1:jx,1:kx)
-   double precision ,intent(in):: B_x (1:ix,1:jx,1:kx)
-   double precision,intent(in) :: B_y (1:ix,1:jx,1:kx)
-   double precision,intent(in) :: B_z (1:ix,1:jx,1:kx)
+   double precision,intent(inout) :: ro_h(1:ix,1:jx,1:kx),ro_m(1:ix,1:jx,1:kx)
+   double precision,intent(inout) :: vx_h(1:ix,1:jx,1:kx),vx_m(1:ix,1:jx,1:kx)
+   double precision,intent(inout) :: vy_h(1:ix,1:jx,1:kx),vy_m(1:ix,1:jx,1:kx)
+   double precision,intent(inout) :: vz_h(1:ix,1:jx,1:kx),vz_m(1:ix,1:jx,1:kx) 
+   double precision,intent(inout) :: P_h (1:ix,1:jx,1:kx),P_m (1:ix,1:jx,1:kx)
+   double precision ,intent(inout):: B_x (1:ix,1:jx,1:kx)
+   double precision,intent(inout) :: B_y (1:ix,1:jx,1:kx)
+   double precision,intent(inout) :: B_z (1:ix,1:jx,1:kx)
    
    if(flag_mhd.eq.1) then      
       call pv2cq_mhd(ro_m,vx_m,vy_m,vz_m,p_m,B_x,B_y,B_z,U_m)

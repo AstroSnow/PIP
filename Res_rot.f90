@@ -1,6 +1,6 @@
 module Res_rot
   use globalvar,only:ix,jx,kx,eta,nvar_h,nvar_m,eta_0,x,y,z,debug_parameter,&
-       ndim,s_order,dxc,dyc,dzc,my_rank,j_cri,vd_cri
+       ndim,s_order,dxc,dyc,dzc,my_rank,j_cri,vd_cri,time
   use Util_rot,only:get_rotation
   implicit none  
   integer,save::resi_type
@@ -35,14 +35,16 @@ contains
           enddo
        enddo              
     case(2)!anomalous resistivity (Current density dependent)
-       eta = 0.d0 ! initialization
+       eta = eta_0 ! initialization
        call get_rotation(ix,jx,kx,ndim,s_order,dxc,dyc,dzc,U_m(:,:,:,6:8),cur)
        c2=sqrt(cur(:,:,:,1)**2+cur(:,:,:,2)**2+cur(:,:,:,3)**2)
        do k=1,kx
           do j=1,jx
              do i=1,ix
-                if(c2(i,j,k).ge.j_cri) eta(i,j,k)=eta_0*(c2(i,j,k)/j_cri-1.0d0)
-             enddo
+                if(c2(i,j,k).ge.j_cri) then 
+	           eta(i,j,k)=eta_0*11.d0 !*(c2(i,j,k)/j_cri-1.0d0)
+	        endif
+	     enddo
           enddo
        enddo                     
     case(3)!anomalous resistivity (drift velocity dependent)

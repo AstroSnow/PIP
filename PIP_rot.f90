@@ -1,12 +1,13 @@
 module PIP_rot
   use globalvar,only:ix,jx,kx,ac,xi_n,gm_rec,gm_ion,nvar_h,nvar_m,&
-       flag_pip_imp,gm,n_fraction,t_ir,col,x,y,z,beta,T0, n0,my_rank
+       flag_pip_imp,gm,n_fraction,t_ir,col,x,y,z,beta,T0, n0,my_rank,flag_IR_type,flag_col,arb_heat,nout,flag_restart
   use scheme_rot,only:get_Te_HD,get_Te_MHD,cq2pv_HD,cq2pv_MHD,get_vel_diff
   use parameters,only:T_r_p,deg1,deg2,pi
   implicit none
   integer,save::col_type,IR_type,xin_type,is_IR,IR_T_dependence
   double precision factor,factor2,mu_p,mu_n,T_ionization,factor3
   double precision :: rec_fac,ion_fac
+  double precision :: ioneq,f_n,f_p, f_p_p,tfac 
 contains
   subroutine initialize_collisional(flag_col)
     integer,intent(inout)::flag_col
@@ -21,14 +22,15 @@ contains
 !mod((flag_col/10),10)
     flag_col=mod(flag_col,10)
     T_ionization=T_r_p
-    factor=2.7d0*sqrt(T0*T_r_p)*T0*T_r_p/5.6e-16/n0
- !   factor=2.7d0*sqrt(T0*T_r_p)*T0*T_r_p/5.6e-16/n0
+    factor=2.7d0*dsqrt(T0*T_r_p)*T0*T_r_p/5.6e-16/n0
+ !   factor=2.7d0*dsqrt(T0*T_r_p)*T0*T_r_p/5.6e-16/n0
 !    factor2=1.0d0/((T0/T_r_p)**deg1/factor+(T0/T_r_p)**deg2*exp(-T_r_p/T0))
-!    factor2=1.0d0/(T_r_p/T0/factor+sqrt(T0/T_r_p)*exp(-T_r_p/T0))
-    factor2=1.0d0/(T_ionization/factor+exp(-T_ionization)/sqrt(T_ionization))
+!    factor2=1.0d0/(T_r_p/T0/factor+dsqrt(T0/T_r_p)*exp(-T_r_p/T0))
+    factor2=1.0d0/(T_ionization/factor+dexp(-T_ionization)/dsqrt(T_ionization))
 
     mu_p=0.5d0
     mu_n=1.0d0
+
   end subroutine initialize_collisional
 
 
@@ -46,35 +48,35 @@ contains
     allocate(Te_h(ix,jx,kx), Te_m(ix,jx,kx))
     call get_Te_MHD(U_m,Te_m)
     call get_Te_HD(U_h,Te_h)
-    ac(:,:,:)=col*sqrt((Te_h(:,:,:)+Te_m(:,:,:))/2.d0)/sqrt(beta/2.d0*gm)
+    ac(:,:,:)=col*dsqrt((Te_h(:,:,:)+Te_m(:,:,:))/2.d0)/dsqrt(beta/2.d0*gm)
     case(2)
     allocate(Te_h(ix,jx,kx), Te_m(ix,jx,kx))
     call get_Te_MHD(U_m,Te_m)
     call get_Te_HD(U_h,Te_h)
-    ac(:,:,:)=col*sqrt((Te_h(:,:,:)+Te_m(:,:,:))/2.d0)
+    ac(:,:,:)=col*dsqrt((Te_h(:,:,:)+Te_m(:,:,:))/2.d0)
     case(3)
     allocate(Te_h(ix,jx,kx), Te_m(ix,jx,kx), vd(ix,jx,kx,3))
     call get_Te_MHD(U_m,Te_m)
     call get_Te_HD(U_h,Te_h)
     call get_vel_diff(vd,U_h,U_m)
-    ac(:,:,:)=col*sqrt((Te_h(:,:,:)+Te_m(:,:,:))/2.d0)*sqrt(1.d0 + &
+    ac(:,:,:)=col*dsqrt((Te_h(:,:,:)+Te_m(:,:,:))/2.d0)*dsqrt(1.d0 + &
               9.d0*pi/64.d0*gm/2.d0*sum(vd**2.d0,dim=4)/(Te_h(:,:,:)+Te_m(:,:,:))) &
-              /sqrt(beta/2.d0*gm)
+              /dsqrt(beta/2.d0*gm)
     case(4)
     allocate(Te_h(ix,jx,kx), Te_m(ix,jx,kx), vd(ix,jx,kx,3))
     call get_Te_MHD(U_m,Te_m)
     call get_Te_HD(U_h,Te_h)
     call get_vel_diff(vd,U_h,U_m)
-    ac(:,:,:)=col*sqrt((Te_h(:,:,:)+Te_m(:,:,:))/2.d0)*sqrt(1.d0 + &
+    ac(:,:,:)=col*dsqrt((Te_h(:,:,:)+Te_m(:,:,:))/2.d0)*dsqrt(1.d0 + &
               9.d0*pi/64.d0*gm/2.d0*sum(vd**2.d0,dim=4)/(Te_h(:,:,:)+Te_m(:,:,:)))
     case(5)
     allocate(Te_h(ix,jx,kx), Te_m(ix,jx,kx), vd(ix,jx,kx,3))
     call get_Te_MHD(U_m,Te_m)
     call get_Te_HD(U_h,Te_h)
     call get_vel_diff(vd,U_h,U_m)
-    ac(:,:,:)=col*sqrt((Te_h(:,:,:)+Te_m(:,:,:))/2.d0)*sqrt(1.d0 + &
+    ac(:,:,:)=col*dsqrt((Te_h(:,:,:)+Te_m(:,:,:))/2.d0)*dsqrt(1.d0 + &
               9.d0*pi/64.d0*gm/2.d0*sum(vd**2.d0,dim=4)/(Te_h(:,:,:)+Te_m(:,:,:))) &
-              /sqrt(beta/2.d0*gm)*((beta/2.d0*gm) &
+              /dsqrt(beta/2.d0*gm)*((beta/2.d0*gm) &
               /(Te_h(:,:,:)+Te_m(:,:,:))/2.d0+gm*pi/16.d0*sum(vd**2,dim=4))**0.125d0
               
     case(6)
@@ -82,7 +84,7 @@ contains
     call get_Te_MHD(U_m,Te_m)
     call get_Te_HD(U_h,Te_h)
     call get_vel_diff(vd,U_h,U_m)
-    ac(:,:,:)=col*sqrt((Te_h(:,:,:)+Te_m(:,:,:))/2.d0)*sqrt(1.d0 + &
+    ac(:,:,:)=col*dsqrt((Te_h(:,:,:)+Te_m(:,:,:))/2.d0)*dsqrt(1.d0 + &
               9.d0*pi/64.d0*gm/2.d0*sum(vd**2.d0,dim=4)/(Te_h(:,:,:)+Te_m(:,:,:)))&
               /((Te_h(:,:,:)+Te_m(:,:,:))/2.d0+gm*pi/16.d0*sum(vd**2,dim=4))**0.125d0
 
@@ -110,14 +112,14 @@ contains
     double precision Te(ix,jx,kx)
     double precision ion_temperature(ix,jx,kx)
     if(IR_T_dependence.eq.0) then
-       ion_temperature=sqrt(Te/T_ionization)*exp(-T_ionization/Te)*factor2  
+       ion_temperature=dsqrt(Te/T_ionization)*dexp(-T_ionization/Te)*factor2  
     else if(IR_T_dependence.eq.1) then
        ion_temperature=1.0-n_fraction
     endif
   end function ion_temperature
 
   subroutine set_IR(U_h,U_m)
-    double precision,intent(in)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
+    double precision,intent(inout)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
     double precision Te_n(ix,jx,kx),Te_p(ix,jx,kx),Te_e(ix,jx,kx)
     double precision xi_n_tmp(ix,jx,kx)
     double precision Te_0
@@ -129,7 +131,7 @@ contains
 	!Get species temperatures
 	call get_Te_HD(U_h,Te_n)
 	call get_Te_MHD(U_m,Te_p)
-	factor=exp(-13.2d0/(T0/11605.0d0)) !exp(-E0/T0) in electron volts
+	factor=dexp(-13.2d0/(T0/11605.0d0)) !exp(-E0/T0) in electron volts
 	factor2=2.7*(13.2d0*11605.0d0)**-2.0d0*T0**(1.0d0/2.0d0)*n0
 	factor3=5.6e-16*(13.2d0*11605.0d0)**-2.0d0*T0**(-1.0d0)*n0**2.0d0
 	rec_fac=factor2/factor3 !is this right?
@@ -147,22 +149,74 @@ contains
 	call get_Te_MHD(U_m,Te_p)
 	!Calculate electron temperature in eV
 	Te_0=T0/1.1604e4
-	rec_fac=2.6e-19*(n0*1.0e6)/sqrt(Te_0)*t_ir  !n0 converted to m^-3
+	rec_fac=2.6e-19*(n0*1.0e6)/dsqrt(Te_0)*t_ir  !n0 converted to m^-3
 !	ele_n=U(:,:,:,1)*rho0/mh_si
 !	psi_ion=13.6d0
 !	A_ion=2.91e-14
 !	k_ion=0.39d0
 !	x_ion=0.232d0
-	factor=exp(-13.6d0/Te_0)
+	factor=dexp(-13.6d0/Te_0)
 	factor2=2.91e-14*(n0*1.0e6)*(13.6d0/Te_0)**0.39d0
 	ion_fac=factor2/t_ir
-	Gm_rec=U_m(:,:,:,1)/sqrt(Te_p)*rec_fac
+	Gm_rec=U_m(:,:,:,1)/dsqrt(Te_p)*rec_fac
 !	Gm_ion=factor**(-Te_p)*U_m(:,:,:,1)*Te_p**(1.0d0-0.39d0)/(Te_p*0.232d0+13.6d0/Te_0)*ion_fac
-	Gm_ion=(n0*1.0e6*U_m(:,:,:,1))*2.91e-14*exp(-13.6d0/Te_0/Te_p)*(13.6d0/Te_0/Te_p)**0.39d0/(0.232d0+13.6d0/Te_0/Te_p)*t_ir
-!	print*,Gm_rec(1,1,1)/Gm_ion(1,1,1),U_h(1,1,1,1)/U_m(1,1,1,1),(2.6e-19/sqrt(Te_0))/(2.91e-14/(0.232+13.6/Te_0)* &
+	Gm_ion=(n0*1.0e6*U_m(:,:,:,1))*2.91e-14*dexp(-13.6d0/Te_0/Te_p)*(13.6d0/Te_0/Te_p)**0.39d0/(0.232d0+13.6d0/Te_0/Te_p)*t_ir
+!	print*,Gm_rec(1,1,1)/Gm_ion(1,1,1),U_h(1,1,1,1)/U_m(1,1,1,1),(2.6e-19/dsqrt(Te_0))/(2.91e-14/(0.232+13.6/Te_0)* &
 !		(13.6/Te_0)**0.39*exp(-13.6/Te_0))
-!	print*,'Gm_rec',Gm_rec(1,1,1)/U_m(1,1,1,1)*t_ir,(n0*1.0e6)*(2.6e-19/sqrt(Te_0))
+!	print*,'Gm_rec',Gm_rec(1,1,1)/U_m(1,1,1,1)*t_ir,(n0*1.0e6)*(2.6e-19/dsqrt(Te_0))
 !	print*,'Gm_ion',Gm_ion(1,1,1)/U_m(1,1,1,1)*t_ir,(n0*1.0e6)*(2.91e-14/(0.232d0+13.6d0/Te_0)*(13.6d0/Te_0)**0.39d0*exp(-13.6d0/Te_0))
+    case(3)
+	!Formulation from Popescu+2019 paper
+	!Empirical estimates for the rates
+	!Quarentine attempt
+	call get_Te_HD(U_h,Te_n)
+	call get_Te_MHD(U_m,Te_p)
+	!Calculate electron temperature in eV
+	Te_0=T0/1.1604e4
+	rec_fac=2.6e-19*(n0*1.0e6)/dsqrt(Te_0)  !n0 converted to m^-3
+!	factor=dexp(-13.6d0/Te_0)
+!	factor2=(13.6d0/Te_0)**0.39d0
+!	factor3=1.d0/(0.232d0+13.6d0/Te_0)
+!	ion_fac=factor*factor2*factor3
+
+	!initial equilibrium fractions
+	ioneq=(2.6e-19/dsqrt(Te_0))/(2.91e-14/(0.232d0+13.6d0/Te_0)*(13.6d0/Te_0)**0.39d0*dexp(-13.6d0/Te_0))
+	f_n=ioneq/(ioneq+1.0d0)
+	f_p=1.0d0-f_n
+	f_p_p=2.0d0*f_p/(f_n+2.0d0*f_p)
+	!print*,f_p_p,'f_p_p'
+	
+	if(mod(flag_col,2) .eq. 1) then
+		tfac=0.5d0*f_p_p/f_p
+		!print*,tfac
+	elseif(mod(flag_col,2) .eq. 0) then
+		tfac=beta/2.0d0*f_p_p*5.0d0/6.0d0/f_p
+	else
+		print*,'option not included!'
+		stop
+	endif
+	
+	!print*,Te_p(1,1,1),'temperature'
+	!print*,'mod(2,2)=',mod(2,2)	
+	!print*,'mod(3,2)=',mod(3,2)
+	!print*,'mod(flag_col,2)=',mod(flag_col,2)
+	!stop
+
+	Gm_rec=U_m(:,:,:,1)/dsqrt(Te_p)*t_ir/f_p*dsqrt(tfac)
+	Gm_ion=2.91e-14*(n0*1.0e6)*U_m(:,:,:,1)*dexp(-13.6d0/Te_0/Te_p*tfac)*(13.6d0/Te_0/Te_p*tfac)**0.39d0
+	Gm_ion=Gm_ion/(0.232d0+13.6d0/Te_0/Te_p*tfac)/rec_fac/f_p *t_ir
+!print*,'set_ir:',maxval(gm_rec),maxval(gm_ion)
+    if(nout .eq. 0 .and. flag_restart.eq.-1) then
+	allocate(arb_heat(ix,jx,kx))
+	if(mod(flag_col,2) .eq. 1) then
+		arb_heat=Gm_ion*U_h(:,:,:,1)*(13.6d0/gm/T0/8.6173e-5)
+	elseif(mod(flag_col,2) .eq. 0) then
+		arb_heat=Gm_ion*U_h(:,:,:,1)*(13.6d0*beta/T0/2.d0/8.6173e-5)
+	else
+		print*,'option not included!'
+		stop
+	endif
+    endif
     end select
   end subroutine set_IR
   
@@ -181,7 +235,7 @@ contains
     double precision N_pr(ix,jx,kx),N_i(ix,jx,kx),N_n(ix,jx,kx),f_T(ix,jx,kx)
     f_T=ion_temperature(Te_tot)/rec_temperature(Te_tot)
     N_pr=Pr_tot/Te_tot*gm    
-    N_i=-f_T+sqrt(f_T*(f_T+N_pr))
+    N_i=-f_T+dsqrt(f_T*(f_T+N_pr))
     N_n=N_i*N_i/f_T    
     N_tot=N_i+N_n
     xi_n0=N_n/N_tot        
@@ -252,7 +306,7 @@ contains
     double precision vz(ix,jx,kx),nvz(ix,jx,kx)
     double precision bx(ix,jx,kx),by(ix,jx,kx),bz(ix,jx,kx)
     double precision kapper(ix,jx,kx),lambda(ix,jx,kx)
-    double precision A(ix,jx,kx),B(ix,jx,kx),D(ix,jx,kx)    
+    double precision A(ix,jx,kx),B(ix,jx,kx),D(ix,jx,kx),ion_pot(ix,jx,kx)    
     dS=0.0
     call cq2pv_hd(nde,nvx,nvy,nvz,npr,U_h)
     call cq2pv_mhd(de,vx,vy,vz,pr,bx,by,bz,U_m)
@@ -301,12 +355,41 @@ contains
        ds(:,:,:,2)=Gm_rec*de*vx-Gm_ion*nde*nvx
        ds(:,:,:,3)=Gm_rec*de*vy-Gm_ion*nde*nvy
        ds(:,:,:,4)=Gm_rec*de*vz-Gm_ion*nde*nvz
-       ds(:,:,:,5)=0.5d0*(Gm_rec*de*(vx*vx+vy*vy+vz*vz)- &
-            Gm_ion*nde*(nvx*nvx+nvy*nvy+nvz*nvz)) -&
-	    Gm_ion*3.0d0/2.0d0/gm*nte + Gm_rec*3.0d0/2.0d0/gm*te
-       S_h(:,:,:,1:5)=S_h(:,:,:,1:5)+ds(:,:,:,1:5)
-       S_m(:,:,:,1:5)=S_m(:,:,:,1:5)-ds(:,:,:,1:5)
-!       print *, 'term',Gm_rec,Gm_ion,gm,nte,te
+	if(flag_IR_type .eq. 0) then !New formulation
+	ds(:,:,:,5)=0.5d0*(Gm_rec*de*(vx*vx+vy*vy+vz*vz)- &
+	    Gm_ion*nde*(nvx*nvx+nvy*nvy+nvz*nvz)) -&
+	    Gm_ion*npr/(gm-1.d0) + 0.5d0*Gm_rec*pr/(gm-1.d0)
+	S_h(:,:,:,1:5)=S_h(:,:,:,1:5)+ds(:,:,:,1:5)
+	S_m(:,:,:,1:5)=S_m(:,:,:,1:5)-ds(:,:,:,1:5)
+	ion_pot=0.0d0
+		if(mod(flag_col,2) .eq. 1) then
+			ion_pot=Gm_ion*nde*(13.6d0/gm/T0/8.6173e-5)
+		elseif(mod(flag_col,2) .eq. 0) then
+			ion_pot=Gm_ion*nde*(13.6d0*beta/T0/2.d0/8.6173e-5)
+		else
+			print*,'option not included!'
+			stop
+		endif
+!print*,maxval(Gm_ion),maxval(ion_pot),maxval(abs(arb_heat))
+!print*,maxval(abs(ion_pot)),maxval(abs(arb_heat)),maxval(abs(ion_pot-arb_heat))
+	S_m(:,:,:,5)=S_m(:,:,:,5)-ion_pot+arb_heat
+!	print*,'New type'
+	else if(flag_IR_type .eq. 1) then
+	ds(:,:,:,5)=0.5d0*(Gm_rec*de*(vx*vx+vy*vy+vz*vz)- &
+	    Gm_ion*nde*(nvx*nvx+nvy*nvy+nvz*nvz)) -&
+	    Gm_ion*npr/(gm-1.d0) + 0.5d0*Gm_rec*pr/(gm-1.d0) !Khomenko
+	S_h(:,:,:,1:5)=S_h(:,:,:,1:5)+ds(:,:,:,1:5)
+	S_m(:,:,:,1:5)=S_m(:,:,:,1:5)-ds(:,:,:,1:5)
+!	print*,'Khomenko type'
+	else if(flag_IR_type .eq. 2) then
+	ds(:,:,:,5)=0.5d0*(Gm_rec*de*(vx*vx+vy*vy+vz*vz)- &
+	    Gm_ion*nde*(nvx*nvx+nvy*nvy+nvz*nvz)) -&
+		    Gm_ion*npr/(gm-1.d0) + Gm_rec*pr/(gm-1.d0) !Singh
+	S_h(:,:,:,1:5)=S_h(:,:,:,1:5)+ds(:,:,:,1:5)
+	S_m(:,:,:,1:5)=S_m(:,:,:,1:5)-ds(:,:,:,1:5)
+!	print*,'Singh type'
+	endif
+
     endif    
     return
   end subroutine source_PIP

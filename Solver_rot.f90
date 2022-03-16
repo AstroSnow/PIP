@@ -26,6 +26,7 @@ module solver_rot
        artvis,mhd_fluxes,hd_fluxes, &
        divb_cleaning_Dedner_source,divb_cleaning_Dedner_iter,derivative,vel_damp!,divb_flux_tmp
   use Res_rot,only:set_resistivity
+  use Visc_rot,only:source_visc,initialize_visc
   use PIP_rot,only:set_xin,set_IR,set_collisional,source_PIP
   use Gra_rot,only:set_gravity,source_gravity
   use HC_rot,only:HC,HC_STS,HC_SUBCYCLE
@@ -66,14 +67,14 @@ contains
        ! time integral  
        call time_integral(F_h,F_m,S_h,S_m,U_h0,U_m0,U_h,U_m,dt_coll_i,istep)
        ! fix boundaries so that the substeps are updated, not the main variable
-       call PIPbnd(U_h,U_m)
+       call PIPbnd(U_h,U_m,istep)
     enddo
-    if ((flag_damp.eq.1) .or. (flag_damp.eq.2))  call vel_damp(U_h,U_m)
+    if ((flag_damp.eq.1) .or. (flag_damp.eq.2) .or. (flag_damp.eq.3))  call vel_damp(U_h,U_m)
 
     
     call post_step(U_h,U_m,dt)
 
-    call PIPbnd(U_h,U_m)
+    call PIPbnd(U_h,U_m,0)
 
 
           
@@ -101,7 +102,7 @@ contains
     if(flag_grav.ge.2.or.(flag.eq.0.and.flag_grav.eq.1)) then
        call set_gravity(U_h,U_m)       
     endif
-    if(flag_col.ge.2.or.(flag.eq.0.and.flag_col.eq.1)) then
+    if((flag_col.ge.2.or.(flag.eq.0.and.flag_col.eq.1)).AND.(flag_pip.eq.1)) then
        call set_collisional(U_h,U_m)       
     endif
     if(flag_amb.ge.2.or.(flag.eq.0.and.flag_amb.eq.1)) then
@@ -110,6 +111,9 @@ contains
     if(flag_IR.ge.2.or.(flag.eq.0.and.flag_IR.eq.1)) then
        call set_IR(U_h,U_m)       
     endif
+!    if(flag_visc.ge.1) then
+!       call initialize_visc()       
+!    endif
     if(flag_rad.ge.1) then
 	print*,'RADIATIVE LOSSES ARE NOT YET FINISHED'
 	stop    
@@ -169,6 +173,7 @@ contains
        call source_PIP(U_h0,U_m0,U_h,U_m,dt_coll_i,S_h,S_m)              
     endif
     if(flag_cyl.eq.1) call source_cyl(S_h,S_m,U_h,U_m,F_h,F_m) 
+    if(flag_visc.eq.1) call source_visc(S_h,S_m,U_h,U_m)
   end subroutine set_source
     
   subroutine time_integral(F_h,F_m,S_h,S_m,U_h0,U_m0, U_h,U_m,dt_coll_i,istep)
@@ -303,22 +308,22 @@ contains
        do dir=1,ndim
           if(flag_mhd.eq.1) then
              call artvis(dir,U_m,dt,nvar_m,1,nvar_m)
-             call PIPbnd(U_h,U_m)
+             call PIPbnd(U_h,U_m,0)
           endif
           if(flag_mhd.eq.0.or.flag_pip.eq.1) then
              call artvis(dir,U_h,dt,nvar_h,0,nvar_h)
-             call PIPbnd(U_h,U_m)
+             call PIPbnd(U_h,U_m,0)
           endif
        enddo
     else if(flag_artvis.eq.2) then
        do dir=1,ndim
           if(flag_mhd.eq.1) then
              call artvis(dir,U_m,dt,nvar_m,1,5)
-             call PIPbnd(U_h,U_m)
+             call PIPbnd(U_h,U_m,0)
           endif
           if(flag_mhd.eq.0.or.flag_pip.eq.1) then               
              call artvis(dir,U_h,dt,nvar_h,0,nvar_h)
-             call PIPbnd(U_h,U_m)
+             call PIPbnd(U_h,U_m,0)
           endif
        enddo
     end if

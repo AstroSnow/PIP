@@ -16,19 +16,19 @@ module scheme_rot
        flag_amb,flag_mhd,flag_pip,flag_amb,flag_mpi,flag_resi,margin,gm,&
        flag_bnd,xi_n,flag_pip_imp,nt,eta_0,gra,scl_height,s_order,flag_sch,&
        x,y,z,col,n_fraction,flag_ir,gm_rec,gm_ion,t_ir,mpi_pos,my_rank,&
-       debug_parameter,ro_lim,pr_lim,tiny,cmax,dsc,b_cr,damp_time
+       debug_parameter,ro_lim,pr_lim,tiny,cmax,dsc,b_cr,damp_time,flag_damp,&
+       oldke_damp,flag_rad
   use MPI_rot,only:mpi_double_interface
   use Boundary_rot,only:bnd_divb
   implicit none
   integer i,j,k,ierr
-  double precision,parameter::pr_minimam=1.0d-7
 
 contains 
 !------------------------------------------------------------------------
   subroutine pv2cq_hd(de,vx,vy,vz,pr,U_h)
-    double precision,intent(in):: de(ix,jx,kx),pr(ix,jx,kx)
-    double precision,intent(in)::vx(ix,jx,kx),vy(ix,jx,kx),vz(ix,jx,kx)
-    double precision,intent(out)::U_h(ix,jx,kx,nvar_h)
+    double precision,intent(inout):: de(ix,jx,kx),pr(ix,jx,kx)
+    double precision,intent(inout)::vx(ix,jx,kx),vy(ix,jx,kx),vz(ix,jx,kx)
+    double precision,intent(inout)::U_h(ix,jx,kx,nvar_h)
     u_h = 0.d0 ! initialization
     u_h(:,:,:,1)=de
     u_h(:,:,:,2)=de*vx
@@ -39,11 +39,11 @@ contains
 
   !Convert physical variables to conserved quantity for MHD
   subroutine pv2cq_mhd (de,vx,vy,vz,pr,bx,by,bz,U_m)
-    double precision,intent(in):: de(ix,jx,kx),vx(ix,jx,kx)
-    double precision,intent(in)::vy(ix,jx,kx),vz(ix,jx,kx)
-    double precision,intent(in):: pr(ix,jx,kx),bx(ix+flag_b_stg,jx,kx)
-    double precision,intent(in):: by(ix,jx+flag_b_stg,kx),bz(ix,jx,kx+flag_b_stg)
-    double precision,intent(out)::U_m(ix,jx,kx,nvar_m)
+    double precision,intent(inout):: de(ix,jx,kx),vx(ix,jx,kx)
+    double precision,intent(inout)::vy(ix,jx,kx),vz(ix,jx,kx)
+    double precision,intent(inout):: pr(ix,jx,kx),bx(ix+flag_b_stg,jx,kx)
+    double precision,intent(inout):: by(ix,jx+flag_b_stg,kx),bz(ix,jx,kx+flag_b_stg)
+    double precision,intent(inout)::U_m(ix,jx,kx,nvar_m)
 !    u_m = 0.d0 ! initialization
     if(flag_b_stg.eq.1) then
        u_m(:,:,:,1)=de
@@ -79,31 +79,36 @@ contains
 !------------------------------------------------------------------------
 !------------------------------------------------------------------------
   subroutine get_Te_HD(U,Te)
-    double precision,intent(in)::U(ix,jx,kx,nvar_h)
-    double precision,intent(out)::Te(ix,jx,kx)
+    double precision,intent(inout)::U(ix,jx,kx,nvar_h)
+    double precision,intent(inout)::Te(ix,jx,kx)
     double precision pr(ix,jx,kx)
     call get_Pr_HD(U,pr)
     Te=gm*(pr/U(:,:,:,1))    
   end subroutine get_Te_HD
   subroutine get_Pr_HD(U,Pr)
-    double precision,intent(in)::U(ix,jx,kx,nvar_m)
-    double precision,intent(out)::Pr(ix,jx,kx)
+    double precision,intent(inout)::U(ix,jx,kx,nvar_m)
+    double precision,intent(inout)::Pr(ix,jx,kx)
     pr=(gm-1.0d0)*(U(:,:,:,5)&
          -0.5d0*(U(:,:,:,2)*U(:,:,:,2) &
          +U(:,:,:,3)*U(:,:,:,3) &
+         +U(:,:,:,4)*U(:,:,:,4))/U(:,:,:,1))
+!HD PRESSURE FIXES
+   if(minval(pr).le.pr_lim) pr=max(pr,pr_lim)  
+    U(:,:,:,5)=pr/(gm-1.0d0)+0.5d0*((U(:,:,:,2)*U(:,:,:,2)&
+         +U(:,:,:,3)*U(:,:,:,3)&
          +U(:,:,:,4)*U(:,:,:,4))/U(:,:,:,1))
   end subroutine get_Pr_HD
 
   subroutine get_Te_MHD(U,Te)
     double precision,intent(inout)::U(ix,jx,kx,nvar_m)
-    double precision,intent(out)::Te(ix,jx,kx)
+    double precision,intent(inout)::Te(ix,jx,kx)
     double precision pr(ix,jx,kx)
     call get_Pr_MHD(U,pr)
     Te=0.5d0*gm*(pr/U(:,:,:,1))    
   end subroutine get_Te_MHD
   subroutine get_Pr_MHD(U,pr)
     double precision,intent(inout)::U(ix,jx,kx,nvar_m)
-    double precision,intent(out)::Pr(ix,jx,kx)
+    double precision,intent(inout)::Pr(ix,jx,kx)
     pr=(gm-1.0d0)*(u(:,:,:,5)&
          -0.5d0*((U(:,:,:,2)*U(:,:,:,2)&
          +U(:,:,:,3)*U(:,:,:,3)&
@@ -117,7 +122,7 @@ contains
          +U(:,:,:,4)*U(:,:,:,4))/U(:,:,:,1)&
          +U(:,:,:,6)*U(:,:,:,6)&
          +U(:,:,:,7)*U(:,:,:,7)&
-         +U(:,:,:,8)*U(:,:,:,8))
+         +U(:,:,:,8)*U(:,:,:,8)) 
   end subroutine get_Pr_MHD
 
   
@@ -125,12 +130,21 @@ contains
   subroutine cq2pv_hd(de,vx,vy,vz,pr,U_h)
     double precision,intent(inout):: de(ix,jx,kx),pr(ix,jx,kx)
     double precision,intent(inout)::vx(ix,jx,kx),vy(ix,jx,kx),vz(ix,jx,kx)
-    double precision,intent(in)::U_h(ix,jx,kx,nvar_h)
+    double precision,intent(inout)::U_h(ix,jx,kx,nvar_h)
     de=u_h(:,:,:,1)
     vx=u_h(:,:,:,2)/de
     vy=u_h(:,:,:,3)/de
     vz=u_h(:,:,:,4)/de
-    pr=(gm-1.0d0)*(u_h(:,:,:,5)-0.5d0*de*(vx**2+vy**2+vz**2))    
+    pr=(gm-1.0d0)*(u_h(:,:,:,5)-0.5d0*de*(vx**2+vy**2+vz**2))
+!!!!!!FIXES FOR HD DENSITY, PRESSURE AND ENERGY !!!!!!!  
+    if(minval(pr).le.pr_lim) pr=max(pr,pr_lim)
+    if(minval(de).le.ro_lim) de=max(de,ro_lim)
+    u_h(:,:,:,1)=de
+    u_h(:,:,:,2)=vx*de
+    u_h(:,:,:,3)=vy*de
+    u_h(:,:,:,4)=vz*de
+    u_h(:,:,:,5)=pr/(gm-1.0d0)+0.5d0*de*(vx**2+vy**2+vz**2)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  
   end subroutine cq2pv_hd
 
   !Convert physical variables to conserved quantity for MHD
@@ -142,7 +156,7 @@ contains
     double precision,intent(inout):: by(ix,jx,kx),bz(ix,jx,kx)
     double precision,intent(inout)::U_m(ix,jx,kx,nvar_m)
 
-    
+   
     de=u_m(:,:,:,1)
     vx=u_m(:,:,:,2)/de
     vy=u_m(:,:,:,3)/de
@@ -160,7 +174,6 @@ contains
     u_m(:,:,:,4)=vz*de
     u_m(:,:,:,5)=pr/(gm-1.0d0)+0.5d0*de*(vx**2+vy**2+vz**2)  &
          +0.5d0*(bx**2+by**2+bz**2)
-
   end subroutine cq2pv_mhd
 
 
@@ -182,7 +195,6 @@ contains
     if(flag_resi.ge.1) call cfl_resi
     if(flag_mpi.eq.1) then
        dt=mpi_double_interface(dt,1)
-!if (MY_RANK .eq. 0) print *,'dt: ', dt
     endif
 
     !! for divB cleaning
@@ -197,7 +209,7 @@ contains
   end subroutine cfl
   !set time step for HD with CFL condition 
   subroutine cfl_hd(U_h)
-    double precision,intent(in)::U_h(ix,jx,kx,nvar_h)
+    double precision,intent(inout)::U_h(ix,jx,kx,nvar_h)
     double precision dt_min,cs2,v2,gmin,cs,vabs
     double precision de(ix,jx,kx),pr(ix,jx,kx)
     double precision vx(ix,jx,kx),vy(ix,jx,kx),vz(ix,jx,kx)
@@ -268,7 +280,6 @@ contains
             maxval(xi_n*(bx*bx+by*by+bz*bz)/&
             (ac*de*de*(1.0-xi_n))))
     endif
-    !print*,'dt: ',dt
   end subroutine cfl_mhd
   
   subroutine cfl_resi
@@ -286,7 +297,7 @@ contains
 
 
   subroutine cfl_pn_col(U_m,U_h)
-    double precision,intent(in)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
+    double precision,intent(inout)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
     if(flag_pip_imp.eq.1) then
        dt=min(dt,pip_imp_factor/max(maxval(u_m(:,:,:,1)*ac(:,:,:)),maxval(u_h(:,:,:,1)*ac(:,:,:))))
     else
@@ -295,8 +306,9 @@ contains
    end subroutine cfl_pn_col
 
    subroutine cfl_pip_ir(U_m,U_h)
+
      double precision,intent(in)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
-     dt=min(dt,safety/max(maxval(gm_rec)+maxval(gm_ion),1.0d-5))     
+     dt=min(dt,safety/max(maxval(gm_rec)+maxval(gm_ion),1.0d-5))   !,maxval(gm_rec/U_m(:,:,:,1))+maxval(gm_ion/U_h(:,:,:,1))  
    end subroutine cfl_pip_ir
 
   subroutine hd_fluxes(F_h,U_h)
@@ -533,7 +545,7 @@ contains
 
     double precision :: eps,epsg,eps_limit,ch,cmaxg
     double precision,parameter::slow=0.9d0
-    integer,parameter :: it_max = 10000
+    integer,parameter :: it_max = 100
     integer,parameter::i_bx=6,i_by=7,i_bz=8,i_psi=9
 
     ncount=0
@@ -545,11 +557,8 @@ contains
     ch = slow*cmax
 
     b_vec = U_m(:,:,:,i_bx:i_bz)
-    !print*,'here1'
     call div_cal(divb,b_vec)
     call bnd_divb(divb)
-    !print*,'here2'
-    !print*,U_m(1,1,1,:)
     psi = U_m(:,:,:,i_psi)
 
     do while(eps.ge.eps_limit .and. ncount.lt.it_max)
@@ -563,11 +572,9 @@ contains
        call derivative(dpsdx,psi,1)
        call derivative(dpsdy,psi,2)
        call derivative(dpsdz,psi,3)
-
        b_vec(:,:,:,1) = b_vec(:,:,:,1) - dt0*dpsdx
        b_vec(:,:,:,2) = b_vec(:,:,:,2) - dt0*dpsdy
        b_vec(:,:,:,3) = b_vec(:,:,:,3) - dt0*dpsdz
-
        call div_cal(divb,b_vec)
        call bnd_divb(divb)
 
@@ -585,10 +592,9 @@ contains
        endif
 !    if (MY_RANK.eq.0) print*,eps,eps_limit,ncount !test to check the number of iteration and convergence
        ncount = ncount+1
-!       if(ncount.eq.it_max) exit
+       if(ncount.eq.it_max) exit
     end do
 
-    if (MY_RANK.eq.0) print*,eps,eps_limit,ncount !test to check the number of iteration and convergence
     ! update
     U_m(:,:,:,i_bx:i_bz) = b_vec
     U_m(:,:,:,i_psi) = psi
@@ -744,13 +750,13 @@ contains
     if(mhd.eq.1)then
        bb(:,:,:) = U(:,:,:,6)**2 + U(:,:,:,7)**2 + U(:,:,:,8)**2
        call cq2pv_mhd(de,vx,vy,vz,pr,bx,by,bz,U)
-       rovv=abs(de)*(vx*vx+vy*vy+vz*vz)
-       cc(:,:,:) = sqrt( gm*abs(pr(:,:,:))/abs(U(:,:,:,1)) ) &
-            + sqrt( rovv(:,:,:)/abs(U(:,:,:,1)) ) &
-            + sqrt( bb(:,:,:)/abs(U(:,:,:,1)) )
+       rovv=max(de,ro_lim)*(vx*vx+vy*vy+vz*vz)
+       cc(:,:,:) = dsqrt( gm*max(pr(:,:,:),pr_lim)/max(U(:,:,:,1),ro_lim) ) &
+            + dsqrt( rovv(:,:,:)/max(U(:,:,:,1),ro_lim) ) &
+            + dsqrt( bb(:,:,:)/max(U(:,:,:,1),ro_lim) )
     else 
        call cq2pv_hd(de,vx,vy,vz,pr,U)
-       cc=sqrt(gm*abs(pr(:,:,:))/abs(de))+sqrt(vx*vx+vy*vy+vz*vz)       
+       cc=dsqrt(gm*max(pr(:,:,:),pr_lim)/max(de,ro_lim))+dsqrt(vx*vx+vy*vy+vz*vz)       
     endif
 
     cc(xs:xe,ys:ye,zs:ze) = &
@@ -862,9 +868,23 @@ contains
   subroutine vel_damp(U_h,U_m)
     double precision,intent(inout)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
     double precision :: damp_time1(ix,jx,kx)
+    double precision :: mach,rcom,rpres,f_n
+
+!Damping based on sucsessive kinetic energy 
+if ((flag_damp.eq.1).or.(flag_damp.eq.2)) then
+
+    if (flag_damp.eq.2) then
+	damp_time=1.0d0
+	damp_time1=spread(spread(spread(1.d0*damp_time ,1,ix),2,jx),3,kx)
+	do while (maxval(U_h(:,:,:,5)-damp_time1*dt*(U_h(:,:,:,2)**2+U_h(:,:,:,2)**2+U_h(:,:,:,2)**2)/U_h(:,:,:,1)/2.0d0) .GT. oldke_damp)
+		damp_time=damp_time*2.0d0
+		damp_time1=spread(spread(spread(1.d0*damp_time ,1,ix),2,jx),3,kx)
+	enddo
+!	print*,damp_time,maxval(U_h(:,:,:,5)-damp_time1*dt*(U_h(:,:,:,2)**2+U_h(:,:,:,2)**2+U_h(:,:,:,2)**2)/U_h(:,:,:,1)/2.0d0),oldke_damp
+	damp_time=min(damp_time,1.0e6)
+    endif
 
     damp_time1=spread(spread(spread(1.d0*damp_time ,1,ix),2,jx),3,kx)
-
 
     if (flag_mhd.eq.1) then
     U_m(:,:,:,2:4)=U_m(:,:,:,2:4)-spread(damp_time1,4,3)*dt*U_m(:,:,:,2:4)
@@ -877,11 +897,47 @@ contains
       +U_h(:,:,:,4)**2)/U_h(:,:,:,1)/2.d0
     endif
 
+    oldke_damp=0.9d0*maxval(U_h(:,:,:,5)-(U_h(:,:,:,2)**2+U_h(:,:,:,2)**2+U_h(:,:,:,2)**2)/U_h(:,:,:,1)/2.0d0)
+
+
+endif
+
+if (flag_damp.eq.3) then
+!Damping based on the shock frame parameters
+	mach=2.d0
+	rcom=(gm+1.d0)*mach**2/(2.d0+(gm-1.d0)*mach**2)
+	rpres=1.d0+gm*mach**2*(1.d0-1.d0/rcom)
+
+	damp_time1=spread(spread((tanh((x+70.d0)/10.0d0)+1.0d0)/2.0d0&
++(1.0d0-tanh((x-70.0d0)/10.0d0))/2.0d0-1.0d0,2,jx),3,kx)
+
+!print*,damp_time1(:,1,1)
+!print*,damp_time1(:,2,1)
+!stop
+f_n=0.0d0
+
+if (flag_pip .eq. 1) then
+	f_n=n_fraction
+	U_h(:,:,:,5)=U_h(:,:,:,5)-0.5d0*(U_h(:,:,:,2)**2+U_h(:,:,:,3)**2+U_h(:,:,:,4)**2)/U_h(:,:,:,1)
+	U_h(:,:,:,2)=(U_h(:,:,:,2)+f_n*mach)*damp_time1-spread(spread(spread(f_n*mach,1,ix),2,jx),3,kx)
+	U_h(:,:,:,3)=(U_h(:,:,:,3))*damp_time1
+	U_h(:,:,:,4)=(U_h(:,:,:,4))*damp_time1
+	U_h(:,:,:,5)=U_h(:,:,:,5)+0.5d0*(U_h(:,:,:,2)**2+U_h(:,:,:,3)**2+U_h(:,:,:,4)**2)/U_h(:,:,:,1)
+endif
+
+	U_m(:,:,:,5)=U_m(:,:,:,5)-0.5d0*(U_m(:,:,:,2)**2+U_m(:,:,:,3)**2+U_m(:,:,:,4)**2)/U_m(:,:,:,1)
+	U_m(:,:,:,2)=(U_m(:,:,:,2)+(1.0d0-f_n)*mach)*damp_time1-spread(spread(spread((1.0d0-f_n)*mach,1,ix),2,jx),3,kx)
+	U_m(:,:,:,3)=(U_m(:,:,:,3))*damp_time1
+	U_m(:,:,:,4)=(U_m(:,:,:,4))*damp_time1
+	U_m(:,:,:,5)=U_m(:,:,:,5)+0.5d0*(U_m(:,:,:,2)**2+U_m(:,:,:,3)**2+U_m(:,:,:,4)**2)/U_m(:,:,:,1)	
+
+!		print*,U_m(i,1,1,:)
+endif
 
   end subroutine vel_damp
 
   subroutine get_vel_diff(vd,U_h,U_m)
-  double precision,intent(in)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
+  double precision,intent(inout)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
   double precision,intent(out)::vd(ix,jx,kx,3)  
     integer :: i
 
@@ -892,5 +948,36 @@ contains
      endif
 
   end subroutine get_vel_diff
+
+  subroutine get_rad_loss(rad_loss,U_h,U_m)
+!NONE OF THIS WORKS
+	double precision,intent(inout)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
+	double precision,intent(out)::rad_loss(ix,jx,kx,2)  
+	integer :: i
+	double precision :: rad_time,rad_c
+	double precision :: Te_m(ix,jx,kx),Te_h(ix,jx,kx),Te_amb(ix,jx,kx)
+
+	!Newton cooling
+	if (flag_rad .eq. 1) then
+		rad_time=1.0d0 !FOR TESTING. SHOULD MOVE TO SETTINGS
+	elseif (flag_rad .eq. 2) then
+		print*, 'NEED TO BUILD SPIEGEL RADIATIVE TIMES'
+		stop
+	endif
+
+	stop
+
+	!get ambient temperature
+	call get_Te_MHD(U_m,Te_m)
+	call get_Te_HD(U_h,Te_h)
+	Te_amb=0.5d0*(Te_m+Te_h) !IS THIS RIGHT?
+
+	!Specific heat at constant volume
+	rad_c=1.0d0 !WHAT IS THIS VALUE?
+
+	rad_loss(:,:,:,1)=-rad_c*(Te_m-Te_amb(:,:,:))/rad_time
+	rad_loss(:,:,:,2)=-rad_c*(Te_h-Te_amb(:,:,:))/rad_time
+	
+  end subroutine get_rad_loss
 
 end module scheme_rot
