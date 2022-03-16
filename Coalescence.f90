@@ -34,7 +34,7 @@ subroutine Coalescence
    CALL RANDOM_SEED(PUT=new(1:size))
    call random_number(HARVEST=harvest)
 
-  !Find the equilibrium neutral fraction
+  !Find the equilibrium neutral fraction from the initial temperature T0
   Te_0=T0/1.1604e4
   ioneq=(2.6e-19/dsqrt(Te_0))/(2.91e-14/(0.232+13.6/Te_0)*(13.6/Te_0)**0.39*dexp(-13.6/Te_0))
   f_n=ioneq/(ioneq+1.0d0)
@@ -53,6 +53,7 @@ subroutine Coalescence
   endif
   !----------------------------------------
 
+!Define ionization fraction from the initial conditions 
   !set ionization fraction-----------------
 !  if(flag_pip.eq.0) then
 !     f_n=1.0d0
@@ -69,7 +70,7 @@ subroutine Coalescence
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=0.0d0 ;end(1)=4.0d0
+  start(1)=-4.0d0 ;end(1)=4.0d0
   start(2)=-4.0d0 ;end(2)=4.0d0
   start(3)=-1.0d0 ;end(3)=1.0d0
   call set_coordinate(start,end)
@@ -77,8 +78,8 @@ subroutine Coalescence
   
   !!default boundary condition----------------------
   if (flag_bnd(1) .eq.-1) flag_bnd(1)=3
-  if (flag_bnd(2) .eq.-1) flag_bnd(2)=3 !This becomes 3 for the symmetric simulations at x=0 having one plasmoid only
-  if (flag_bnd(3) .eq.-1) flag_bnd(3)=3 !per tutti test con meta' plasmoide superiore avevo usato boundary=4; a dominio intero questo deve diventare 3 (bottom boundary)
+  if (flag_bnd(2) .eq.-1) flag_bnd(2)=3
+  if (flag_bnd(3) .eq.-1) flag_bnd(3)=3
   if (flag_bnd(4) .eq.-1) flag_bnd(4)=3
   if (flag_bnd(5) .eq.-1) flag_bnd(5)=1
   if (flag_bnd(6) .eq.-1) flag_bnd(6)=1
