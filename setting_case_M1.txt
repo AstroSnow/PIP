@@ -1,0 +1,116 @@
+./Data/case_M1/:outdir;   ------------------------------>   output directory (This should written at the first line in this file!!)
+./Data/case_M1/:indir;   ------------------------------->   input directory
+
+MHD:flag_eqs;   ---------------------------------------->   flag_for equation (HD,MHD, PIP) 
+-1:flag_restart;   ------------------------------------->   restart count (-1:no restart, 0: restart. nout at the end of config.txt will be read, >0: restart from No."flag_restart" data)
+2:ndim;   ---------------------------------------------->   dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
+4100:ix;   --------------------------------------------->   grid number for x-direction
+3074:jx;   --------------------------------------------->   grid number for y-direction
+2:kx;   ------------------------------------------------>   grid number for z-direction
+0.1 :dtout;   ------------------------------------------>   output period 100 
+10.0 :tend;   ------------------------------------------>   tend time for simulation (if lt 0 then default value is set) 20000
+-1:esav;   --------------------------------------------->   flag for save after given physical time
+1.0d0:emsavtime;   ------------------------------------->   Physical time to save for esav
+0 :flag_cyl;   ----------------------------------------->   set to 1 when you use Cylindrical coordinates (x=>r,y=>z,z=>phi) NB: Only ndim=2 is allowed (rz-plane)
+5.0    :gm_d; 
+3.0    :gm_n;
+
+0.8  :safety;   ---------------------------------------->   safety factor
+Coalescence:flag_ini;   -------------------------------->   flag for initial setting   
+1:flag_sch;   ------------------------------------------>   flag for numerical scheme (0:HLL-branch, 1:SLW)
+2:flag_hll;   ------------------------------------------>   flag for HLL branch (0:HLL,1:Rusanov,2:HLLD)
+2:s_order;   ------------------------------------------->   order of space for HLL branch (1, 2)
+0:flag_time;   ----------------------------------------->   flag for time integration method (0:RK, 1: SSPRK)
+2:t_order;   ------------------------------------------->   order of time (2 or 3. Activated ONLY WHEN flag_time=1)
+0    :flag_grav;   ------------------------------------->   flag for gravity
+0    :flag_visc;   ------------------------------------->   flag for viscosity
+1.0e-3  :nu_0;   --------------------------------------->   Value of viscosity
+-1:flag_artvis;   -------------------------------------->   flag for artificial viscosity (default :-1)
+1.3 :theta;   ------------------------------------------>   parameterfor artificial viscosity (set between 1 and 2 inclusive)
+
+=== For limits ===;
+0.0005001 :ro_lim;   ----------------------------------->   Lower limit for density
+0.0005001 :pr_lim;   ----------------------------------->   Lower limit for pressure
+
+=== For Boundary conditions ===;
+-1    :flag_bnd_x_l;   --------------------------------->   flag for x-boundary (if 0 then default value is set)
+-1    :flag_bnd_x_r;   --------------------------------->   flag for x+boundary (if 0 then default value is set)
+-1    :flag_bnd_y_l;   --------------------------------->   flag for y-boundary (if 0 then default value is set)
+-1    :flag_bnd_y_r;   --------------------------------->   flag for y+boundary (if 0 then default value is set)
+-1    :flag_bnd_z_l;   --------------------------------->   flag for z-boundary (if 0 then default value is set)
+-1    :flag_bnd_z_r;   --------------------------------->   flag for z+boundary (if 0 then default value is set)
+
+=== For MHD ===;
+0.1:beta;   -------------------------------------------->   initial plasma beta 
+0:flag_amb;   ------------------------------------------>   flag for resistive of not (Ambipolar)
+1:flag_divb;   ----------------------------------------->   flag for divB cleaning (0: no cleaning, 1:9-wave, 2:iterative 9-wave)
+0.7 :db_clean;   --------------------------------------->   paramter for divb cleaning
+0.1 :b_cr;   ------------------------------------------->   paramter for divb cleaning
+
+=== For Resistivity ===;
+1:flag_resi;   ----------------------------------------->   flag for resistive of not (1:uniform, 11: fixed localized, 22: anomalous (J dependent), 32: anomalous (vd dependent))
+0.0015:eta_0;   ---------------------------------------->   resistivity
+1.0:j_cri;   ------------------------------------------->   critical current density (for J-dependent anomalous res)
+100.0:vd_cri;   ---------------------------------------->   critical drift velocity (for vd-dependent anomalous res)
+
+=== For Two fluid ====;
+0.99:n_fraction;   ------------------------------------->   for uniform ionization degree 
+5.0:col;   --------------------------------------------->   for collisional coefficient
+0     :flag_pip_imp;   --------------------------------->   for implicit scheme in source term
+10.0   :pip_imp_factor;   ------------------------------>   cfl condition factor for pip_implicit scheme
+5    :flag_col;   -------------------------------------->   flag for collisional coefficient
+0:flag_IR;   ------------------------------------------->   flag for ionization and recombination (0:none, 1:Single level, 2:Empirical, 3:ion/rec to use)
+1:flag_IR_type;   -------------------------------------->   (0:new (with ionisation potential), 1:Khomenko (without ionisation potential), 2:Singh)
+0.0001:t_IR;   ----------------------------------------->   time scale of ionization and recombination relative to collisional time
+
+=== For heat condution ===;
+0 :flag_heat;   ---------------------------------------->   heat conduction flag (0:switch-off, 1:switch-on)
+1 :hc_type;   ------------------------------------------>   type of heat conduction (0:constant-type, 1:Spitzer-type)
+2 :hc_integ;   ----------------------------------------->   time integration (0:explicit, 1:implicit, 2:2nd-order super timestepping, 3:subcycling)
+2 :hc_split;   ----------------------------------------->   region splitting method for the implicit method (1:Yokoyama-Shibata, 2:Takasao+2015)
+0.3:safety_cnd;   -------------------------------------->   safety factor for heat conduction (not used in implicit method)
+30:nsub_max;   ----------------------------------------->   Max subcycle number for super timestepping and Subcycling. Solutions go wrong with nsub > 40
+2 :hc_sch;   ------------------------------------------->   iterative method for heat conduction equation (1:SOR, 2:BICG)
+8.2:kapper;   ------------------------------------------>   heat condution coefficient (Note: One should be careful about your normalization unit)
+500:hc_max;   ------------------------------------------>   maximum iteration count for heat conduction
+1.0:sor_omega;   --------------------------------------->   SOR-omega parameter (for iterative method)
+
+=== For MPI ===;
+1     :flag_mpi;   ------------------------------------->   flag for mpi
+16     :mpi_x;   --------------------------------------->   node number for x-direction
+8     :mpi_y;   ---------------------------------------->   node number for y-direction
+1     :mpi_z;   ---------------------------------------->   node number for z-direction
+1     :flag_mpi_split;   ------------------------------->   flag for splitting domain (Activated ONLY WHEN A=mpi_x*mpi_y*mpi_z=0 or A ne total_prc)
+
+==For debug==;
+0     :flag_debug;   ----------------------------------->   flag for debug (Currently not used)
+0     :debug_option;   --------------------------------->   option for debug
+
+=== NOTE: if you try debug_direction of >1, then you need to set ndim to 2 or 3. ===;
+1:debug_direction;   ----------------------------------->   direction for debug (1:x, 2:y, 3:z, ...) 
+0.494:debug_parameter;   ------------------------------->   debug parameter
+0:no_advection;   -------------------------------------->   neglect advection term of induction equation 
+
+=== For damping ===;
+0     :flag_damp;   ------------------------------------>   flag for damping
+0.0   :damp_time;   ------------------------------------>   timescale for damping
+
+=== Radiative losses ===;
+0     :flag_rad;   ------------------------------------->   radiative losses
+
+=== Normalisation parameters ===;
+10855.0d0 :T_norm;   ----------------------------------->   Temperature in K (13.6 eV = 157814.4 K)
+1.0d15  :n_norm;   ------------------------------------->   number density
+3.d5    :L_norm;   ------------------------------------->   Length scale
+
+=== Optional save flags (0 on, -1 off) TOGGLE AT YOUR PERIL! MAY PREVENT RESTARTS ===;
+0:ac_sav;   -------------------------------------------->   collisional coefficient
+-1:xi_sav;   ------------------------------------------->   neutral fraction
+0:ion_sav;   ------------------------------------------->   ionisation
+0:rec_sav;   ------------------------------------------->   recombination
+-1:col_sav;   ------------------------------------------>   collisional coefficient
+0:gr_sav;   -------------------------------------------->   gravity
+0:vs_sav;   -------------------------------------------->   viscosity
+0:heat_sav;   ------------------------------------------>   arbitrary heating
+0:et_sav;   -------------------------------------------->   resistivity
+-1:ps_sav;   ------------------------------------------->   ps
