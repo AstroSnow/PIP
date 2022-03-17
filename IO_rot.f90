@@ -99,7 +99,76 @@ endif
 
   end subroutine output
 
-  subroutine save_coordinates  
+  subroutine create_hdf5_outfile
+    character(40) :: file_path
+
+    ! Initialize FORTRAN predefined datatypes
+    CALL h5open_f(hdf5_error)
+
+    ! Setup file access property list with parallel I/O access.
+    CALL h5pcreate_f(H5P_FILE_ACCESS_F, plist_id, hdf5_error)
+    CALL h5pset_fapl_mpio_f(plist_id, MPI_COMM_WORLD, MPI_INFO_NULL, hdf5_error)
+
+    ! Create the output file
+    write(tno, "(i4.4)") nout
+    file_path = trim(outdir) // 't' // tno // '.h5'
+    CALL h5fcreate_f(trim(file_path), H5F_ACC_TRUNC_F, file_id, hdf5_error, access_prp = plist_id)
+
+    ! Create property list for collective dataset write
+    CALL h5pcreate_f(H5P_DATASET_XFER_F, plist_id, hdf5_error)
+    CALL h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, hdf5_error)
+  end subroutine create_hdf5_outfile
+
+  subroutine create_write_dataspaces
+    integer(HSIZE_T) :: dims_1D(1)
+    integer(HSIZE_T) :: unif_cell_size
+    integer :: i
+
+    ! iterate over grid coordinates (X, Y, Z)
+    do i=1,3
+      unif_cell_size = (dimsFile(i)-2*margin(i))/mpi_siz(i)
+      ! Define local process start index & global offset
+      if(neighbor(2*i-1).eq.-1 .or. mpi_pos(i).eq.0) then
+        start_stop(i,1) = 1
+        hdf5_offset(i) = 0
+      else
+        start_stop(i,1) = 1 + margin(i)
+        hdf5_offset(i) = margin(i) + unif_cell_size*mpi_pos(i)
+      end if
+      ! Define local process stop index
+      if(neighbor(2*i).eq.-1 .or. mpi_pos(i).eq.(mpi_siz(i)-1)) then
+        start_stop(i,2) = ig(i)
+      else
+        start_stop(i,2) = ig(i) - margin(i)
+      end if
+
+      dimsMem(i) = start_stop(i,2) - start_stop(i,1) + 1
+      ! Create 1D dataspaces for spatial coordinates
+      dims_1D(1) = dimsMem(i)
+      CALL h5screate_simple_f(1, dims_1D, memspace_id(i), hdf5_error)
+      dims_1D(1) = dimsFile(i)
+      CALL h5screate_simple_f(1, dims_1D, filespace_id(i), hdf5_error)
+    end do
+
+    ! Create 3D dataspaces
+    CALL h5screate_simple_f(3, dimsFile, filespace_id(4), hdf5_error)
+    CALL h5screate_simple_f(3, dimsMem, memspace_id(4), hdf5_error)
+  end subroutine create_write_dataspaces
+
+  subroutine close_write_outfile
+    integer :: i
+
+    ! Close the dataspaces
+    do i=1,4
+      CALL h5sclose_f(filespace_id(i), hdf5_error)
+      CALL h5sclose_f(memspace_id(i), hdf5_error)
+    end do
+    ! Close the file and property list.
+    CALL h5pclose_f(plist_id, hdf5_error)
+    CALL h5fclose_f(file_id, hdf5_error)
+  end subroutine close_write_outfile
+
+  subroutine save_coordinates
     character*4 tmp_id
 
     if(flag_mpi.eq.0 .or.(mpi_pos(2).eq.0.and.mpi_pos(3).eq.0)) then
