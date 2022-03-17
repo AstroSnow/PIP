@@ -404,22 +404,6 @@ endif
     CALL h5dclose_f(dset_id, hdf5_error)
   end subroutine write_3D_array
 
-  subroutine save1param(q,name,nvar)
-    integer,intent(in)::nvar
-    double precision, intent(in) :: q(ix,jx,kx,nvar)
-    character(*), intent(in) :: name
-    integer, parameter :: mf_q = 999
-    integer nn
-
-    call dacdef3s(mf_q,trim(outdir) // '/' // name // cno,6,0)
-    do nn=1,nvar
-       write(mf_q) q(:,:,:,nn)
-    enddo
-!print*,mf_q,name,q(1,1,1,:)
-    close(mf_q)
-  end subroutine save1param
-
-
   subroutine set_initial_out
     integer i
     if(flag_mhd.eq.1) then
@@ -748,37 +732,6 @@ endif
     CALL h5dclose_f(dset_id, hdf5_error)
   end subroutine read_3D_array
 
-!  subroutine dacget(idf,file,nvar,restart,var)
-  subroutine dacget(idf,file,nvar,var,read_num)
-    integer,intent(in)::idf
-    integer,intent(in)::nvar
-    character*(*),intent(in)::file
-    double precision,intent(out)::var(nvar)
-    integer,optional::read_num
-    integer tmp,i
-    integer n_read,read_size
-    if(present(read_num)) then
-       n_read=read_num
-    else
-       n_read=1
-    endif
-    read_size=nvar/n_read
-
-    open(idf,file=file,form="unformatted",status="old")
-    !remove .dac. header----------------------------
-    do i=1,5
-       read(idf)tmp
-    enddo
-    i=tmp
-    !-----------------------------------------------
-!    if(present(restart)) then
-    do i=1,n_read
-       read(idf)var(1+(i-1)*read_size:read_size*i)
-    enddo
-    close(idf)
-
-  end subroutine dacget
-
   subroutine copy_time(idf,in_file,out_file,start_step)
     integer,intent(in)::idf,start_step
     integer i,tmp
@@ -825,18 +778,6 @@ endif
     close(idf)
   end subroutine get_time
 
-
-  subroutine dacdef1d(idf,file,mtype,in)
-    integer,intent(in)::idf,mtype,in
-    character*(*) file
-    open(idf,file=file,form='unformatted')
-    write(idf)1
-    write(idf)0
-    write(idf)mtype
-    write(idf)1
-    write(idf)in
-  end subroutine dacdef1d
-
   subroutine dacdef0s(idf,file,mtype,append)
     integer,intent(in)::idf,mtype,append
     character*(*) file
@@ -851,23 +792,6 @@ endif
        open(idf,file=file,form='unformatted',position='append')
     endif
   end subroutine dacdef0s
-
-  subroutine dacdef3s(idf,file,mtype,append)
-    integer,intent(in)::idf,mtype,append
-    character*(*) file
-    if(append.ne.1) then
-       open(idf,file=file,form='unformatted')
-       write(idf)1
-       write(idf)0
-       write(idf)mtype
-       write(idf)4
-       write(idf)ix,jx,kx,-1
-    else
-
-       open(idf,file=file,form='unformatted',position='append')
-    endif
-  end subroutine dacdef3s
-
 
 
   subroutine stop_sim
