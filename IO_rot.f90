@@ -175,42 +175,14 @@ contains
   end subroutine close_write_outfile
 
   subroutine save_coordinates
-    character*4 tmp_id
-
-    if(flag_mpi.eq.0 .or.(mpi_pos(2).eq.0.and.mpi_pos(3).eq.0)) then
-       write(tmp_id,"(i4.4)")mpi_pos(1)
-       call dacdef1d(mf_x,trim(outdir) // 'x.dac.'//tmp_id,6,ix)
-       write(mf_x) x
-       call dacdef1d(mf_dx,trim(outdir) // 'dx.dac.'//tmp_id,6,ix)
-       write(mf_dx) dx
-       close(mf_x)
-       close(mf_dx)
-    endif
-
-    if(ndim.ge.2) then
-       if(flag_mpi.eq.0 .or.(mpi_pos(1).eq.0.and.mpi_pos(3).eq.0)) then
-          write(tmp_id,"(i4.4)")mpi_pos(2)
-          call dacdef1d(mf_y,trim(outdir) // 'y.dac.'//tmp_id,6,jx)
-          write(mf_y) y
-          call dacdef1d(mf_dy,trim(outdir) // 'dy.dac.'//tmp_id,6,jx)
-          write(mf_dy) dy
-          close(mf_y)
-          close(mf_dy)
-
-       endif
-       if(ndim.ge.3) then
-          if(flag_mpi.eq.0 .or.(mpi_pos(1).eq.0.and.mpi_pos(2).eq.0)) then
-             write(tmp_id,"(i4.4)")mpi_pos(3)
-             call dacdef1d(mf_z,trim(outdir) // 'z.dac.'//tmp_id,6,kx)
-             write(mf_z) z
-             call dacdef1d(mf_dz,trim(outdir) // 'dz.dac.'//tmp_id,6,kx)
-             write(mf_dz) dz
-             close(mf_z)
-             close(mf_dz)
-          endif
-       endif
-    endif
-
+    ! Save the coordinate grids into the parallel HDF5 file
+    call write_1D_array(1, "xgrid", x)
+    call write_1D_array(2, "ygrid", y)
+    call write_1D_array(3, "zgrid", z)
+    ! Also include the grid spacings
+    call write_1D_array(1, "dx", dx)
+    call write_1D_array(2, "dy", dy)
+    call write_1D_array(3, "dz", dz)
   end subroutine save_coordinates
 
   subroutine write_1D_array(n, varname, data_array)
@@ -599,21 +571,14 @@ contains
   end subroutine reconf_grid_space
 
   subroutine reread_coordinate
-    character*4 tmp_id
-    write(tmp_id,"(i4.4)")mpi_pos(1)
-
-    call dacget(51,trim(indir) // 'x.dac.'//tmp_id,ix,x)
-    call dacget(51,trim(indir) // 'dx.dac.'//tmp_id,ix,dx)
-    if(ndim.ge.2)then
-       write(tmp_id,"(i4.4)")mpi_pos(2)
-       call dacget(51,trim(indir) // 'y.dac.'//tmp_id,jx,y)
-       call dacget(51,trim(indir) // 'dy.dac.'//tmp_id,jx,dy)
-       if(ndim.ge.3)then
-          write(tmp_id,"(i4.4)")mpi_pos(3)
-          call dacget(51,trim(indir) // 'z.dac.'//tmp_id,kx,z)
-          call dacget(51,trim(indir) // 'dz.dac.'//tmp_id,kx,dz)
-       endif
-    endif
+    ! Save the coordinate grids into the parallel HDF5 file
+    call read_1D_array(1, "xgrid", x)
+    call read_1D_array(2, "ygrid", y)
+    call read_1D_array(3, "zgrid", z)
+    ! Also include the grid spacings
+    call read_1D_array(1, "dx", dx)
+    call read_1D_array(2, "dy", dy)
+    call read_1D_array(3, "dz", dz)
   end subroutine reread_coordinate
 
   subroutine read_1D_array(n, varname, data_out)
