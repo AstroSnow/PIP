@@ -1,7 +1,7 @@
 module io_rot
 !====================================================================
 ! This is the in_out module for the PIP code.
-! Module for input and output 
+! Module for input and output
 ! Author A.Hillier
 ! First version - 2013/04/26 NN
 ! Modification history
@@ -48,9 +48,9 @@ contains
     nt=nt+1
     if(nout.eq.0) then
        call set_initial_out
-       call save_coordinates            
+       call save_coordinates
        call def_varfiles(0)
-       start_time=MPI_Wtime()  
+       start_time=MPI_Wtime()
        if(flag_mpi.eq.0 .or. my_rank.eq.0) then
           call mk_config
        endif
@@ -59,20 +59,20 @@ contains
     !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 !Check for physical-time save
 end_time=MPI_Wtime()
-outesav=-1 
+outesav=-1
 if (((end_time-start_time) .ge. emsavtime) .and. (esav .eq. 1)) then
 	outesav=1
 	esav=2
      if(flag_mpi.eq.0 .or.my_rank.eq.0) &
           write(6,*) 'calling emergency save'
-endif  
-    !output variables 
+endif
+    !output variables
   if((time.ge.get_next_output(nout,time,esav)) .or. (out.eq.1) .or. (outesav.eq.1)) then
      !     if(flag_mpi.eq.0 .or.my_rank.eq.0) write(6,*) 'Time,dt,nout,nt,total_iter: ',time,dt,nout,nt,total_iter
-    end_time=MPI_Wtime() 
+    end_time=MPI_Wtime()
      if(flag_mpi.eq.0 .or.my_rank.eq.0) &
-!          write(6,*) 'Time,dt,dt_cnd,nout,nt,total_iter: ',time,dt,dt_cnd,nout,nt,total_iter 
-          write(6,*) 'Time,dt,nout,nt,elapsed time: ',time,dt,nout,nt,end_time-start_time   
+!          write(6,*) 'Time,dt,dt_cnd,nout,nt,total_iter: ',time,dt,dt_cnd,nout,nt,total_iter
+          write(6,*) 'Time,dt,nout,nt,elapsed time: ',time,dt,nout,nt,end_time-start_time
        total_divb=0.0d0
        max_C=0.0d0
        if(ndim.eq.100) then
@@ -90,8 +90,8 @@ endif
                   -8.0d0*U_m(i-1,j,1,7)+U_m(i-2,j,1,7))/(12.0d0*dx(i)))**2+ &
                   ((-U_m(i,j+2,1,6)+8.0d0*U_m(i,j+1,1,6) &
                   -8.0d0*U_m(i,j-1,1,6)+U_m(i,j-2,1,6))/(12.0d0*dy(j)))**2)
-          enddo;enddo          
-          print *,"NT,TOTAL_DIVB, maxJ =",nt,total_divb,sqrt(max_C)          
+          enddo;enddo
+          print *,"NT,TOTAL_DIVB, maxJ =",nt,total_divb,sqrt(max_C)
        endif
        call save_varfiles(nout)
        nout=nout+1
@@ -111,7 +111,7 @@ endif
        close(mf_x)
        close(mf_dx)
     endif
-    
+
     if(ndim.ge.2) then
        if(flag_mpi.eq.0 .or.(mpi_pos(1).eq.0.and.mpi_pos(3).eq.0)) then
           write(tmp_id,"(i4.4)")mpi_pos(2)
@@ -135,7 +135,7 @@ endif
           endif
        endif
     endif
-    
+
   end subroutine save_coordinates
 
   subroutine def_varfiles(append)
@@ -143,7 +143,7 @@ endif
     integer i
 
     write(tno,"(i4.4)")nout
-    
+
 
     if(flag_pip.eq.1.or.flag_amb.eq.1) then
 !print*,'ac_sav',ac_sav
@@ -161,7 +161,7 @@ endif
     if(flag_col.eq.1) then
        if(col_sav.eq.0) call save1param(ac,tno//'col.dac.',1)
     endif
-     
+
     if(flag_grav.eq.1) then
        if(gr_sav.eq.0) call save1param(gra,tno//'gr.dac.',3)
     endif
@@ -173,17 +173,17 @@ endif
     endif
 
 
-    if(flag_mpi.eq.0 .or.my_rank.eq.0)      &         
+    if(flag_mpi.eq.0 .or.my_rank.eq.0)      &
          call dacdef0s(mf_t,trim(outdir) // 't.dac.'//cno,6,append)
 
   end subroutine def_varfiles
 
-  
+
 !   subroutine def_varfiles(append)
 !     integer,intent(in)::append
 !     integer i
 
-!     if(flag_mpi.eq.0 .or.my_rank.eq.0)      &         
+!     if(flag_mpi.eq.0 .or.my_rank.eq.0)      &
 !          call dacdef0s(mf_t,trim(outdir) // '/t.dac.'//cno,6,append)
 !     if(flag_mhd.eq.1) then
 ! !       do i=1,nvar_m
@@ -229,7 +229,7 @@ endif
     if(flag_mpi.eq.1) then
        call end_mpi
     endif
-    close(mf_t)          
+    close(mf_t)
   end subroutine epilogue
 
 !  subroutine save_varfiles(t)
@@ -242,7 +242,7 @@ endif
     if(n_out.ne.0) then
        call def_varfiles(1)
     endif
-    write(mf_t) time    
+    write(mf_t) time
     close(mf_t)
     if(flag_mhd.eq.1) then
        do i=1,nvar_m
@@ -256,7 +256,7 @@ endif
           if(ion_sav.eq.0) call save1param(Gm_ion,tno//'ion.dac.',1)
           if(rec_sav.eq.0) call save1param(Gm_rec,tno//'rec.dac.',1)
        endif
-      if(flag_ir.eq.4) then 
+      if(flag_ir.eq.4) then
         !print*,Nexcite(1,1,1,:)
         call save1param(Nexcite(:,:,:,1),tno//'nexcite1.dac.',1)
         call save1param(Nexcite(:,:,:,2),tno//'nexcite2.dac.',1)
@@ -276,10 +276,10 @@ endif
           call save1param(U_h(:,:,:,i),tno//trim(file_h(i)),1)
        enddo
     endif
-    if(flag_divb.eq.1 .and. flag_mhd.eq.1 .and. ps_sav .eq.0) then    
+    if(flag_divb.eq.1 .and. flag_mhd.eq.1 .and. ps_sav .eq.0) then
        call save1param(U_m(:,:,:,9),tno//trim(file_m(9)),1)
     endif
-    
+
   end subroutine save_varfiles
 
   subroutine save1param(q,name,nvar)
@@ -288,7 +288,7 @@ endif
     character(*), intent(in) :: name
     integer, parameter :: mf_q = 999
     integer nn
-    
+
     call dacdef3s(mf_q,trim(outdir) // '/' // name // cno,6,0)
     do nn=1,nvar
        write(mf_q) q(:,:,:,nn)
@@ -296,7 +296,7 @@ endif
 !print*,mf_q,name,q(1,1,1,:)
     close(mf_q)
   end subroutine save1param
-  
+
 
   subroutine set_initial_out
     integer i
@@ -304,15 +304,15 @@ endif
           allocate(mf_m(nvar_m,2),file_m(nvar_m))
           do i=1,nvar_m
              mf_m(i,1)=19+i
-             mf_m(i,2)=i         
+             mf_m(i,2)=i
           enddo
-          file_m(1)='ro_p.dac.' 
-          file_m(2)='mx_p.dac.' 
-          file_m(3)='my_p.dac.' 
-          file_m(4)='mz_p.dac.' 
-          file_m(5)='en_p.dac.' 
-          file_m(6)='bx.dac.' 
-          file_m(7)='by.dac.' 
+          file_m(1)='ro_p.dac.'
+          file_m(2)='mx_p.dac.'
+          file_m(3)='my_p.dac.'
+          file_m(4)='mz_p.dac.'
+          file_m(5)='en_p.dac.'
+          file_m(6)='bx.dac.'
+          file_m(7)='by.dac.'
           file_m(8)='bz.dac.'
           if(flag_divb.eq.1.or.flag_divb.eq.2) &
                file_m(9)='ps.dac.'
@@ -324,7 +324,7 @@ endif
              mf_h(i,1)=30+i
              mf_h(i,2)=i
           enddo
-         
+
           file_h(1)='ro_n.dac.'
           file_h(2)='mx_n.dac.'
           file_h(3)='my_n.dac.'
@@ -351,9 +351,9 @@ endif
     integer ind_e
     open(11,file='setting.txt',form='formatted',status='old')
     open(99,file=trim(outdir) // "/config.txt",status="replace",form="formatted")
-    do 
+    do
        read(11,"(A)",end=999)tmp
-       call get_word(tmp,key,ind_e)       
+       call get_word(tmp,key,ind_e)
        if(ind_e.gt.1) write(99,"(A)")key//":"//tmp(1:ind_e-1)
     enddo
 999 continue
@@ -361,17 +361,17 @@ endif
     write(99,"(A)")"ENDSETTING"
     write(99,*)flag_mhd,flag_pip, " #mhd and pip flag"
     write(99,*)nvar_h,nvar_m, " #number of variables"
-    write(99,*)ix,jx,kx, " # used grid numbers" 
-    write(99,*)margin, " # used margin grid numbers" 
+    write(99,*)ix,jx,kx, " # used grid numbers"
+    write(99,*)margin, " # used margin grid numbers"
     write(99,*)gm," #Abiabatic constant"
     write(99,*)flag_bnd
 !    write(99,*)flag_damp,damp_time, "velocity damping"
     if(flag_mpi.eq.1) then
        write(99,*)mpi_siz," #mpi domain size"
     endif
-    close(99)    
+    close(99)
   end subroutine mk_config
-  
+
   !! restart routine should be modified
   subroutine restart
     integer tmp,out_tmp
@@ -382,7 +382,7 @@ endif
     !Modification restart setting 2015/08/27 NN======================
 
     open(restart_unit,file=trim(indir)//"config.txt",status="old",form="formatted")
-    do  
+    do
        read(restart_unit,*,end=111)line
        if(trim(line)=="ENDSETTING") exit
     enddo
@@ -401,8 +401,8 @@ endif
        read(restart_unit,*,end=777)mpi_siz
     endif
     if(flag_restart.eq.0) then
-       key="nout"       
-       do           
+       key="nout"
+       do
           read(restart_unit,"(A)",end=888)line
           call get_value_integer(line,key,out_tmp)
        enddo
@@ -410,8 +410,8 @@ endif
        flag_restart=out_tmp-1
     endif
 !    if(flag_restart.eq.-1) then
-!       key="nout"       
-!       do           
+!       key="nout"
+!       do
 !          read(restart_unit,"(A)",end=889)line
 !          call get_value_integer(line,key,out_tmp)
 !       enddo
@@ -428,20 +428,20 @@ endif
     call reread_coordinate
     if (flag_mpi.eq.0 .or. my_rank.eq.0) then
        print *,"Now reading data from [",trim(indir),"] ..."
-       print *,"start step is : ",flag_restart 
+       print *,"start step is : ",flag_restart
     endif
     call reread_variables
-    
-    
+
+
     if (flag_mpi.eq.0 .or. my_rank.eq.0) print *,"reading Finish."
 !    if (flag_mpi.eq.0 .or. my_rank.eq.1) print *,"dtout=",dtout
 
     call reconf_grid_space
 
-    nout = flag_restart+1 
+    nout = flag_restart+1
 
     start_time=MPI_Wtime()
-    tend=tend+time    
+    tend=tend+time
 !    if (flag_mpi.eq.0 .or. my_rank.eq.1) print *,"time",start_time,tend,dtout
     call initialize_IOT(dtout,tend,output_type)
   end subroutine restart
@@ -488,7 +488,7 @@ endif
     write(step_char,"(i4.4)")flag_restart
     nvar=ix
     if(ndim.ge.2)nvar=nvar*jx
-    if(ndim.ge.3)nvar=nvar*kx    
+    if(ndim.ge.3)nvar=nvar*kx
 
     call set_initial_out
     if(flag_mhd.eq.1) then
@@ -498,7 +498,7 @@ endif
        enddo
     endif
 
-    if(flag_pip.eq.1.or.flag_mhd.eq.0) then       
+    if(flag_pip.eq.1.or.flag_mhd.eq.0) then
        do i=1,nvar_h
           call dacget(mf_h(i,1),trim(indir)//step_char//trim(file_h(i))//cno,nvar,&
                U_h(:,:,:,mf_h(i,2)))
@@ -538,7 +538,7 @@ endif
     if(my_rank.eq.0) then
        call copy_time(mf_t,trim(indir)//'t.dac.0000',trim(outdir)//'t.dac.0000',flag_restart+1)
     endif
-    
+
   end subroutine reread_variables
 
 
@@ -565,7 +565,7 @@ endif
     enddo
     i=tmp
     !-----------------------------------------------
-!    if(present(restart)) then 
+!    if(present(restart)) then
     do i=1,n_read
        read(idf)var(1+(i-1)*read_size:read_size*i)
     enddo
@@ -591,11 +591,11 @@ endif
        times(i)=time_tmp
     enddo
     close(idf)
-    
+
     call dacdef0s(idf,out_file,6,0)
     do i=1,start_step
        write(idf)times(i)
-    end do    
+    end do
     close(idf)
 
   end subroutine copy_time
@@ -618,8 +618,8 @@ endif
     enddo
     close(idf)
   end subroutine get_time
-  
-  
+
+
   subroutine dacdef1d(idf,file,mtype,in)
     integer,intent(in)::idf,mtype,in
     character*(*) file
@@ -655,11 +655,11 @@ endif
        write(idf)0
        write(idf)mtype
        write(idf)4
-       write(idf)ix,jx,kx,-1       
+       write(idf)ix,jx,kx,-1
     else
-       
+
        open(idf,file=file,form='unformatted',position='append')
-    endif 
+    endif
   end subroutine dacdef3s
 
 
@@ -681,7 +681,7 @@ endif
        flag_stop=1
     endif
     if (flag_mhd.eq.1) then
-       if(sum(U_m*0).ne.0)then          
+       if(sum(U_m*0).ne.0)then
           o_count=0
           print *,"NAN Appear"
           do k=1,kx;do j=1,jx;do i=1,ix
@@ -692,7 +692,7 @@ endif
                 o_count=o_count+1
              endif
           enddo;enddo;enddo
-          flag_stop=1       
+          flag_stop=1
        endif
     else
        if(sum(U_h*0).ne.0)then
@@ -707,11 +707,11 @@ endif
           enddo;enddo;enddo
           flag_stop=1
        endif
-    endif    
+    endif
     if(flag_mpi.eq.1) then
        call mpi_allreduce(flag_stop,tmp_stop,1,mpi_integer,MPI_MAX, &
             mpi_comm_world,ierr)
        flag_stop=tmp_stop
-    endif   
+    endif
   end subroutine stop_sim
 end module io_rot
