@@ -305,26 +305,27 @@ endif
 
 !   end subroutine def_varfiles
 
- !close file units
+  !close file units
   subroutine epilogue
     integer i
     if(flag_mpi.eq.0 .or.my_rank.eq.0) then
-       print *,"END of simulation total loop ",nt
-       open(99,file=trim(outdir) // "/config.txt",status="old",form="formatted",position="append")
-!       open(99,file=trim(outdir) // "/config.txt",status="replace",form="formatted")
-       write(99,*)"nout:",nout
-       close(99)
-
+      print *,"END of simulation total loop ",nt
+      open(99,file=trim(outdir) // "/config.txt",status="old",form="formatted",position="append")
+      write(99,*)"nout:",nout
+      close(99)
     endif
     end_time=MPI_Wtime()
     if(my_rank.eq.0) then
-       write(*,*)"CPU TIME FOR CALCULATION IS :",end_time-start_time
+      write(*,*)"CPU TIME FOR CALCULATION IS :",end_time-start_time
     endif
-!    call mk_result
+
+    ! Close MPI interface
     if(flag_mpi.eq.1) then
-       call end_mpi
+      call end_mpi
     endif
     close(mf_t)
+    ! Close FORTRAN interface.
+    call h5close_f(hdf5_error)
   end subroutine epilogue
 
 !  subroutine save_varfiles(t)
