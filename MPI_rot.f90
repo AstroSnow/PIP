@@ -37,7 +37,7 @@ contains
       end if
     end do
     ! replace _x range values with those for the process
-    ix=ig(1); jx=ig(2); kx=ig(3))
+    ix=ig(1); jx=ig(2); kx=ig(3)
   end subroutine set_mpi
 
   subroutine set_mpi_pos
