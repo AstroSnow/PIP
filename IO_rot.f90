@@ -642,6 +642,29 @@ endif
     endif
   end subroutine reread_coordinate
 
+  subroutine read_1D_array(n, varname, data_out)
+    integer(HID_T) :: dset_id, dataspace_id
+    integer(HSIZE_T) :: dims_1D(1)
+    integer(HSSIZE_T) :: offsetFile(1)
+    integer :: n
+    character(*) :: varname
+    double precision, dimension(1) :: data_out(dimsMem(n))
+
+    CALL h5dopen_f(file_id, varname, dset_id, hdf5_error)
+    ! Get file dataspace
+    dims_1D(1) = dimsMem(n)
+    offsetFile(1) = hdf5_offset(n)
+    CALL h5dget_space_f(dset_id, dataspace_id, hdf5_error)
+    CALL h5sselect_hyperslab_f(dataspace_id, H5S_SELECT_SET_F, offsetFile, dims_1D, hdf5_error)
+    ! read file
+    dims_1D(1) = dimsFile(n)
+    CALL h5dread_f(dset_id, H5T_NATIVE_DOUBLE, data_out, dims_1D, hdf5_error, &
+                   mem_space_id=memspace_id(n), file_space_id=dataspace_id)
+    ! close connections
+    CALL h5sclose_f(dataspace_id, hdf5_error)
+    CALL h5dclose_f(dset_id, hdf5_error)
+  end subroutine read_1D_array
+
   subroutine reread_variables
     integer nvar,i
     character*4 step_char
@@ -701,6 +724,29 @@ endif
 
   end subroutine reread_variables
 
+  subroutine read_3D_array(varname, data_out)
+    integer(HID_T) :: dset_id, dataspace_id     ! dataset and file-dataspace IDs
+    integer(HSIZE_T) :: dimsFile(3), dimsMem(3)
+    integer(HSSIZE_T) :: offsetFile(3)
+    integer :: per
+    character(*) :: varname
+    double precision, dimension(3) :: data_out(ix,jx,kx)
+
+    ! strip off '.dac.' suffix on certain variable names
+    per = index(varname, '.')
+    if(per /= 0) varname = varname(1:per-1)
+
+    CALL h5dopen_f(file_id, varname, dset_id, hdf5_error)
+    ! Get file dataspace
+    CALL h5dget_space_f(dset_id, dataspace_id, hdf5_error)
+    CALL h5sselect_hyperslab_f(dataspace_id, H5S_SELECT_SET_F, hdf5_offset, dimsMem, hdf5_error)
+    ! read file
+    CALL h5dread_f(dset_id, H5T_NATIVE_DOUBLE, data_out, dimsFile, hdf5_error, &
+                   mem_space_id=memspace_id(4), file_space_id=dataspace_id)
+    ! close connections
+    CALL h5sclose_f(dataspace_id, hdf5_error)
+    CALL h5dclose_f(dset_id, hdf5_error)
+  end subroutine read_3D_array
 
 !  subroutine dacget(idf,file,nvar,restart,var)
   subroutine dacget(idf,file,nvar,var,read_num)
