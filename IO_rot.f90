@@ -484,64 +484,48 @@ endif
     integer tmp,out_tmp
     character*200 line
     character*15 key
-!    open(99,file=trim(indir)//"result.txt",status="old",form="formatted"
 
     !Modification restart setting 2015/08/27 NN======================
-
     open(restart_unit,file=trim(indir)//"config.txt",status="old",form="formatted")
     do
-       read(restart_unit,*,end=111)line
-       if(trim(line)=="ENDSETTING") exit
+      read(restart_unit,*,end=111)line
+      if(trim(line)=="ENDSETTING") exit
     enddo
 111 continue
     read(restart_unit,*)flag_mhd,flag_pip
     read(restart_unit,*)nvar_h,nvar_m
     read(restart_unit,*)ix,jx,kx
     read(restart_unit,*)margin
-!    read(99,*)tmp
-!    read(99,*)tmp
-!    tmp=tmp+1
     read(restart_unit,*)gm
     read(restart_unit,*,end=777)flag_bnd
-!    read(restart_unit,*)flag_damp,damp_time
     if(flag_mpi.eq.1) then
-       read(restart_unit,*,end=777)mpi_siz
+      read(restart_unit,*,end=777)mpi_siz
     endif
     if(flag_restart.eq.0) then
-       key="nout"
-       do
-          read(restart_unit,"(A)",end=888)line
-          call get_value_integer(line,key,out_tmp)
-       enddo
+      key="nout"
+      do
+        read(restart_unit,"(A)",end=888)line
+        call get_value_integer(line,key,out_tmp)
+      enddo
 888    continue
-       flag_restart=out_tmp-1
+      flag_restart=out_tmp-1
     endif
-!    if(flag_restart.eq.-1) then
-!       key="nout"
-!       do
-!          read(restart_unit,"(A)",end=889)line
-!          call get_value_integer(line,key,out_tmp)
-!       enddo
-!889    continue
-!       flag_restart=out_tmp-1
-!    endif
 777 continue
-
-
     close(restart_unit)
 
     !=========================Modification end
-
-    call reread_coordinate
     if (flag_mpi.eq.0 .or. my_rank.eq.0) then
        print *,"Now reading data from [",trim(indir),"] ..."
        print *,"start step is : ",flag_restart
     endif
+    ! open file and initialize local-memory dataspaces
+    call read_restart_hdf5
+    ! load spatial grid coordinates
+    call reread_coordinate
+    ! load simulation variables
     call reread_variables
-
-
+    call close_restart_hdf5
     if (flag_mpi.eq.0 .or. my_rank.eq.0) print *,"reading Finish."
-!    if (flag_mpi.eq.0 .or. my_rank.eq.1) print *,"dtout=",dtout
 
     call reconf_grid_space
 
@@ -549,7 +533,6 @@ endif
 
     start_time=MPI_Wtime()
     tend=tend+time
-!    if (flag_mpi.eq.0 .or. my_rank.eq.1) print *,"time",start_time,tend,dtout
     call initialize_IOT(dtout,tend,output_type)
   end subroutine restart
 
