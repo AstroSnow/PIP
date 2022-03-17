@@ -35,68 +35,74 @@ module io_rot
   ! version number (date)
   integer, parameter :: mf_info=9, version=20140708,restart_unit=77
   double precision start_time,end_time
+
 contains
-!output subroutine called from main
-!  subroutine output(nout,time)
+  !output subroutine called from main
   subroutine output(out)
     integer,intent(in)::out
     integer i,j,k,outesav
-!    integer j
     double precision total_divB,cx,cy,max_C,divb
-!    double precision,intent(in)::time
-    !if nout = 0 initial setting for output is done^^^^^^^^^^^^^^^^^^^^^^
+
+    ! if nout = 0 initial setting for output is done
     nt=nt+1
     if(nout.eq.0) then
        call set_initial_out
-       call save_coordinates
-       call def_varfiles(0)
        start_time=MPI_Wtime()
        if(flag_mpi.eq.0 .or. my_rank.eq.0) then
           call mk_config
        endif
        call initialize_IOT(dtout,tend,output_type)
     endif
-    !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-!Check for physical-time save
-end_time=MPI_Wtime()
-outesav=-1
-if (((end_time-start_time) .ge. emsavtime) .and. (esav .eq. 1)) then
-	outesav=1
-	esav=2
-     if(flag_mpi.eq.0 .or.my_rank.eq.0) &
-          write(6,*) 'calling emergency save'
-endif
-    !output variables
-  if((time.ge.get_next_output(nout,time,esav)) .or. (out.eq.1) .or. (outesav.eq.1)) then
-     !     if(flag_mpi.eq.0 .or.my_rank.eq.0) write(6,*) 'Time,dt,nout,nt,total_iter: ',time,dt,nout,nt,total_iter
-    end_time=MPI_Wtime()
-     if(flag_mpi.eq.0 .or.my_rank.eq.0) &
-!          write(6,*) 'Time,dt,dt_cnd,nout,nt,total_iter: ',time,dt,dt_cnd,nout,nt,total_iter
-          write(6,*) 'Time,dt,nout,nt,elapsed time: ',time,dt,nout,nt,end_time-start_time
-       total_divb=0.0d0
-       max_C=0.0d0
-       if(ndim.eq.100) then
-          do j=margin(2)+1,jx-margin(2);do i=margin(1)+1,ix-margin(1)
-             divb=abs((-U_m(i+2,j,1,6)+8.0d0*U_m(i+1,j,1,6)&
-                  -8.0d0*U_m(i-1,j,1,6)+U_m(i-2,j,1,6))/dx(i) +&
-                  (-U_m(i,j+2,1,7)+8.0d0*U_m(i,j+1,1,7)&
-                  -8.0d0*U_m(i,j-1,1,7)+U_m(i,j-2,1,7))/dy(j))
 
-             total_divb=total_divb +divb
-!             if(divb.gt.1.0d-13) then
-!                print *,x(i),y(j),divb
-!             endif
-             max_C=max(max_C,((-U_m(i+2,j,1,7)+8.0d0*U_m(i+1,j,1,7) &
-                  -8.0d0*U_m(i-1,j,1,7)+U_m(i-2,j,1,7))/(12.0d0*dx(i)))**2+ &
-                  ((-U_m(i,j+2,1,6)+8.0d0*U_m(i,j+1,1,6) &
-                  -8.0d0*U_m(i,j-1,1,6)+U_m(i,j-2,1,6))/(12.0d0*dy(j)))**2)
-          enddo;enddo
-          print *,"NT,TOTAL_DIVB, maxJ =",nt,total_divb,sqrt(max_C)
-       endif
-       call save_varfiles(nout)
-       nout=nout+1
+    !Check for physical-time save
+    end_time=MPI_Wtime()
+    outesav=-1
+    if (((end_time-start_time) .ge. emsavtime) .and. (esav .eq. 1)) then
+      outesav=1
+      esav=2
+      if(flag_mpi.eq.0 .or.my_rank.eq.0) &
+        write(6,*) 'calling emergency save'
     endif
 
+    ! output variables
+    if((time.ge.get_next_output(nout,time,esav)) .or. (out.eq.1) .or. (outesav.eq.1)) then
+      end_time=MPI_Wtime()
+
+      if(flag_mpi.eq.0 .or.my_rank.eq.0) &
+        write(6,*) 'Time,dt,nout,nt,elapsed time: ',time,dt,nout,nt,end_time-start_time
+
+      total_divb=0.0d0
+      max_C=0.0d0
+      if(ndim.eq.100) then
+        do j=margin(2)+1,jx-margin(2);do i=margin(1)+1,ix-margin(1)
+          divb=abs((-U_m(i+2,j,1,6)+8.0d0*U_m(i+1,j,1,6)&
+                -8.0d0*U_m(i-1,j,1,6)+U_m(i-2,j,1,6))/dx(i) +&
+                (-U_m(i,j+2,1,7)+8.0d0*U_m(i,j+1,1,7)&
+                -8.0d0*U_m(i,j-1,1,7)+U_m(i,j-2,1,7))/dy(j))
+
+          total_divb=total_divb +divb
+          max_C=max(max_C,((-U_m(i+2,j,1,7)+8.0d0*U_m(i+1,j,1,7) &
+                -8.0d0*U_m(i-1,j,1,7)+U_m(i-2,j,1,7))/(12.0d0*dx(i)))**2+ &
+                ((-U_m(i,j+2,1,6)+8.0d0*U_m(i,j+1,1,6) &
+                -8.0d0*U_m(i,j-1,1,6)+U_m(i,j-2,1,6))/(12.0d0*dy(j)))**2)
+        enddo;enddo
+        print *,"NT,TOTAL_DIVB, maxJ =",nt,total_divb,sqrt(max_C)
+      endif
+
+      ! create output parallel HDF5 file for all data in time-step
+      call create_hdf5_outfile
+      ! create file & local-memory dataspaces
+      call create_write_dataspaces
+      ! save spatial grid coordinates
+      call save_coordinates
+      ! save initial variables to output HDF5 file
+      if(nout .eq. 0) call def_varfiles(0)
+      ! Save simulation variables to output HDF5 file
+      call save_varfiles(nout)
+      call close_write_outfile
+
+      nout=nout+1
+    endif
   end subroutine output
 
   subroutine create_hdf5_outfile
