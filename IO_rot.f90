@@ -138,6 +138,32 @@ endif
 
   end subroutine save_coordinates
 
+  subroutine write_1D_array(n, varname, data_array)
+    integer(HID_T) :: dset_id
+    integer(HSSIZE_T) :: offset(1)
+    integer(HSIZE_T) :: dims_1D(1)
+    integer :: n
+    character(*) :: varname
+    double precision, dimension(1) :: data_array(ig(n))
+
+    ! Creating dataset
+    CALL h5dcreate_f(file_id, trim(varname), H5T_NATIVE_DOUBLE, filespace_id(n), &
+                     dset_id,  hdf5_error)
+    ! Select hyperslab in the file.
+    CALL h5dget_space_f(dset_id, filespace_id(n), hdf5_error)
+    offset(1) = hdf5_offset(n)
+    dims_1D(1) = dimsMem(n)
+    CALL h5sselect_hyperslab_f(filespace_id(n), H5S_SELECT_SET_F, offset, dims_1D, hdf5_error)
+    ! write data to file
+    dims_1D(1) = dimsFile(n)
+    CALL h5dwrite_f(dset_id, H5T_NATIVE_DOUBLE, data_array(start_stop(n,1):start_stop(n,2)), &
+                    dims_1D, hdf5_error, &
+                    file_space_id=filespace_id(n), mem_space_id=memspace_id(n), &
+                    xfer_prp=plist_id)
+    ! Closing dataset connections
+    CALL h5dclose_f(dset_id, hdf5_error)
+    end subroutine write_1D_array
+
   subroutine def_varfiles(append)
     integer,intent(in)::append
     integer i
@@ -281,6 +307,33 @@ endif
     endif
 
   end subroutine save_varfiles
+
+  subroutine write_3D_array(varname, data_array)
+    integer(HID_T) :: dset_id         ! Dataset identifier
+    integer :: per, n
+    character(*) :: varname
+    double precision :: data_array(ix,jx,kx)
+
+    ! strip off '.dac.' suffix on certain variable names
+    per = index(varname, '.')
+    if(per /= 0) varname = varname(1:per-1)
+
+    ! Creating dataset
+    CALL h5dcreate_f(file_id, trim(varname), H5T_NATIVE_DOUBLE, filespace_id(4), &
+                     dset_id, hdf5_error)
+    ! Select hyperslab in the file.
+    CALL h5dget_space_f(dset_id, filespace_id(4), hdf5_error)
+    CALL h5sselect_hyperslab_f(filespace_id(4), H5S_SELECT_SET_F, hdf5_offset, dimsMem, hdf5_error)
+    ! write data to file
+    CALL h5dwrite_f(dset_id, H5T_NATIVE_DOUBLE, &
+                    data_array(start_stop(1,1):start_stop(1,2), start_stop(2,1):start_stop(2,2), &
+                               start_stop(3,1):start_stop(3,2)), &
+                    dimsFile, hdf5_error, &
+                    file_space_id=filespace_id(4), mem_space_id=memspace_id(4), &
+                    xfer_prp=plist_id)
+    ! Closing dataset connections
+    CALL h5dclose_f(dset_id, hdf5_error)
+  end subroutine write_3D_array
 
   subroutine save1param(q,name,nvar)
     integer,intent(in)::nvar
