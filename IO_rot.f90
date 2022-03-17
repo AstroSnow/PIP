@@ -15,10 +15,13 @@ module io_rot
        total_iter,flag_amb,dtout,mpi_siz,nt,nmax,output_type,flag_ps,flag_divb,&
        flag_damp,damp_time,flag_rad,flag_ir_type,arb_heat,visc,esav,emsavtime,&
        ac_sav, xi_sav, ion_sav, rec_sav, col_sav, gr_sav, vs_sav, heat_sav, et_sav, ps_sav,&
-       Nexcite
+       Nexcite, &
+       file_id, plist_id, hdf5_error, filespace_id, memspace_id,&
+       dimsFile, dimsMem, start_stop, hdf5_offset, neighbor, ig
   use mpi_rot,only:end_mpi
   use IOT_rot,only:initialize_IOT,get_next_output
   use Util_rot,only:get_word,get_value_integer
+  use HDF5
   implicit none
   include "mpif.h"
   integer ios
