@@ -6,7 +6,7 @@ module globalvar
 ! Second version - 2013/06/02
 ! Third version - 2013/06/04 NN
 !====================================================================
-
+use HDF5
 !Define global constant------------------------------------------------------
 
 !Coordinate system (only cartesian coordinates used)
@@ -81,6 +81,12 @@ module globalvar
   integer,save::flag_mpi,flag_mpi_split,neighbor(6),my_rank,total_prc 
   integer,save::mpi_siz(3),mpi_pos(3),vmpi
   character*4 cno  
+! for parallel HDF5 writing & reading
+  integer(HID_T), save :: file_id, plist_id
+  integer(HID_T), save :: filespace_id(4), memspace_id(4)
+  integer(HID_T), save :: start_stop(3,2)
+  integer, save :: hdf5_error
+  integer(HSIZE_T), save :: dimsFile(3), dimsMem(3), hdf5_offset(3)
 
 !for limit
   double precision,save :: ro_lim,pr_lim
