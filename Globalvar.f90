@@ -1,6 +1,6 @@
 module globalvar
 !====================================================================
-! This is the global variables for the PIP code. 
+! This is the global variables for the PIP code.
 ! Author A.Hillier
 ! First version - 2013/04/23
 ! Second version - 2013/06/02
@@ -17,7 +17,7 @@ use HDF5
   double precision,allocatable,save ::U_m(:,:,:,:),U_h(:,:,:,:)
 
 !Magnetic field at cell-face
-  
+
 !other variables
   double precision,allocatable,save ::kap(:,:,:),mu(:,:,:),eta(:,:,:)
   double precision,allocatable,save::ac(:,:,:),xi_n(:,:,:),GM_rec(:,:,:),Gm_ion(:,:,:)
@@ -35,7 +35,7 @@ use HDF5
 
 ! for numerical calculation
   integer,save::flag_mhd,flag_pip
-  integer,save::flag_sch,flag_hll,flag_artvis,no_advection  
+  integer,save::flag_sch,flag_hll,flag_artvis,no_advection
   integer,save::flag_resi,flag_visc,flag_heat,flag_grav,flag_amb
   integer,save::flag_b_stg,flag_divb,flag_pip_imp
   integer,save::flag_cc,flag_ex,flag_restart,flag_debug,flag_ps
@@ -57,7 +57,7 @@ use HDF5
   double precision,save :: cmax
 ! Radiative losses
   integer,save :: flag_rad
-  
+
 !for coordinate system
   integer,save::ix,jx,kx,nvar_h,nvar_m,margin(3),ndim,ig(3)
 ! marginz is set to 0 for 2d to let all the 3d codes that use margin work
@@ -66,7 +66,7 @@ use HDF5
   double precision,save ::time,dt,dtout,dt_cnd,start_t
   integer,save:: flag_stop,flag_time,t_order,s_order,total_iter
   integer,save:: flag_hc_test,nmax=500000000
-  
+
 !for output
   double precision,save:: tend ! time at which the data should be output and end time of simulation
   character*200,save:: outdir,indir
@@ -77,13 +77,13 @@ use HDF5
   integer,save::flag_bnd(6)
 
 
-!for mpi 
-  integer,save::flag_mpi,flag_mpi_split,neighbor(6),my_rank,total_prc 
+!for mpi
+  integer,save::flag_mpi,flag_mpi_split,neighbor(6),my_rank,total_prc
   integer,save::mpi_siz(3),mpi_pos(3),vmpi
-  character*4 cno  
+  character*4 cno
 ! for parallel HDF5 writing & reading
   integer(HID_T), save :: file_id, plist_id
-  integer(HID_T), save :: filespace_id(4), memspace_id(4)
+  integer(HID_T), save :: filespace_id(5), memspace_id(5)
   integer(HID_T), save :: start_stop(3,2)
   integer, save :: hdf5_error
   integer(HSIZE_T), save :: dimsFile(3), dimsMem(3), hdf5_offset(3)
@@ -94,7 +94,7 @@ use HDF5
 
 !For damping across time MAKE ALLOCATABLE??, CHOOSE SENSIBLE VALUE?
   double precision,save :: oldke_damp=1.0d0
-  
+
 !Emergency save procedure
 integer,save :: esav
 double precision,save :: emsavtime

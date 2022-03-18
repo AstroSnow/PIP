@@ -95,6 +95,7 @@ contains
       call create_write_dataspaces
       ! save spatial grid coordinates
       call save_coordinates
+      call write_time
       ! save initial variables to output HDF5 file
       if(nout .eq. 0) call def_varfiles(0)
       ! Save simulation variables to output HDF5 file
@@ -159,20 +160,38 @@ contains
     ! Create 3D dataspaces
     CALL h5screate_simple_f(3, dimsFile, filespace_id(4), hdf5_error)
     CALL h5screate_simple_f(3, dimsMem, memspace_id(4), hdf5_error)
+    ! Create scalar dataspaces for sim-time
+    call h5screate_f(H5S_SCALAR_F, filespace_id(5), hdf5_error)
+    call h5screate_f(H5S_SCALAR_F, memspace_id(5), hdf5_error)
   end subroutine create_write_dataspaces
 
   subroutine close_write_outfile
     integer :: i
 
     ! Close the dataspaces
-    do i=1,4
+    do i=1,5
       CALL h5sclose_f(filespace_id(i), hdf5_error)
       CALL h5sclose_f(memspace_id(i), hdf5_error)
     end do
+
     ! Close the file and property list.
     CALL h5pclose_f(plist_id, hdf5_error)
     CALL h5fclose_f(file_id, hdf5_error)
   end subroutine close_write_outfile
+
+  subroutine write_time
+    integer(HID_T) :: dset_id
+    integer(HSIZE_T) :: dims_scalar(0)
+
+    ! Creating dataset
+    CALL h5dcreate_f(file_id, 'time', H5T_NATIVE_DOUBLE, filespace_id(5), dset_id,  hdf5_error)
+    ! write data to file
+    CALL h5dwrite_f(dset_id, H5T_NATIVE_DOUBLE, time, dims_scalar, hdf5_error, &
+                    file_space_id=filespace_id(5), mem_space_id=memspace_id(5), &
+                    xfer_prp=plist_id)
+    ! Closing dataset connections
+    CALL h5dclose_f(dset_id, hdf5_error)
+  end subroutine write_time
 
   subroutine save_coordinates
     ! Save the coordinate grids into the parallel HDF5 file
