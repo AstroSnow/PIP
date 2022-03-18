@@ -213,75 +213,36 @@ contains
 
   subroutine def_varfiles(append)
     integer,intent(in)::append
-    integer i
-
-    write(tno,"(i4.4)")nout
-
 
     if(flag_pip.eq.1.or.flag_amb.eq.1) then
-!print*,'ac_sav',ac_sav
-!print*,'xi_sav',xi_sav
-       if(ac_sav.eq.0) call save1param(ac,tno//'ac.dac.',1)
-       if(xi_sav.eq.0) call save1param(xi_n,tno//'xi.dac.',1)
+      if(ac_sav.eq.0) call write_3D_array("ac", ac)
+      if(xi_sav.eq.0) call write_3D_array("xi", xi_n)
     endif
     if(flag_pip.eq.1.and.flag_ir.eq.1) then
-       if(ion_sav.eq.0) call save1param(Gm_ion,tno//'ion.dac.',1)
-       if(rec_sav.eq.0) call save1param(Gm_rec,tno//'rec.dac.',1)
+      if(ion_sav.eq.0) call write_3D_array("ion", Gm_ion)
+      if(rec_sav.eq.0) call write_3D_array("rec", Gm_rec)
     endif
     if(flag_mhd.eq.1.and.flag_resi.eq.1) then
-       if(et_sav.eq.0) call save1param(eta,tno//'et.dac.',1)
+      if(et_sav.eq.0) call write_3D_array("et", eta)
     endif
     if(flag_col.eq.1) then
-       if(col_sav.eq.0) call save1param(ac,tno//'col.dac.',1)
+      if(col_sav.eq.0) call write_3D_array("col", ac)
     endif
 
     if(flag_grav.eq.1) then
-       if(gr_sav.eq.0) call save1param(gra,tno//'gr.dac.',3)
+      if(gr_sav.eq.0) call write_3D_array("gr", gra)
     endif
     if(flag_visc.eq.1) then
-       if(vs_sav.eq.0) call save1param(mu,tno//'vs.dac.',1)
+      if(vs_sav.eq.0) call write_3D_array("vs", mu)
     endif
     if(flag_pip.eq.1.and.flag_ir_type.eq.0.and.flag_IR.ne.0) then
-       if(heat_sav.eq.0) call save1param(arb_heat,tno//'aheat.dac.',1)
+      if(heat_sav.eq.0) call write_3D_array("aheat", arb_heat)
     endif
 
-
-    if(flag_mpi.eq.0 .or.my_rank.eq.0)      &
-         call dacdef0s(mf_t,trim(outdir) // 't.dac.'//cno,6,append)
-
+    if(flag_mpi.eq.0 .or.my_rank.eq.0) then
+      call dacdef0s(mf_t,trim(outdir) // 't.dac.'//cno,6,append)
+    end if
   end subroutine def_varfiles
-
-
-!   subroutine def_varfiles(append)
-!     integer,intent(in)::append
-!     integer i
-
-!     if(flag_mpi.eq.0 .or.my_rank.eq.0)      &
-!          call dacdef0s(mf_t,trim(outdir) // '/t.dac.'//cno,6,append)
-!     if(flag_mhd.eq.1) then
-! !       do i=1,nvar_m
-! !       print *,"OK",my_rank,file_m(1)//cno
-!        do i=1,8
-!           call dacdef3s(mf_m(i,1),trim(outdir)//trim(file_m(i))//cno,6,append)
-!        enddo
-!        if(flag_resi.ge.2) then
-!           call dacdef3s(77,trim(outdir)//'/et.dac.'//cno,6,append)
-!        endif
-!        if(flag_ir.ge.2) then
-!           call dacdef3s(78,trim(outdir)//'/ion.dac.'//cno,6,append)
-!           call dacdef3s(79,trim(outdir)//'/rec.dac.'//cno,6,append)
-! !          call dacdef3s(Gm_ion,'ion.dac.',1)
-! !          call dacdef3s(Gm_rec,'rec.dac.',1)
-!        endif
-
-!     endif
-!     if(flag_pip.eq.1.or.flag_mhd.eq.0) then
-!        do i=1,nvar_h
-!           call dacdef3s(mf_h(i,1),trim(outdir) // trim(file_h(i))//cno,6,append)
-!        enddo
-!     endif
-
-!   end subroutine def_varfiles
 
   !close file units
   subroutine epilogue
