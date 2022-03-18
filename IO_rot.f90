@@ -25,8 +25,6 @@ module io_rot
   implicit none
   include "mpif.h"
   integer ios
-  integer,allocatable,save::mf_m(:,:),mf_h(:,:)
-!  integer,save::mf_m(8,2),mf_h(5,2)
   character*15,allocatable::file_m(:),file_h(:)
   character*4 tno
   integer, parameter :: mf_t=10 &
@@ -355,48 +353,16 @@ contains
   subroutine set_initial_out
     integer i
     if(flag_mhd.eq.1) then
-          allocate(mf_m(nvar_m,2),file_m(nvar_m))
-          do i=1,nvar_m
-             mf_m(i,1)=19+i
-             mf_m(i,2)=i
-          enddo
-          file_m(1)='ro_p.dac.'
-          file_m(2)='mx_p.dac.'
-          file_m(3)='my_p.dac.'
-          file_m(4)='mz_p.dac.'
-          file_m(5)='en_p.dac.'
-          file_m(6)='bx.dac.'
-          file_m(7)='by.dac.'
-          file_m(8)='bz.dac.'
-          if(flag_divb.eq.1.or.flag_divb.eq.2) &
-               file_m(9)='ps.dac.'
-       endif
-       if(flag_pip.eq.1.or.flag_mhd.eq.0) then
-          allocate(mf_h(nvar_h,2),file_h(nvar_h))
-!          allocate(file_h(nvar_h))
-          do i=1,nvar_h
-             mf_h(i,1)=30+i
-             mf_h(i,2)=i
-          enddo
-
-          file_h(1)='ro_n.dac.'
-          file_h(2)='mx_n.dac.'
-          file_h(3)='my_n.dac.'
-          file_h(4)='mz_n.dac.'
-          file_h(5)='en_n.dac.'
-       endif
-  end subroutine set_initial_out
-  subroutine reset_out
-    if(flag_mhd.eq.1) then
-       deallocate(file_m,mf_m)
+      allocate(file_m(nvar_m))
+      file_m(1:5)= ['ro_p', 'mx_p', 'my_p', 'mz_p', 'en_p']
+      file_m(6:8) = ['bx', 'by', 'bz']
+      if(flag_divb.eq.1.or.flag_divb.eq.2) file_m(9)='ps.dac.'
     endif
     if(flag_pip.eq.1.or.flag_mhd.eq.0) then
-       deallocate(file_h,mf_h)
+      allocate(file_h(nvar_h))
+      file_h(1:5)=['ro_n', 'mx_n', 'my_n', 'mz_n', 'en_n']
     endif
-  end subroutine reset_out
-
-
-
+  end subroutine set_initial_out
 
   !Modification for restart setting NN 2015/08/27
   subroutine mk_config
@@ -580,12 +546,12 @@ contains
 
     if(flag_mhd.eq.1) then
       do i=1,nvar_m
-        call read_3D_array(trim(file_m(i)), U_m(:,:,:,mf_m(i,2)))
+        call read_3D_array(trim(file_m(i)), U_m(:,:,:,i))
       enddo
     endif
     if(flag_pip.eq.1.or.flag_mhd.eq.0) then
       do i=1,nvar_h
-        call read_3D_array(trim(file_h(i)), U_h(:,:,:,mf_h(i,2)))
+        call read_3D_array(trim(file_h(i)), U_h(:,:,:,i))
       enddo
     endif
 
