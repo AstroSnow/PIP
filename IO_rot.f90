@@ -6,6 +6,7 @@ module io_rot
 ! First version - 2013/04/26 NN
 ! Modification history
 ! 2013/05/29  S.Takasao
+! 2022/03/18  M.T.West
 !====================================================================
   use globalvar,only:ix,jx,kx,ndim,dt,dt_cnd,U_h,U_m,time,cno,flag_stop,&
        flag_mhd,flag_pip,flag_mpi,my_rank,indir,outdir,&
@@ -31,7 +32,8 @@ module io_rot
                        ,mf_x=11, mf_y=12, mf_z=13 &
                        ,mf_dx=14, mf_dy=15, mf_dz=16
   ! version number (date)
-  integer, parameter :: mf_info=9, version=20140708,restart_unit=77
+  integer, parameter :: mf_info=10, version=20220318
+  integer, parameter :: restart_unit=77
   double precision start_time,end_time
 
 contains
