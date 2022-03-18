@@ -267,54 +267,44 @@ contains
     call h5close_f(hdf5_error)
   end subroutine epilogue
 
-!  subroutine save_varfiles(t)
   subroutine save_varfiles(n_out)
-    integer n_out
-    integer i
-!    double precision, intent(in) :: t
+    integer n_out, i
+    character(8) :: Nexc_name
 
-
-    if(n_out.ne.0) then
-       call def_varfiles(1)
-    endif
+    if(n_out.ne.0) call def_varfiles(1)
     write(mf_t) time
     close(mf_t)
+
     if(flag_mhd.eq.1) then
-       do i=1,nvar_m
-          call save1param(U_m(:,:,:,i),tno//trim(file_m(i)),1)
-       enddo
-       if(flag_resi.ge.2) then
-          if(et_sav.eq.0) call save1param(eta,tno//"et.dac.",1)
-       endif
-       if(flag_ir.ge.1) then
-!	print*,gm_ion
-          if(ion_sav.eq.0) call save1param(Gm_ion,tno//'ion.dac.',1)
-          if(rec_sav.eq.0) call save1param(Gm_rec,tno//'rec.dac.',1)
-       endif
-      if(flag_ir.eq.4) then
-        !print*,Nexcite(1,1,1,:)
-        call save1param(Nexcite(:,:,:,1),tno//'nexcite1.dac.',1)
-        call save1param(Nexcite(:,:,:,2),tno//'nexcite2.dac.',1)
-        call save1param(Nexcite(:,:,:,3),tno//'nexcite3.dac.',1)
-        call save1param(Nexcite(:,:,:,4),tno//'nexcite4.dac.',1)
-        call save1param(Nexcite(:,:,:,5),tno//'nexcite5.dac.',1)
-        call save1param(Nexcite(:,:,:,6),tno//'nexcite6.dac.',1)
+      do i=1,nvar_m
+        if((i.lt.9) .or. (flag_divb.eq.1 .and. ps_sav .eq.0)) then
+          call write_3D_array(trim(file_m(i)), U_m(:,:,:,i))
+        end if
+      enddo
+      if(flag_resi.ge.2) then
+        if(et_sav.eq.0) call write_3D_array("et", eta)
       endif
-       if((flag_visc.ge.1).and.(vs_sav.eq.0)) then
-          call save1param(visc(:,:,:,1),tno//"viscx.dac.",1)
-          call save1param(visc(:,:,:,2),tno//"viscy.dac.",1)
-          call save1param(visc(:,:,:,3),tno//"viscz.dac.",1)
-       endif
+      if(flag_ir.ge.1) then
+        if(ion_sav.eq.0) call write_3D_array("ion", Gm_ion)
+        if(rec_sav.eq.0) call write_3D_array("rec", Gm_rec)
+      endif
+      if(flag_ir.eq.4) then
+        do i=1,6
+          write(Nexc_name, '(a, i0)') 'nexcite', i
+          call write_3D_array(Nexc_name, Nexcite(:,:,:,i))
+        end do
+      endif
+      if((flag_visc.ge.1).and.(vs_sav.eq.0)) then
+        call write_3D_array("viscx", visc(:,:,:,1))
+        call write_3D_array("viscy", visc(:,:,:,2))
+        call write_3D_array("viscz", visc(:,:,:,3))
+      endif
     endif
     if(flag_pip.eq.1 .or.flag_mhd.eq.0) then
-       do i=1,nvar_h
-          call save1param(U_h(:,:,:,i),tno//trim(file_h(i)),1)
-       enddo
+      do i=1,nvar_h
+        call write_3D_array(trim(file_h(i)), U_h(:,:,:,i))
+      enddo
     endif
-    if(flag_divb.eq.1 .and. flag_mhd.eq.1 .and. ps_sav .eq.0) then
-       call save1param(U_m(:,:,:,9),tno//trim(file_m(9)),1)
-    endif
-
   end subroutine save_varfiles
 
   subroutine write_3D_array(varname, data_array)
