@@ -600,7 +600,6 @@ contains
 
   subroutine read_3D_array(varname, data_out)
     integer(HID_T) :: dset_id, dataspace_id     ! dataset and file-dataspace IDs
-    integer(HSIZE_T) :: dimsFile(3), dimsMem(3)
     integer(HSSIZE_T) :: offsetFile(3)
     integer :: per
     character(*) :: varname
