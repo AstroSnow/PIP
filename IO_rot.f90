@@ -258,13 +258,12 @@ contains
       write(*,*)"CPU TIME FOR CALCULATION IS :",end_time-start_time
     endif
 
-    ! Close MPI interface
     if(flag_mpi.eq.1) then
       call end_mpi
+      ! Close FORTRAN interface
+      if(my_rank.eq.0) call h5close_f(hdf5_error)
     endif
     close(mf_t)
-    ! Close FORTRAN interface.
-    call h5close_f(hdf5_error)
   end subroutine epilogue
 
   subroutine save_varfiles(n_out)
