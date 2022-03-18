@@ -280,7 +280,7 @@ contains
     if(flag_mpi.eq.1) then
       call end_mpi
       ! Close FORTRAN interface
-      if(my_rank.eq.0) call h5close_f(hdf5_error)
+      !if(my_rank.eq.0) call h5close_f(hdf5_error)
     endif
     close(mf_t)
   end subroutine epilogue
