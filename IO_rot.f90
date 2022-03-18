@@ -422,12 +422,12 @@ contains
 111 continue
     read(restart_unit,*)flag_mhd,flag_pip
     read(restart_unit,*)nvar_h,nvar_m
-    read(restart_unit,*)ix,jx,kx
+    read(restart_unit,*)
     read(restart_unit,*)margin
     read(restart_unit,*)gm
     read(restart_unit,*,end=777)flag_bnd
     if(flag_mpi.eq.1) then
-      read(restart_unit,*,end=777)mpi_siz
+      read(restart_unit,*,end=777)
     endif
     if(flag_restart.eq.0) then
       key="nout"
