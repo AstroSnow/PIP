@@ -28,9 +28,7 @@ module io_rot
   integer ios
   character*15,allocatable::file_m(:),file_h(:)
   character*4 tno
-  integer, parameter :: mf_t=10 &
-                       ,mf_x=11, mf_y=12, mf_z=13 &
-                       ,mf_dx=14, mf_dy=15, mf_dz=16
+  integer, parameter :: mf_t=10
   ! version number (date)
   integer, parameter :: mf_info=10, version=20220318
   integer, parameter :: restart_unit=77
