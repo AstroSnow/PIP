@@ -256,9 +256,9 @@ contains
       if(heat_sav.eq.0) call write_3D_array("aheat", arb_heat)
     endif
 
-    if(flag_mpi.eq.0 .or.my_rank.eq.0) then
-      call dacdef0s(mf_t,trim(outdir) // 't.dac.'//cno,6,append)
-    end if
+    !if(flag_mpi.eq.0 .or.my_rank.eq.0) then
+    !  call dacdef0s(mf_t,trim(outdir) // 't.dac.'//cno,6,append)
+    !end if
   end subroutine def_varfiles
 
   !close file units
@@ -575,12 +575,9 @@ contains
       call read_3D_array('gr', gra)
     endif
 
-    !! read time (by Tak)
-    call get_time(mf_t,trim(indir)//'t.dac.0000',flag_restart,time)
-    if (flag_mpi.eq.0 .or. my_rank.eq.0) print *, 'Read time: ',time
-    if(my_rank.eq.0) then
-       call copy_time(mf_t,trim(indir)//'t.dac.0000',trim(outdir)//'t.dac.0000',flag_restart+1)
-    endif
+    ! Get simulation time of last completed step
+    call read_time
+
   end subroutine reread_variables
 
   subroutine read_3D_array(varname, data_out)
@@ -605,6 +602,21 @@ contains
     CALL h5sclose_f(dataspace_id, hdf5_error)
     CALL h5dclose_f(dset_id, hdf5_error)
   end subroutine read_3D_array
+
+  subroutine read_time
+    integer(HID_T) :: dset_id, dataspace_id
+    integer(HSIZE_T) :: dims_scalar(0)
+
+    CALL h5dopen_f(file_id, 'time', dset_id, hdf5_error)
+    ! Get file dataspace
+    CALL h5dget_space_f(dset_id, dataspace_id, hdf5_error)
+    ! read file
+    CALL h5dread_f(dset_id, H5T_NATIVE_DOUBLE, time, dims_scalar, hdf5_error, &
+                   mem_space_id=memspace_id(5), file_space_id=dataspace_id)
+    ! close connections
+    CALL h5sclose_f(dataspace_id, hdf5_error)
+    CALL h5dclose_f(dset_id, hdf5_error)
+  end subroutine read_time
 
   subroutine copy_time(idf,in_file,out_file,start_step)
     integer,intent(in)::idf,start_step
