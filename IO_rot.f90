@@ -28,7 +28,6 @@ module io_rot
   integer ios
   character*15,allocatable::file_m(:),file_h(:)
   character*4 tno
-  integer, parameter :: mf_t=10
   ! version number (date)
   integer, parameter :: mf_info=10, version=20220318
   integer, parameter :: restart_unit=77
@@ -256,9 +255,6 @@ contains
       if(heat_sav.eq.0) call write_3D_array("aheat", arb_heat)
     endif
 
-    !if(flag_mpi.eq.0 .or.my_rank.eq.0) then
-    !  call dacdef0s(mf_t,trim(outdir) // 't.dac.'//cno,6,append)
-    !end if
   end subroutine def_varfiles
 
   !close file units
@@ -280,7 +276,6 @@ contains
       ! Close FORTRAN interface
       !if(my_rank.eq.0) call h5close_f(hdf5_error)
     endif
-    close(mf_t)
   end subroutine epilogue
 
   subroutine save_varfiles(n_out)
@@ -288,8 +283,6 @@ contains
     character(8) :: Nexc_name
 
     if(n_out.ne.0) call def_varfiles(1)
-    write(mf_t) time
-    close(mf_t)
 
     if(flag_mhd.eq.1) then
       do i=1,nvar_m
@@ -617,68 +610,6 @@ contains
     CALL h5sclose_f(dataspace_id, hdf5_error)
     CALL h5dclose_f(dset_id, hdf5_error)
   end subroutine read_time
-
-  subroutine copy_time(idf,in_file,out_file,start_step)
-    integer,intent(in)::idf,start_step
-    integer i,tmp
-    character*(*),intent(in)::in_file
-    character*(*),intent(in)::out_file
-    double precision time_tmp
-    double precision times(start_step)
-    open(idf,file=in_file,form="unformatted",status="old")
-    !remove .dac. header----------------------------
-    do i=1,5
-       read(idf)tmp
-    enddo
-    !-----------------------------------------------
-    do i=1,start_step
-       read(idf)time_tmp
-       times(i)=time_tmp
-    enddo
-    close(idf)
-
-    call dacdef0s(idf,out_file,6,0)
-    do i=1,start_step
-       write(idf)times(i)
-    end do
-    close(idf)
-
-  end subroutine copy_time
-
-  !! Get time when the calculation is restarted (by Tak)
-  subroutine get_time(idf,file,restart,time_tmp)
-    integer,intent(in)::idf
-    integer,intent(in)::restart
-    character*(*),intent(in)::file
-    double precision,intent(out)::time_tmp
-    integer tmp,i
-    open(idf,file=file,form="unformatted",status="old")
-    !remove .dac. header----------------------------
-    do i=1,5
-       read(idf)tmp
-    enddo
-    !-----------------------------------------------
-    do i=1,restart+1
-       read(idf)time_tmp
-    enddo
-    close(idf)
-  end subroutine get_time
-
-  subroutine dacdef0s(idf,file,mtype,append)
-    integer,intent(in)::idf,mtype,append
-    character*(*) file
-    if(append.ne.1) then
-       open(idf,file=file,form='unformatted')
-       write(idf)1
-       write(idf)0
-       write(idf)mtype
-       write(idf)1
-       write(idf)-1
-    else
-       open(idf,file=file,form='unformatted',position='append')
-    endif
-  end subroutine dacdef0s
-
 
   subroutine stop_sim
     !----------------------------------------------------------------------|
