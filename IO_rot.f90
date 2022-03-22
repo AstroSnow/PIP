@@ -576,13 +576,8 @@ contains
   subroutine read_3D_array(varname, data_out)
     integer(HID_T) :: dset_id, dataspace_id     ! dataset and file-dataspace IDs
     integer(HSSIZE_T) :: offsetFile(3)
-    integer :: per
     character(*) :: varname
     double precision, dimension(3) :: data_out(ix,jx,kx)
-
-    ! strip off '.dac.' suffix on certain variable names
-    per = index(varname, '.')
-    if(per /= 0) varname = varname(1:per-1)
 
     CALL h5dopen_f(file_id, varname, dset_id, hdf5_error)
     ! Get file dataspace
