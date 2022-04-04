@@ -349,7 +349,7 @@ contains
       allocate(file_m(nvar_m))
       file_m(1:5)= ['ro_p', 'mx_p', 'my_p', 'mz_p', 'en_p']
       file_m(6:8) = ['bx', 'by', 'bz']
-      if(flag_divb.eq.1.or.flag_divb.eq.2) file_m(9)='ps.dac.'
+      if(flag_divb.eq.1.or.flag_divb.eq.2) file_m(9)='ps'
     endif
     if(flag_pip.eq.1.or.flag_mhd.eq.0) then
       allocate(file_h(nvar_h))
