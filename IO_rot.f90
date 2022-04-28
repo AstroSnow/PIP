@@ -15,7 +15,7 @@ module io_rot
        total_iter,flag_amb,dtout,mpi_siz,nt,nmax,output_type,flag_ps,flag_divb,&
        flag_damp,damp_time,flag_rad,flag_ir_type,arb_heat,visc,esav,emsavtime,&
        ac_sav, xi_sav, ion_sav, rec_sav, col_sav, gr_sav, vs_sav, heat_sav, et_sav, ps_sav,&
-       Nexcite
+       Nexcite,gm_ion_rad,gm_rec_rad
   use mpi_rot,only:end_mpi
   use IOT_rot,only:initialize_IOT,get_next_output
   use Util_rot,only:get_word,get_value_integer
@@ -261,6 +261,10 @@ endif
         call save1param(Nexcite(:,:,:,4),tno//'nexcite4.dac.',1)
         call save1param(Nexcite(:,:,:,5),tno//'nexcite5.dac.',1)
         call save1param(Nexcite(:,:,:,6),tno//'nexcite6.dac.',1)
+        if(flag_rad .eq. 1) then
+          if(ion_sav.eq.0) call save1param(Gm_ion_rad,tno//'ion_rad.dac.',1)
+          if(rec_sav.eq.0) call save1param(Gm_rec_rad,tno//'rec_rad.dac.',1)
+        endif
       endif
        if((flag_visc.ge.1).and.(vs_sav.eq.0)) then
           call save1param(visc(:,:,:,1),tno//"viscx.dac.",1)
@@ -672,7 +676,7 @@ endif
        write(6,*) 'max loop number reached'
        flag_stop=1
     endif
-    if (dt .le. 1.d-9) then
+    if (dt .le. 1.d-12) then
        write(6,*) 't=',time,'dt=',dt
        write(6,*) 'dt too small'
        flag_stop=1
