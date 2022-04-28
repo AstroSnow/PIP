@@ -114,10 +114,10 @@ contains
 !    if(flag_visc.ge.1) then
 !       call initialize_visc()       
 !    endif
-    if(flag_rad.ge.1) then
-	print*,'RADIATIVE LOSSES ARE NOT YET FINISHED'
-	stop    
-    endif
+    !if(flag_rad.ge.1) then
+	!print*,'RADIATIVE LOSSES ARE NOT YET FINISHED'
+	!stop    
+    !endif
   end subroutine set_coefficients
 
   !  subroutine set_flux(F_h,F_m,U_h,U_m,dt_sub,dt_coll_i)

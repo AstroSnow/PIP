@@ -55,8 +55,11 @@ use HDF5
   double precision,save::debug_parameter
 ! alpha is the collision parameter and flag_sch is the flag for the scheme you are using
   double precision,save :: cmax
+
 ! Radiative losses
   integer,save :: flag_rad
+  double precision,save :: rad_temp
+  double precision,allocatable,save::GM_rec_rad(:,:,:),Gm_ion_rad(:,:,:),radrat(:,:,:,:,:)
 
 !for coordinate system
   integer,save::ix,jx,kx,nvar_h,nvar_m,margin(3),ndim,ig(3)
