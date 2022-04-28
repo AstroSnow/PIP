@@ -370,7 +370,6 @@ subroutine get_parameters
 
  !Allocate the array sizes
  subroutine allocate_vars
-   ig(1)=ix ; ig(2)=jx ; ig(3)=kx   
    if(flag_mpi.eq.0 .or.my_rank.eq.0) print *,"total grid :",ix,jx,kx
    allocate(x(ix),dx(ix),y(jx),dy(jx),z(kx),dz(kx),dsc(max(ix,jx,kx),3),&
         dxc(ix),dyc(jx),dzc(kx))

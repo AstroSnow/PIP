@@ -308,7 +308,7 @@ contains
    subroutine cfl_pip_ir(U_m,U_h)
 
      double precision,intent(in)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
-     dt=min(dt,safety/max(maxval(gm_rec)+maxval(gm_ion),1.0d-5))   !,maxval(gm_rec/U_m(:,:,:,1))+maxval(gm_ion/U_h(:,:,:,1))  
+     dt=min(dt,min(safety,0.3d0)/max(maxval(gm_rec)+maxval(gm_ion),1.0d-5))   !,maxval(gm_rec/U_m(:,:,:,1))+maxval(gm_ion/U_h(:,:,:,1)) 
    end subroutine cfl_pip_ir
 
   subroutine hd_fluxes(F_h,U_h)
