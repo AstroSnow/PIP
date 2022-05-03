@@ -249,9 +249,10 @@ contains
 !        call expintread
  
 !	    allocate(Colrat(ix,jx,kx,6,6)) !Allocate the rate array
-        call get_col_ion_coeff(Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion,Gm_rec)
+!        call get_col_ion_coeff(Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion,Gm_rec)
+        call get_col_ion_coeff(Te_p*T0/tfac,spread(spread(spread(n0,1,ix),2,jx),3,kx),Gm_ion,Gm_rec)
 !        call get_col_ion_coeff_aprox(Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion,Gm_rec)
-        Gm_rec_ref=Gm_rec(1,1,1)  !Get the normalisation recombination rates
+        Gm_rec_ref=Gm_rec(1,1,1)/U_m(1,1,1,1)  !Get the normalisation recombination rates
         !allocate(Nexcite(ix,jx,kx,6)) !Allocate the fractional array (allocated in IC)
 
         !get the arbitraty heating
@@ -266,13 +267,14 @@ contains
 !stop
 
 !Get the dimensional ionisation and recombination rates
-    call get_col_ion_coeff(Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion,Gm_rec) 
+!    call get_col_ion_coeff(Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion,Gm_rec) 
+    call get_col_ion_coeff(Te_p*T0/tfac,spread(spread(spread(n0,1,ix),2,jx),3,kx),Gm_ion,Gm_rec) 
 !Use the appoximate rates instead
 !    call get_col_ion_coeff_aprox(Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion,Gm_rec) 
 
 !Normalise the rates based on intial recombination rate
-    Gm_ion=Gm_ion/Gm_rec_ref*t_ir
-    Gm_rec=Gm_rec/Gm_rec_ref*t_ir
+    Gm_ion=Gm_ion/U_h(:,:,:,1)/Gm_rec_ref*t_ir
+    Gm_rec=Gm_rec/U_m(:,:,:,1)/Gm_rec_ref*t_ir
 
 !Get the radiative rates
     if (flag_rad .eq. 1) then
@@ -483,6 +485,7 @@ contains
 
     !set colex to zero initially
     colex(:,:)=0.d0
+    colrat(:,:,:,:,:)=0.0d0
     !Loop over the grid
     do k=1,kx;do j=1,jx; do i=1,ix
         !loop over the Excitation states
@@ -515,7 +518,7 @@ contains
 !                    print*,E1y,E1z,E2y,E2z
 
                     !Rate coefficient for excitation Equation 36 using electron mass
-                    Colex(ii,jj)=dsqrt(8.d0*kboltz*Telec(i,j,k)/pi/melec)*2.0d0*&
+                    Colex(ii,jj)=nelec(i,j,k)*dsqrt(8.d0*kboltz*Telec(i,j,k)/pi/melec)*2.0d0*&
                         dble(ii)**2/xrat(ii,jj)*pi*a0bohr**2*yhat**2*&
                               (Ann(ii,jj)*((1.0d0/yhat+0.5d0)*E1y-(1.0d0/zhat+0.5d0)*E1z)+&
                               (Bnn(ii,jj)-Ann(ii,jj)*dlog(2.d0*dble(ii)**2/xrat(ii,jj)))*(E2y/yhat-E2z/zhat))
@@ -576,7 +579,7 @@ contains
                 Bn0=2.0d0/3.0d0*dble(ii)**2*(5.0d0+bn(ii)) !Equation 24
 
                 !Ionisation coefficients Equation 35 using electron mass
-                Colex(ii,6)=dsqrt(8.d0*kboltz*Telec(i,j,k)/pi/melec)&
+                Colex(ii,6)=nelec(i,j,k)*dsqrt(8.d0*kboltz*Telec(i,j,k)/pi/melec)&
                     *2.0d0*dble(ii)**2*pi*a0bohr**2*yn**2*&
                     (An0*(E1y/yn-E1z/zn)+&
                     (Bn0-An0*dlog(2.d0*dble(ii)**2))*(ziyn-zizn))
@@ -589,18 +592,18 @@ contains
                     if (ii .eq. jj) then 
                         colrat(i,j,k,ii,jj)=0.d0
                     else if (jj .gt. ii) then 
-                        colrat(i,j,k,ii,jj)=nelec(i,j,k)*1.0e-6*gweight(ii)/gweight(jj)*Colex(ii,jj)*dsqrt(Telec(i,j,k)) 
+                        colrat(i,j,k,ii,jj)=gweight(ii)/gweight(jj)*Colex(ii,jj)*dsqrt(Telec(i,j,k)) 
                     else
-                        colrat(i,j,k,ii,jj)=nelec(i,j,k)*1.0e-6*Colex(jj,ii)*dsqrt(Telec(i,j,k))*&
+                        colrat(i,j,k,ii,jj)=Colex(jj,ii)*dsqrt(Telec(i,j,k))*&
                             exp(-(Eion(jj)-Eion(ii))/kboltz/Telec(i,j,k))
                     endif
                 enddo
                 !Ionisation rates
-                colrat(i,j,k,ii,6)=nelec(i,j,k)*1.0e-6*Colex(ii,6)*dsqrt(Telec(i,j,k))*exp(-(Eion(6)-Eion(ii))/kboltz/Telec(i,j,k))
+                colrat(i,j,k,ii,6)=Colex(ii,6)*dsqrt(Telec(i,j,k))*exp(-(Eion(6)-Eion(ii))/kboltz/Telec(i,j,k))
             enddo
 
             do ii=1,5
-                colrat(i,j,k,6,ii)=nelec(i,j,k)*1.0e-6*nelec(i,j,k)*1.0e-6*colrat(i,j,k,ii,6)*gweight(ii)/gweight(6)&
+                colrat(i,j,k,6,ii)=nelec(i,j,k)*colrat(i,j,k,ii,6)*gweight(ii)/gweight(6)&
                     /2.0d0*(2.0d0*pi*mehat*kbhat*Telec(i,j,k)/hhat/hhat*1.0e14)**(-3.0d0/2.0d0)*&
                     exp(Eion(ii)/kboltz/Telec(i,j,k))
             enddo
@@ -608,19 +611,6 @@ contains
 !print*,colex
 !print*,colrat(i,j,k,:,:)
 !stop
-            ! Calculate the change in each species
-            dntot=0.d0
-            do ii=1,6
-                do jj=1,6 
-                    dneut(ii)=Nexcite(i,j,k,jj)*colrat(i,j,k,jj,ii) - Nexcite(i,j,k,ii)*colrat(i,j,k,ii,jj)
-                enddo
-
-                    if (Nexcite(i,j,k,ii) .ne. maxval(Nexcite(i,j,k,:))) then 
-                        dntot=dntot+dneut(ii)
-                    endif
-            enddo
-            nmaxloc=maxloc(Nexcite(i,j,k,:),DIM=1)
-            dneut(nmaxloc)=-dntot
 
             Gm_ion(i,j,k)=0.d0
             Gm_rec(i,j,k)=0.d0
@@ -631,9 +621,9 @@ contains
 !print*,gm_ion(1,1,1),gm_rec(1,1,1)
 !stop
             !divide rates by total neutral/plasma density for consistency
-            Gm_ion(i,j,k)=Gm_ion(i,j,k)/(Nexcite(i,j,k,1)+Nexcite(i,j,k,2)+Nexcite(i,j,k,3)&
-                          +Nexcite(i,j,k,4)+Nexcite(i,j,k,5))        
-            Gm_rec(i,j,k)=Gm_rec(i,j,k)/Nexcite(i,j,k,6)
+!            Gm_ion(i,j,k)=Gm_ion(i,j,k)/(Nexcite(i,j,k,1)+Nexcite(i,j,k,2)+Nexcite(i,j,k,3)&
+!                          +Nexcite(i,j,k,4)+Nexcite(i,j,k,5))        
+!            Gm_rec(i,j,k)=Gm_rec(i,j,k)/Nexcite(i,j,k,6)
     enddo;enddo;enddo
 
   end subroutine get_col_ion_coeff  
@@ -1065,37 +1055,48 @@ END subroutine
   integer::i,j,k,ii,jj,nmaxloc
 !Vector form
 !The new number of electrons/protons is:
-    Nexcite(:,:,:,6)=rom
+    !Nexcite(:,:,:,6)=rom
 !    do k=1,kx;do j=1,jx; do i=1,ix
             ! Calculate the change in each neutral species
             dntotv(:,:,:)=0.d0
-            do ii=1,5
+            dneutv(:,:,:,:)=0.d0
+            do ii=1,6
                 do jj=1,6 
-                    dneutv(:,:,:,ii)=Nexcite(:,:,:,jj)*colrat(:,:,:,jj,ii) - Nexcite(:,:,:,ii)*colrat(:,:,:,ii,jj)
+                    dneutv(:,:,:,ii)=dneutv(:,:,:,ii)+Nexcite(:,:,:,jj)*colrat(:,:,:,jj,ii)/Gm_rec_ref*t_ir - &
+                    			Nexcite(:,:,:,ii)*colrat(:,:,:,ii,jj)/Gm_rec_ref*t_ir
                     if (flag_rad .eq. 1) then
-                        dneutv(:,:,:,ii)=Nexcite(:,:,:,jj)*radrat(:,:,:,jj,ii) - Nexcite(:,:,:,ii)*radrat(:,:,:,ii,jj)
+                        dneutv(:,:,:,ii)=dneutv(:,:,:,ii)+Nexcite(:,:,:,jj)*radrat(:,:,:,jj,ii)/Gm_rec_ref*t_ir - &
+                        			Nexcite(:,:,:,ii)*radrat(:,:,:,ii,jj)/Gm_rec_ref*t_ir
                     endif
+!                    print*,ii,jj,Nexcite(1,1,1,jj)*colrat(1,1,1,jj,ii)/Gm_rec_ref*t_ir,&
+!                    	Nexcite(1,1,1,ii)*colrat(1,1,1,ii,jj)/Gm_rec_ref*t_ir
+!print*,ii,jj,dneutv(1,1,1,ii)
                 enddo
             enddo
 !print*,dneut
 !print*,colrat(i,j,k,:,:)
-!print*,Nexcite(i,j,k,:)
-            Nexcite(:,:,:,1:5)=Nexcite(:,:,:,1:5)+dt*dneutv(:,:,:,1:5)/n0
-            where (Nexcite>=0.d0)
+print*,Nexcite(1,1,1,:)
+!print*,colrat(1,1,1,6,:)
+!print*,dneutv(1,1,1,:)*dt
+            Nexcite(:,:,:,1:6)=Nexcite(:,:,:,1:6)+dt*dneutv(:,:,:,1:6)!/n0
+            where (Nexcite>1.e-16)
                 Nexcite = Nexcite
             elsewhere
-                Nexcite = 0.0d0!1.e-16
+                Nexcite = 1.e-16
             end where
-!print*,Nexcite(i,j,k,:)
-            dntotv(:,:,:)=sum(Nexcite(:,:,:,1:5),DIM=4)
-            Nexcite(:,:,:,1)=roh(:,:,:)*Nexcite(:,:,:,1)/dntotv(:,:,:)
-            Nexcite(:,:,:,2)=roh(:,:,:)*Nexcite(:,:,:,2)/dntotv(:,:,:)
-            Nexcite(:,:,:,3)=roh(:,:,:)*Nexcite(:,:,:,3)/dntotv(:,:,:)
-            Nexcite(:,:,:,4)=roh(:,:,:)*Nexcite(:,:,:,4)/dntotv(:,:,:)
-            Nexcite(:,:,:,5)=roh(:,:,:)*Nexcite(:,:,:,5)/dntotv(:,:,:)
-
+print*,Nexcite(1,1,1,:),sum(Nexcite(1,1,1,1:5))
+            dntotv(:,:,:)=sum(Nexcite(:,:,:,1:5),DIM=4)-roh
+            Nexcite(:,:,:,1)=Nexcite(:,:,:,1)-dntotv
+!print*,dntotv(1,1,1),dt
+!            Nexcite(:,:,:,1)=roh(:,:,:)*Nexcite(:,:,:,1)/dntotv(:,:,:)
+!            Nexcite(:,:,:,2)=roh(:,:,:)*Nexcite(:,:,:,2)/dntotv(:,:,:)
+!            Nexcite(:,:,:,3)=roh(:,:,:)*Nexcite(:,:,:,3)/dntotv(:,:,:)
+!            Nexcite(:,:,:,4)=roh(:,:,:)*Nexcite(:,:,:,4)/dntotv(:,:,:)
+!            Nexcite(:,:,:,5)=roh(:,:,:)*Nexcite(:,:,:,5)/dntotv(:,:,:)
+		Nexcite(:,:,:,6)=rom(:,:,:)!*Nexcite(:,:,:,6)/dntotv(:,:,:)
+!stop
 !    enddo;enddo;enddo
-!print*,Nexcite(1,1,1,6),rom(1,1,1),sum(Nexcite(1,1,1,1:5)),roh(1,1,1)
+print*,Nexcite(1,1,1,6),rom(1,1,1),sum(Nexcite(1,1,1,1:5)),roh(1,1,1)
   end subroutine hydrogen_excitation_update
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1286,6 +1287,7 @@ ieloss=ieloss+nexcite(:,:,:,1)*(colrat(:,:,:,1,2)*(Eev(1)-Eev(2))+colrat(:,:,:,1
     endif
 
     if(IR_type.ge.1) then
+!print*,Gm_rec(1,1,1)*de(1,1,1),Gm_ion(1,1,1)*nde(1,1,1),Gm_rec(1,1,1)*de(1,1,1)-Gm_ion(1,1,1)*nde(1,1,1)
        ds(:,:,:,1)=Gm_rec*de-Gm_ion*nde
        ds(:,:,:,2)=Gm_rec*de*vx-Gm_ion*nde*nvx
        ds(:,:,:,3)=Gm_rec*de*vy-Gm_ion*nde*nvy

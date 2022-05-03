@@ -100,7 +100,7 @@ call expintread
   endif
 
   if (my_rank.eq.0) print*,'Neutral fraction = ',f_n
-
+!stop
 !  !set ionization fraction-----------------
   if(flag_pip.eq.0) then
      f_n=1.0d0
@@ -201,9 +201,9 @@ call expintread
   case default
 !     v_l=(/1.0d0,1.0d0,0.0d0,0.0d0,0.0d0,B0*0.75d0,B0,0.0d0/)
 !     v_r=(/0.125d0,0.1d0,0.0d0,0.0d0,0.0d0,B0*0.75d0,-B0,0.0d0/)
-     v_l=(/1.0d0,beta*B0**2/2.d0,0.0d0,0.0d0,0.0d0,B0*0.3d0,B0,0.0d0/)
+     v_l=(/1.0d0,beta*B0**2/2.d0,0.0d0,0.0d0,0.0d0,0.0*B0*0.3d0,0.0*B0,0.0d0/)
 !     v_r=(/1.0d0,beta*B0**2/2.d0,0.0d0,0.0d0,0.0d0,B0*0.3d0,B0,0.0d0/)
-     v_r=(/1.0d0,beta*B0**2/2.d0,0.0d0,0.0d0,0.0d0,B0*0.3d0,-B0,0.0d0/)
+     v_r=(/1.0d0,beta*B0**2/2.d0,0.0d0,0.0d0,0.0d0,0.0*B0*0.3d0,-0.0*B0,0.0d0/)
 !     Density, pressure, velocity * 3, magnetic field *3
 
 
