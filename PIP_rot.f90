@@ -2,7 +2,7 @@ module PIP_rot
   use globalvar,only:ix,jx,kx,ac,xi_n,gm_rec,gm_ion,nvar_h,nvar_m,&
        flag_pip_imp,gm,n_fraction,t_ir,col,x,y,z,beta,T0, n0,my_rank,flag_IR_type,flag_col,arb_heat,nout,flag_restart,Colrat,&
         Nexcite,n0,f_p_ini,f_p_p_ini,n0fac,Gm_rec_ref,expinttab,&
-        rad_temp,flag_rad,gm_ion_rad,gm_rec_rad,radrat
+        rad_temp,flag_rad,gm_ion_rad,gm_rec_rad,radrat,ion_pot
   use scheme_rot,only:get_Te_HD,get_Te_MHD,cq2pv_HD,cq2pv_MHD,get_vel_diff
   use parameters,only:T_r_p,deg1,deg2,pi
   implicit none
@@ -257,7 +257,9 @@ contains
 
         !get the arbitraty heating
         allocate(arb_heat(ix,jx,kx))
-        call IRgetionpot(U_m(:,:,:,1),arb_heat) 
+	allocate(ion_pot(ix,jx,kx))
+        call IRgetionpot(U_h(:,:,:,1),arb_heat) 
+        call IRgetionpot(U_h(:,:,:,1),ion_pot) 
     endif
 !print*,Gm_rec_ref
 !stop
@@ -275,7 +277,8 @@ contains
     Gm_ion=Gm_ion/U_h(:,:,:,1)/Gm_rec_ref*t_ir
     Gm_rec=Gm_rec/U_m(:,:,:,1)/Gm_rec_ref*t_ir
 
-
+!print*,maxval(Gm_rec),maxval(Gm_ion)
+!stop
 !Get the radiative rates
     if (flag_rad .eq. 1) then
         call get_radrat_fixed(rad_temp,Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion_rad,Gm_rec_rad)
@@ -1137,7 +1140,7 @@ ieloss=ieloss+nexcite(:,:,:,1)*(colrat(:,:,:,1,2)*(Eev(1)-Eev(2))+colrat(:,:,:,1
                     colrat(:,:,:,2,5)*(Eev(2)-Eev(5)))+&
               nexcite(:,:,:,3)*(colrat(:,:,:,3,4)*(Eev(3)-Eev(4))+colrat(:,:,:,3,5)*(Eev(3)-Eev(5)))+&
               nexcite(:,:,:,4)*(colrat(:,:,:,4,5)*(Eev(4)-Eev(5)))
-
+print*,minval(ieloss),minval(colrat),minval(nexcite)
     if(mod(flag_col,2) .eq. 1) then
 !	    enloss=nde/gm/T0/8.6173e-5*(&
 !                (13.6d0*max(Nexcite(:,:,:,1)*colrat(:,:,:,1,6),0.d0))+& !ground state
@@ -1148,7 +1151,7 @@ ieloss=ieloss+nexcite(:,:,:,1)*(colrat(:,:,:,1,2)*(Eev(1)-Eev(2))+colrat(:,:,:,1
 !                (Nexcite(:,:,:,1)+Nexcite(:,:,:,2)+Nexcite(:,:,:,3)+Nexcite(:,:,:,4)+Nexcite(:,:,:,5)) 
 !	    enloss=nde/gm/T0/8.6173e-5*ieloss/&
 !                (Nexcite(:,:,:,1)+Nexcite(:,:,:,2)+Nexcite(:,:,:,3)+Nexcite(:,:,:,4)+Nexcite(:,:,:,5)) 
-    	    enloss=gm/T0/8.6173e-5*ieloss
+    	    enloss=ieloss/gm/T0/8.6173e-5
     elseif(mod(flag_col,2) .eq. 0) then
 !	    enloss=nde*(beta/T0/2.d0/8.6173e-5)*(&
 !                (13.6d0*max(Nexcite(:,:,:,1)*colrat(:,:,:,1,6),0.d0))+& !ground state
@@ -1159,7 +1162,7 @@ ieloss=ieloss+nexcite(:,:,:,1)*(colrat(:,:,:,1,2)*(Eev(1)-Eev(2))+colrat(:,:,:,1
 !                (Nexcite(:,:,:,1)+Nexcite(:,:,:,2)+Nexcite(:,:,:,3)+Nexcite(:,:,:,4)+Nexcite(:,:,:,5))
 !	    enloss=nde*(beta/T0/2.d0/8.6173e-5)*ieloss/& 
 !                (Nexcite(:,:,:,1)+Nexcite(:,:,:,2)+Nexcite(:,:,:,3)+Nexcite(:,:,:,4)+Nexcite(:,:,:,5))  
-	    enloss=(beta/T0/2.d0/8.6173e-5)*ieloss
+	    enloss=ieloss/(beta/T0/2.d0/8.6173e-5)
     else
 	    print*,'option not included!'
 	    stop
@@ -1257,7 +1260,7 @@ ieloss=ieloss+nexcite(:,:,:,1)*(colrat(:,:,:,1,2)*(Eev(1)-Eev(2))+colrat(:,:,:,1
     double precision vz(ix,jx,kx),nvz(ix,jx,kx)
     double precision bx(ix,jx,kx),by(ix,jx,kx),bz(ix,jx,kx)
     double precision kapper(ix,jx,kx),lambda(ix,jx,kx)
-    double precision A(ix,jx,kx),B(ix,jx,kx),D(ix,jx,kx),ion_pot(ix,jx,kx) 
+    double precision A(ix,jx,kx),B(ix,jx,kx),D(ix,jx,kx)
     double precision dneut(ix,jx,kx,6)
     integer i,j   
     dS=0.0
