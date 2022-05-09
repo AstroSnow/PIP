@@ -16,6 +16,9 @@ use HDF5
 !Conserved variables
   double precision,allocatable,save ::U_m(:,:,:,:),U_h(:,:,:,:)
 
+!Back up variables for if dt changes too much across a time step  
+	double precision,allocatable,save ::U_m_backup(:,:,:,:),U_h_backup(:,:,:,:)
+
 !Magnetic field at cell-face
 
 !other variables

@@ -21,7 +21,8 @@ module model_rot
        flag_hc_test,safety_cnd,nsub_max,b_cr,flag_ps,flag_cyl, &
        vd_cri,j_cri,flag_damp,damp_time,flag_rad, T0, n0, L0,flag_IR_type, &
        flag_visc, nu_0, esav, emsavtime, rad_temp, &
-	ac_sav, xi_sav, ion_sav, rec_sav, col_sav, gr_sav, vs_sav, heat_sav, et_sav, ps_sav
+	ac_sav, xi_sav, ion_sav, rec_sav, col_sav, gr_sav, vs_sav, heat_sav, et_sav, ps_sav,&
+	U_m_backup,U_h_backup
   use scheme_rot,only:pv2cq_mhd,pv2cq_hd
   use HC_rot,only:initialize_HC
   use Res_rot,only:initialize_resistivity
@@ -376,7 +377,8 @@ subroutine get_parameters
    if(ndim.le.2) dz(1)=1.0d10
    if(ndim.le.1) dy(1)=1.0d10
    
-   allocate(u_h(ix,jx,kx,nvar_h),u_m(ix,jx,kx,nvar_m))   
+   allocate(u_h(ix,jx,kx,nvar_h),u_m(ix,jx,kx,nvar_m)) 
+   allocate(u_h_backup(ix,jx,kx,nvar_h),u_m_backup(ix,jx,kx,nvar_m))   
    call initialize_xin(flag_amb,flag_col)
    call initialize_collisional(flag_col)
    call initialize_IR(flag_IR)
