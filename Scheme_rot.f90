@@ -178,23 +178,24 @@ contains
 
 
   !set time step with CFL condition : return dt
-  subroutine cfl(U_h,U_m)
+  subroutine cfl(U_h,U_m,dttemp)
     double precision,intent(inout)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
+    double precision,intent(out)::dttemp
     if(flag_pip.eq.1) then
-       call cfl_mhd(U_m)
-       call cfl_hd(U_h)
-       call cfl_pn_col(U_m,U_h)
-       if(flag_ir.ge.1) call cfl_pip_ir(U_m,U_h)
+       call cfl_mhd(U_m,dttemp)
+       call cfl_hd(U_h,dttemp)
+       call cfl_pn_col(U_m,U_h,dttemp)
+       if(flag_ir.ge.1) call cfl_pip_ir(U_m,U_h,dttemp)
     else
        if(flag_mhd.eq.1) then
-          call cfl_mhd(U_m)
+          call cfl_mhd(U_m,dttemp)
        else
-          call cfl_hd(U_h)
+          call cfl_hd(U_h,dttemp)
        endif
     endif
     if(flag_resi.ge.1) call cfl_resi
     if(flag_mpi.eq.1) then
-       dt=mpi_double_interface(dt,1)
+       dttemp=mpi_double_interface(dttemp,1)
     endif
 
     !! for divB cleaning
@@ -208,7 +209,8 @@ contains
     
   end subroutine cfl
   !set time step for HD with CFL condition 
-  subroutine cfl_hd(U_h)
+  subroutine cfl_hd(U_h,dttemp)
+  double precision,intent(inout)::dttemp
     double precision,intent(inout)::U_h(ix,jx,kx,nvar_h)
     double precision dt_min,cs2,v2,gmin,cs,vabs
     double precision de(ix,jx,kx),pr(ix,jx,kx)
@@ -216,7 +218,7 @@ contains
     call cq2pv_hd(de,vx,vy,vz,pr,U_h)
 
     if (flag_pip.eq.1) then 
-       dt_min=dt
+       dt_min=dttemp
     else
        dt_min=10.0    
     endif
@@ -234,10 +236,11 @@ contains
           enddo
        enddo
     enddo
-    dt=dt_min
+    dttemp=dt_min
   end subroutine cfl_hd
   
-  subroutine cfl_mhd(U_m)
+  subroutine cfl_mhd(U_m,dttemp)
+    double precision,intent(inout)::dttemp
     double precision,intent(inout)::U_m(ix,jx,kx,nvar_m)
     double precision dt_min,gmin
     double precision de(ix,jx,kx),pr(ix,jx,kx)
@@ -272,11 +275,11 @@ contains
     enddo
     
     !! This part needs to be modified for non-uniform grids    
-    dt=dt_min
+    dttemp=dt_min
     if(flag_amb.eq.1.and.flag_pip.ne.1) then 
        etmin=1.0d-8
        maxet=0.0d0
-       dt=min(dt,safety*gmin**2/ &
+       dttemp=min(dttemp,safety*gmin**2/ &
             maxval(xi_n*(bx*bx+by*by+bz*bz)/&
             (ac*de*de*(1.0-xi_n))))
     endif
@@ -296,19 +299,20 @@ contains
   end subroutine cfl_resi
 
 
-  subroutine cfl_pn_col(U_m,U_h)
+  subroutine cfl_pn_col(U_m,U_h,dttemp)
     double precision,intent(inout)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
+      double precision,intent(inout)::dttemp
     if(flag_pip_imp.eq.1) then
-       dt=min(dt,pip_imp_factor/max(maxval(u_m(:,:,:,1)*ac(:,:,:)),maxval(u_h(:,:,:,1)*ac(:,:,:))))
+       dttemp=min(dttemp,pip_imp_factor/max(maxval(u_m(:,:,:,1)*ac(:,:,:)),maxval(u_h(:,:,:,1)*ac(:,:,:))))
     else
-       dt=min(dt,min(safety,0.3d0)/max(maxval(u_m(:,:,:,1)*ac(:,:,:)),maxval(u_h(:,:,:,1)*ac(:,:,:))))
+       dttemp=min(dttemp,min(safety,0.3d0)/max(maxval(u_m(:,:,:,1)*ac(:,:,:)),maxval(u_h(:,:,:,1)*ac(:,:,:))))
     endif
    end subroutine cfl_pn_col
 
-   subroutine cfl_pip_ir(U_m,U_h)
-
+   subroutine cfl_pip_ir(U_m,U_h,dttemp)
+  double precision,intent(inout)::dttemp
      double precision,intent(in)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
-     dt=min(dt,min(safety,0.1d0)/max(maxval(gm_rec),maxval(gm_ion),1.0d-5))   !,maxval(gm_rec/U_m(:,:,:,1))+maxval(gm_ion/U_h(:,:,:,1)) 
+     dttemp=min(dttemp,min(safety,0.1d0)/max(maxval(gm_rec),maxval(gm_ion),1.0d-5))   !,maxval(gm_rec/U_m(:,:,:,1))+maxval(gm_ion/U_h(:,:,:,1)) 
    end subroutine cfl_pip_ir
 
   subroutine hd_fluxes(F_h,U_h)

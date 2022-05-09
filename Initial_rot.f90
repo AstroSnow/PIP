@@ -137,7 +137,7 @@ contains
     dsc(1:kx,3)=dzc
     call my_mpi_barrier
     !set dt    
-    call cfl(U_h,U_m)    
+    call cfl(U_h,U_m,dt)    
     if(flag_restart.lt.0) then
        nout=0
        !first output 

@@ -249,8 +249,8 @@ contains
 !        call expintread
  
 !	    allocate(Colrat(ix,jx,kx,6,6)) !Allocate the rate array
-!        call get_col_ion_coeff(Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion,Gm_rec)
-        call get_col_ion_coeff(Te_p*T0/tfac,spread(spread(spread(n0,1,ix),2,jx),3,kx),Gm_ion,Gm_rec)
+        call get_col_ion_coeff(Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion,Gm_rec)
+!        call get_col_ion_coeff(Te_p*T0/tfac,spread(spread(spread(n0,1,ix),2,jx),3,kx),Gm_ion,Gm_rec)
 !        call get_col_ion_coeff_aprox(Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion,Gm_rec)
         Gm_rec_ref=Gm_rec(1,1,1)/U_m(1,1,1,1)  !Get the normalisation recombination rates
         !allocate(Nexcite(ix,jx,kx,6)) !Allocate the fractional array (allocated in IC)
@@ -267,22 +267,22 @@ contains
 !stop
 
 !Get the dimensional ionisation and recombination rates
-!    call get_col_ion_coeff(Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion,Gm_rec) 
-    call get_col_ion_coeff(Te_p*T0/tfac,spread(spread(spread(n0,1,ix),2,jx),3,kx),Gm_ion,Gm_rec) 
+    call get_col_ion_coeff(Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion,Gm_rec) 
+!    call get_col_ion_coeff(Te_p*T0/tfac,spread(spread(spread(n0,1,ix),2,jx),3,kx),Gm_ion,Gm_rec) 
 !Use the appoximate rates instead
 !    call get_col_ion_coeff_aprox(Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion,Gm_rec) 
-
 !Normalise the rates based on intial recombination rate
     Gm_ion=Gm_ion/U_h(:,:,:,1)/Gm_rec_ref*t_ir
     Gm_rec=Gm_rec/U_m(:,:,:,1)/Gm_rec_ref*t_ir
+
 
 !Get the radiative rates
     if (flag_rad .eq. 1) then
         call get_radrat_fixed(rad_temp,Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion_rad,Gm_rec_rad)
 
     !Normalise the rates based on intial collisional recombination rate
-        Gm_ion_rad=Gm_ion_rad/Gm_rec_ref*t_ir
-        Gm_rec_rad=Gm_rec_rad/Gm_rec_ref*t_ir
+        Gm_ion_rad=Gm_ion_rad/U_h(:,:,:,1)/Gm_rec_ref*t_ir
+        Gm_rec_rad=Gm_rec_rad/U_m(:,:,:,1)/Gm_rec_ref*t_ir
     endif
 
     !print*,Gm_rec(1,1,1),Gm_ion(1,1,1)
@@ -632,7 +632,7 @@ contains
 !use the fixed ratiative rates from Sollum 2003 thesis
     double precision,intent(in)::Trad,Telec(ix,jx,kx),nelec(ix,jx,kx)
     double precision,intent(out)::Gm_ion_rad(ix,jx,kx),Gm_rec_rad(ix,jx,kx)
-    double precision::nuarr(6,6),fosc(6,6),gfac(6),E(6),dneut(6)
+    double precision::nuarr(6,6),fosc(6,6),gfac(6),E(6),dneut(6),Tradarr(ix,jx,kx)
     double precision::nu0,sol,oldsol,s1c,alp0,diff,exf,sahasol
     double precision::dntot
     integer::i,j,k,ii,jj,iii
@@ -688,10 +688,15 @@ contains
     gfac(5)=2.d0*5.d0**2 !4th level excitation
     gfac(6)=1.d0 !Ionised hydrogen
 
+
+	!Set the radiative temperature array
+	!Tradarr(:,:)=Trad
+	!Trad(1,:)=
+
     !Reverse engineered cross section at level 1
-    s1c=2.815e29*1.0**4/1.0**5/nuarr(1,6)**3*gfac(1) !Equation 3.4 in Sollum
-    alp0=s1c*((nu0/nuarr(1,6))**(-3)) !in cm^2
-    alp0=alp0*1.0e-4 !in m^2
+    !s1c=2.815e29*1.0**4/1.0**5/nuarr(1,6)**3*gfac(1) !Equation 3.4 in Sollum
+    !alp0=s1c*((nu0/nuarr(1,6))**(-3)) !in cm^2
+    !alp0=alp0*1.0e-4 !in m^2
 
     E=[13.6,3.4,1.51,0.85,0.54,0.0] !in eV
     E=E*1.6022e-19 !Convert to joules (to be dimensionally correct)
@@ -699,34 +704,42 @@ contains
     radrat(:,:,:,:,:)=0.d0
     !Excitation states
         do ii=1,5 
+        	Tradarr(:,:,:)=Trad
+        	if (ii.eq. 1) Tradarr(:,:,:)=Telec
             do jj=ii+1,5
-                radrat(:,:,:,ii,jj)=(4.d0*pi/h/nu0)*(pi*ech**2/melec/cli)*fosc(ii,jj)&
-                    *(2.d0*h*nu0**3/cli/cli)/(dexp(h*nu0/kboltz/Trad)-1.d0)
+                radrat(:,:,:,ii,jj)=(4.d0*pi/h/nuarr(ii,jj))*(pi*ech**2/melec/cli)*fosc(ii,jj)&
+                    *(2.d0*h*nuarr(ii,jj)**3/cli/cli)/(dexp(h*nuarr(ii,jj)/kboltz/Tradarr(:,:,:))-1.d0)
             enddo
         enddo
     !DeExcitation rates (eq 3.3 in Sollum)
         do jj=2,5
             do ii=jj-1,1,-1
-                radrat(:,:,:,jj,ii)=radrat(i,j,k,ii,jj)*gfac(ii)/gfac(jj)*exp(h*nu0/kboltz/Trad)
+                Tradarr(:,:,:)=Trad
+        	    if (ii.eq. 1) Tradarr(:,:,:)=Telec
+                radrat(:,:,:,jj,ii)=radrat(:,:,:,ii,jj)*gfac(ii)/gfac(jj)*exp(h*nuarr(ii,jj)/kboltz/Tradarr(:,:,:))
             enddo
         enddo
 
     !Ionisation rates (Sollum eq 3.5)
     do ii=1,5
-        !Evaluate the integral
-        sol=0.d0
-        oldsol=sol
-        diff=1.d0
-        iii=1
-        do while (diff .GT. 0.0001)
-            oldsol=sol
-            call expintruttonn1(iii*h*nuarr(ii,6)/kboltz/Trad,exf)
-            sol=sol+exf
-            diff=abs((sol-oldsol)/sol)
-            iii=iii+1
-        enddo
+    	do i=1,ix;do j=1,jx;do k=1,kx
+		    Tradarr(i,j,k)=Trad
+			if (ii.eq. 1) Tradarr(i,j,k)=Telec(i,j,k)
+		    !Evaluate the integral
+		    sol=0.d0
+		    oldsol=sol
+		    diff=1.d0
+		    iii=1
+		    do while (diff .GT. 0.0001)
+		        oldsol=sol
+		        call expintruttonn1(dble(iii)*h*nuarr(ii,6)/kboltz/Tradarr(i,j,k),exf)
+		        sol=sol+exf
+		        diff=abs((sol-oldsol)/sol)
+		        iii=iii+1
+		    enddo
 
-        radrat(:,:,:,ii,6)=8.d0*pi*alp0*(1.d0*nu0)**3/cli/cli*sol
+		    radrat(i,j,k,ii,6)=8.d0*pi*alp0*(1.d0*nuarr(ii,6))**3/cli/cli*sol
+		 enddo;enddo;enddo
     enddo
 
 !print*,'ONLY DONE UP TO HERE!'
@@ -739,9 +752,11 @@ contains
         iii=1
 
         do k=1,kx;do j=1,jx; do i=1,ix
+    	    Tradarr(i,j,k)=Trad
+			if (ii.eq. 1) Tradarr(i,j,k)=Telec(i,j,k)
         do while (diff .GT. 0.0001)
             oldsol=sol
-            call expintruttonn1(1.d0*iii*h*nu0/kboltz/Trad+1.d0*h*nu0/kboltz/Telec(i,j,k),exf)
+            call expintruttonn1(1.d0*dble(iii)*h*nuarr(ii,6)/kboltz/Tradarr(i,j,k)+1.d0*h*nuarr(ii,6)/kboltz/Telec(i,j,k),exf)
             sol=sol+exf
             diff=abs((sol-oldsol)/sol)
             iii=iii+1
@@ -749,8 +764,8 @@ contains
 
         sahasol=(2.d0/nelec(i,j,k)*gfac(6)/gfac(ii)*(2.d0*pi*melec*kboltz*Telec(i,j,k)/h/h)**(3.0/2.0)*&
                 dexp(-E(ii)/kboltz/Telec(i,j,k)))
-
-        radrat(i,j,k,6,ii)=8.d0*pi*alp0*(1.d0*nu0)**3/cli/cli*sol*sahasol
+		alp0=2.815e29*1.0d0**4/dble(ii)**5/nuarr(ii,6)**3*gfac(ii) !NOT SURE ABOUT THIS, NEED TO CHECK
+        radrat(i,j,k,6,ii)=8.d0*pi*alp0*(1.d0*nuarr(ii,6))**3/cli/cli*sol*sahasol
 !print*,radrat(1,1,1,6,*)
         enddo;enddo;enddo
     enddo
@@ -764,9 +779,9 @@ contains
 !print*,gm_ion(1,1,1),gm_rec(1,1,1)
 !stop
     !divide rates by total neutral/plasma density for consistency
-    Gm_ion_rad(:,:,:)=Gm_ion_rad(:,:,:)/(Nexcite(:,:,:,1)+Nexcite(:,:,:,2)+Nexcite(:,:,:,3)&
-                  +Nexcite(:,:,:,4)+Nexcite(:,:,:,5))        
-    Gm_rec_rad(:,:,:)=Gm_rec_rad(:,:,:)/Nexcite(:,:,:,6)
+!    Gm_ion_rad(:,:,:)=Gm_ion_rad(:,:,:)/(Nexcite(:,:,:,1)+Nexcite(:,:,:,2)+Nexcite(:,:,:,3)&
+!                  +Nexcite(:,:,:,4)+Nexcite(:,:,:,5))        
+!    Gm_rec_rad(:,:,:)=Gm_rec_rad(:,:,:)/Nexcite(:,:,:,6)
 
   end subroutine get_radrat_fixed
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  
@@ -1075,7 +1090,7 @@ END subroutine
             enddo
 !print*,dneut
 !print*,colrat(i,j,k,:,:)
-print*,Nexcite(1,1,1,:)
+!print*,Nexcite(1,1,1,:)
 !print*,colrat(1,1,1,6,:)
 !print*,dneutv(1,1,1,:)*dt
             Nexcite(:,:,:,1:6)=Nexcite(:,:,:,1:6)+dt*dneutv(:,:,:,1:6)!/n0
@@ -1084,7 +1099,7 @@ print*,Nexcite(1,1,1,:)
             elsewhere
                 Nexcite = 1.e-16
             end where
-print*,Nexcite(1,1,1,:),sum(Nexcite(1,1,1,1:5))
+!print*,Nexcite(1,1,1,:),sum(Nexcite(1,1,1,1:5))
             dntotv(:,:,:)=sum(Nexcite(:,:,:,1:5),DIM=4)-roh
             Nexcite(:,:,:,1)=Nexcite(:,:,:,1)-dntotv
 !print*,dntotv(1,1,1),dt
@@ -1096,7 +1111,7 @@ print*,Nexcite(1,1,1,:),sum(Nexcite(1,1,1,1:5))
 		Nexcite(:,:,:,6)=rom(:,:,:)!*Nexcite(:,:,:,6)/dntotv(:,:,:)
 !stop
 !    enddo;enddo;enddo
-print*,Nexcite(1,1,1,6),rom(1,1,1),sum(Nexcite(1,1,1,1:5)),roh(1,1,1)
+!print*,Nexcite(1,1,1,6),rom(1,1,1),sum(Nexcite(1,1,1,1:5)),roh(1,1,1)
   end subroutine hydrogen_excitation_update
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1131,8 +1146,9 @@ ieloss=ieloss+nexcite(:,:,:,1)*(colrat(:,:,:,1,2)*(Eev(1)-Eev(2))+colrat(:,:,:,1
 !                (0.85d0*max(Nexcite(:,:,:,4)*colrat(:,:,:,4,6),0.d0))+& !3rd excited  state
 !                (0.54d0*max(Nexcite(:,:,:,5)*colrat(:,:,:,5,6),0.d0)))/& !4th excited  state
 !                (Nexcite(:,:,:,1)+Nexcite(:,:,:,2)+Nexcite(:,:,:,3)+Nexcite(:,:,:,4)+Nexcite(:,:,:,5)) 
-	    enloss=nde/gm/T0/8.6173e-5*ieloss/&
-                (Nexcite(:,:,:,1)+Nexcite(:,:,:,2)+Nexcite(:,:,:,3)+Nexcite(:,:,:,4)+Nexcite(:,:,:,5)) 
+!	    enloss=nde/gm/T0/8.6173e-5*ieloss/&
+!                (Nexcite(:,:,:,1)+Nexcite(:,:,:,2)+Nexcite(:,:,:,3)+Nexcite(:,:,:,4)+Nexcite(:,:,:,5)) 
+    	    enloss=gm/T0/8.6173e-5*ieloss
     elseif(mod(flag_col,2) .eq. 0) then
 !	    enloss=nde*(beta/T0/2.d0/8.6173e-5)*(&
 !                (13.6d0*max(Nexcite(:,:,:,1)*colrat(:,:,:,1,6),0.d0))+& !ground state
@@ -1141,8 +1157,9 @@ ieloss=ieloss+nexcite(:,:,:,1)*(colrat(:,:,:,1,2)*(Eev(1)-Eev(2))+colrat(:,:,:,1
 !                (0.85d0*max(Nexcite(:,:,:,4)*colrat(:,:,:,4,6),0.d0))+& !3rd excited  state
 !                (0.54d0*max(Nexcite(:,:,:,5)*colrat(:,:,:,5,6),0.d0)))/& !4th excited  state
 !                (Nexcite(:,:,:,1)+Nexcite(:,:,:,2)+Nexcite(:,:,:,3)+Nexcite(:,:,:,4)+Nexcite(:,:,:,5))
-	    enloss=nde*(beta/T0/2.d0/8.6173e-5)*ieloss/& 
-                (Nexcite(:,:,:,1)+Nexcite(:,:,:,2)+Nexcite(:,:,:,3)+Nexcite(:,:,:,4)+Nexcite(:,:,:,5))  
+!	    enloss=nde*(beta/T0/2.d0/8.6173e-5)*ieloss/& 
+!                (Nexcite(:,:,:,1)+Nexcite(:,:,:,2)+Nexcite(:,:,:,3)+Nexcite(:,:,:,4)+Nexcite(:,:,:,5))  
+	    enloss=(beta/T0/2.d0/8.6173e-5)*ieloss
     else
 	    print*,'option not included!'
 	    stop
