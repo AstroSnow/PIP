@@ -58,11 +58,14 @@ call expintread
 !print*,T0,n0
 !print*,colrat(1,1,1,:,:)
 !stop
+!print*,'Colrat'
+!print*,colrat(1,1,1,:,:)
       tstep=0.1*minval(1.0/colrat(1,1,1,:,:))
       if (flag_rad .eq. 1) then
         call get_radrat_fixed(rad_temp,T0+0.d0*U_m(:,:,:,1),n0+0.d0*U_m(:,:,:,1),Gm_ion_rad,Gm_rec_rad)
         tstep=min(tstep,0.1*minval(1.0/radrat(1,1,1,:,:)))
-print*,radrat(1,1,1,:,:)
+!print*,'Radrat'
+!print*,radrat(1,1,1,:,:)
       endif
       do ti=0,50000 !Should be a while loop
         !print*,nexcite(1,1,1,1:6)/sum(nexcite(1,1,1,1:6))!,colrat
@@ -114,7 +117,7 @@ print*,radrat(1,1,1,:,:)
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=0.0d0 ;end(1)=15000.0d0          !400.0d0/f_p
+  start(1)=0.0d0 ;end(1)=1500.0d0          !400.0d0/f_p
   start(2)=-1.0d0 ;end(2)=1.0d0
   start(3)=-1.0d0 ;end(3)=1.0d0
   call set_coordinate(start,end)
