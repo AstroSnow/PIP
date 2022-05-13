@@ -280,6 +280,7 @@ contains
 !print*,maxval(Gm_rec),maxval(Gm_ion)
 !stop
 !Get the radiative rates
+!print*,Te_p!,T0,tfac
     if (flag_rad .eq. 1) then
         call get_radrat_fixed(rad_temp,Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion_rad,Gm_rec_rad)
 
@@ -381,7 +382,6 @@ contains
             gfac(i)/gfac(6)*Nelec**2*1.0e-6*1.0e-6
     enddo
 
-
     Gm_ion(:,:,:)=0.d0
     Gm_rec(:,:,:)=0.d0
 
@@ -440,7 +440,7 @@ contains
     gweight(4)=32.d0 !3rd level excitation
     gweight(5)=50.d0 !4th level excitation
     gweight(6)=1.d0 !Ionised hydrogen
-
+!print*,Telec
     Eion=[13.6d0,3.4d0,1.51d0,0.85d0,0.54d0,0.0d0] !in eV
     Eion=Eion/13.6d0*2.18e-18 !Convert to joules (to be dimensionally correct)
 
@@ -551,18 +551,29 @@ contains
                 call ionexpfitinterp2(zn,2,E2z)
                 call ionexpfitinterp2(yn,0,E0y)
                 call ionexpfitinterp2(zn,0,E0z)
-
-                !Call the hokey exponential integral
-                !call ionexpfittest(yn,1.d0,0.001d0,0.0001d0,E1y)   !Equation 8
-                !call ionexpfittest(zn,1.d0,0.001d0,0.0001d0,E1z)
-                !call ionexpfittest(yn,2.d0,0.001d0,0.0001d0,E2y)
-                !call ionexpfittest(zn,2.d0,0.001d0,0.0001d0,E2z)
-                !call ionexpfittest(yn,0.d0,0.001d0,0.0001d0,E0y)
-                !call ionexpfittest(zn,0.d0,0.001d0,0.0001d0,E0z)
+!print*,'Quadratic table read'
+!print*,yn,E0y,E1y,E2y
+!print*,zn,E0z,E1z,E2z
 
                 ziyn=E0y-2.0d0*E1y+E2y !Equation 42
                 zizn=E0z-2.0d0*E1z+E2z !Equation 42
-
+                
+	if ((ziyn-zizn) .LT. 0.d0) then
+                !Call the hokey exponential integral
+                call ionexpfittest(yn,1.d0,0.001d0,0.0001d0,E1y)   !Equation 8
+                call ionexpfittest(zn,1.d0,0.001d0,0.0001d0,E1z)
+                call ionexpfittest(yn,2.d0,0.001d0,0.0001d0,E2y)
+                call ionexpfittest(zn,2.d0,0.001d0,0.0001d0,E2z)
+                call ionexpfittest(yn,0.d0,0.001d0,0.0001d0,E0y)
+                call ionexpfittest(zn,0.d0,0.001d0,0.0001d0,E0z)
+				!print*,'Function read'
+				!print*,yn,E0y,E1y,E2y
+				!print*,zn,E0z,E1z,E2z
+                ziyn=E0y-2.0d0*E1y+E2y !Equation 42
+                zizn=E0z-2.0d0*E1z+E2z !Equation 42
+	endif
+	
+	
                 if (ii .eq. 1) then 
                     garr(1)= 1.1330d0
                     garr(2)=-0.4059d0
@@ -586,6 +597,16 @@ contains
                     *2.0d0*dble(ii)**2*pi*a0bohr**2*yn**2*&
                     (An0*(E1y/yn-E1z/zn)+&
                     (Bn0-An0*dlog(2.d0*dble(ii)**2))*(ziyn-zizn))
+if (colex(ii,6) .LT. 0.d0) then
+print*,'Nexcite'
+print*,Nexcite(i,j,k,:)
+print*,ii
+print*,ziyn,yn,E0y,E1y,E2y
+print*,zizn,zn,E0z,E1z,E2z
+!print*,'colrat'
+!print*,colrat(i,j,k,:,:)
+	stop
+endif
             enddo
 
             !Rates
@@ -614,6 +635,15 @@ contains
 !print*,colex
 !print*,colrat(i,j,k,:,:)
 !stop
+if (minval(colrat(i,j,k,:,:)) .LT. 0.d0) then
+print*,'Nexcite'
+print*,Nexcite(i,j,k,:)
+!print*,'Colex'
+!print*,An0,Bn0
+print*,'colrat'
+print*,colrat(i,j,k,:,:)
+	stop
+endif
 
             Gm_ion(i,j,k)=0.d0
             Gm_rec(i,j,k)=0.d0
@@ -659,7 +689,7 @@ contains
     fosc(3,4)=8.4209639e-1
     fosc(3,5)=1.5058408e-1
     fosc(4,5)=1.0377363e0
-
+!print*,Telec
     !Transition frequenices [Hz]
     !Lyman series
     nuarr(1,2)=cli/121.57e-9
@@ -740,46 +770,46 @@ contains
 		        diff=abs((sol-oldsol)/sol)
 		        iii=iii+1
 		    enddo
-
+			alp0=2.815e29*1.0d0**4/dble(ii)**5/nuarr(ii,6)**3*gfac(ii) !NOT SURE ABOUT THIS, NEED TO CHECK
 		    radrat(i,j,k,ii,6)=8.d0*pi*alp0*(1.d0*nuarr(ii,6))**3/cli/cli*sol
 		 enddo;enddo;enddo
     enddo
-
 !print*,'ONLY DONE UP TO HERE!'
     !Recombination rates
     do ii=1,5
-        !Evaluate the integral
-        sol=0.d0
-        oldsol=sol
-        diff=1.0d0
-        iii=1
 
         do k=1,kx;do j=1,jx; do i=1,ix
     	    Tradarr(i,j,k)=Trad
 			if (ii.eq. 1) Tradarr(i,j,k)=Telec(i,j,k)
-        do while (diff .GT. 0.0001)
-            oldsol=sol
-            call expintruttonn1(1.d0*dble(iii)*h*nuarr(ii,6)/kboltz/Tradarr(i,j,k)+1.d0*h*nuarr(ii,6)/kboltz/Telec(i,j,k),exf)
-            sol=sol+exf
-            diff=abs((sol-oldsol)/sol)
-            iii=iii+1
-        enddo
-
-        sahasol=(2.d0/nelec(i,j,k)*gfac(6)/gfac(ii)*(2.d0*pi*melec*kboltz*Telec(i,j,k)/h/h)**(3.0/2.0)*&
-                dexp(-E(ii)/kboltz/Telec(i,j,k)))
-		alp0=2.815e29*1.0d0**4/dble(ii)**5/nuarr(ii,6)**3*gfac(ii) !NOT SURE ABOUT THIS, NEED TO CHECK
-        radrat(i,j,k,6,ii)=8.d0*pi*alp0*(1.d0*nuarr(ii,6))**3/cli/cli*sol*sahasol
-!print*,radrat(1,1,1,6,*)
+			!Evaluate the integral
+		    !sol=0.d0
+		    call expintruttonn1(h*nuarr(ii,6)/kboltz/Tradarr(i,j,k),sol)
+		    oldsol=sol
+		    diff=1.0d0
+		    iii=1
+		    do while (diff .GT. 0.0001)
+		        oldsol=sol
+		        call expintruttonn1(dble(iii)*h*nuarr(ii,6)/kboltz/Tradarr(i,j,k)+h*nuarr(ii,6)/kboltz/Telec(i,j,k),exf)
+		        sol=sol+exf
+		        diff=abs((sol-oldsol)/sol)
+		        iii=iii+1
+		    enddo
+		    sahasol=(2.d0/nelec(i,j,k)*gfac(6)/gfac(ii)*(2.d0*pi*melec*kboltz*Telec(i,j,k)/h/h)**(3.d0/2.d0)*&
+		            dexp(-E(ii)/kboltz/Telec(i,j,k)))
+			alp0=2.815e29/dble(ii)**5/nuarr(ii,6)**3*gfac(ii) !NOT SURE ABOUT THIS, NEED TO CHECK
+		    radrat(i,j,k,6,ii)=8.d0*pi*alp0*(1.d0*nuarr(ii,6))**3/cli/cli*sol/sahasol
+!		    print*,ii,8.d0*pi*alp0*(1.d0*nuarr(ii,6))**3,sahasol,gfac(6)/gfac(ii),dexp(-E(ii)/kboltz/Telec(i,j,k))
+!			print*,ii,sol,sahasol,alp0
         enddo;enddo;enddo
     enddo
-
+!print*,radrat(1,1,1,:,:)
     Gm_ion_rad(:,:,:)=0.d0
     Gm_rec_rad(:,:,:)=0.d0
     do ii=1,5
         Gm_ion_rad(:,:,:)=Gm_ion_rad(:,:,:)+max(Nexcite(:,:,:,ii)*radrat(:,:,:,ii,6),0.d0)
         Gm_rec_rad(:,:,:)=Gm_rec_rad(:,:,:)+max(Nexcite(:,:,:,6)*radrat(:,:,:,6,ii),0.d0)
     enddo
-!print*,gm_ion(1,1,1),gm_rec(1,1,1)
+!print*,gm_ion_rad(1,1,1),gm_rec_rad(1,1,1)
 !stop
     !divide rates by total neutral/plasma density for consistency
 !    Gm_ion_rad(:,:,:)=Gm_ion_rad(:,:,:)/(Nexcite(:,:,:,1)+Nexcite(:,:,:,2)+Nexcite(:,:,:,3)&
@@ -1140,7 +1170,7 @@ ieloss=ieloss+nexcite(:,:,:,1)*(colrat(:,:,:,1,2)*(Eev(1)-Eev(2))+colrat(:,:,:,1
                     colrat(:,:,:,2,5)*(Eev(2)-Eev(5)))+&
               nexcite(:,:,:,3)*(colrat(:,:,:,3,4)*(Eev(3)-Eev(4))+colrat(:,:,:,3,5)*(Eev(3)-Eev(5)))+&
               nexcite(:,:,:,4)*(colrat(:,:,:,4,5)*(Eev(4)-Eev(5)))
-print*,minval(ieloss),minval(colrat),minval(nexcite)
+!print*,minval(ieloss),minval(colrat),minval(nexcite)
     if(mod(flag_col,2) .eq. 1) then
 !	    enloss=nde/gm/T0/8.6173e-5*(&
 !                (13.6d0*max(Nexcite(:,:,:,1)*colrat(:,:,:,1,6),0.d0))+& !ground state
