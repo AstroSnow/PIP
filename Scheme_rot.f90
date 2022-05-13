@@ -17,7 +17,7 @@ module scheme_rot
        flag_bnd,xi_n,flag_pip_imp,nt,eta_0,gra,scl_height,s_order,flag_sch,&
        x,y,z,col,n_fraction,flag_ir,gm_rec,gm_ion,t_ir,mpi_pos,my_rank,&
        debug_parameter,ro_lim,pr_lim,tiny,cmax,dsc,b_cr,damp_time,flag_damp,&
-       oldke_damp,flag_rad
+       oldke_damp,flag_rad,ion_pot,flag_IR_type
   use MPI_rot,only:mpi_double_interface
   use Boundary_rot,only:bnd_divb
   implicit none
@@ -311,8 +311,13 @@ contains
 
    subroutine cfl_pip_ir(U_m,U_h,dttemp)
   double precision,intent(inout)::dttemp
-     double precision,intent(in)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
+     double precision,intent(inout)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
+     double precision::pr(ix,jx,kx)
      dttemp=min(dttemp,min(safety,0.1d0)/max(maxval(gm_rec),maxval(gm_ion),1.0d-5))   !,maxval(gm_rec/U_m(:,:,:,1))+maxval(gm_ion/U_h(:,:,:,1)) 
+     if (flag_IR_type .eq. 0) then
+         call get_Pr_MHD(U_m,pr)
+     	dt=min(dt,safety/max(maxval(ion_pot/(pr/(gm-1.d0))),1.0d-5)) 
+     endif
    end subroutine cfl_pip_ir
 
   subroutine hd_fluxes(F_h,U_h)
