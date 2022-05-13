@@ -47,12 +47,12 @@ program main
      call cfl(U_h,U_m,dtnew)
      !print*,maxval(U_m(:,:,:,2)),maxval(U_m_backup(:,:,:,2))
      !print*,dt,dtnew
-     if (dtnew .lt. dt/10.d0) then
-     	dtmod=0.1d0*dtmod
-        if (my_rank .eq. 0) print *, 'Reducing dt by ',dtmod,time
-        U_m=U_m_backup
-        U_h=U_h_backup
-     else 
+     !if (dtnew .lt. dt/10.d0) then
+     !	dtmod=0.1d0*dtmod
+     !   if (my_rank .eq. 0) print *, 'Reducing dt by ',dtmod,time
+     !   U_m=U_m_backup
+     !   U_h=U_h_backup
+     !else 
 		 ! Output of simulation data  ---------------------------------------
 		 if (dt.ne.dt) print *, my_rank,dt
 		 time=time+dt !! NB: dt can be modified by STS routines
@@ -64,7 +64,7 @@ program main
 		    call output(1)
 		    exit
 		 endif
-	 endif
+	 !endif
   enddo
   !----------------------------------------------------------------------|
   ! End of simulation
