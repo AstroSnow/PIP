@@ -33,7 +33,7 @@ subroutine shock_tube_ion
 
   !Find the equilibrium neutral fraction
   if(flag_IR .eq. 4) then
-      print*,'Calculating LTE excitation state'
+if (my_rank.eq.0)       print*,'Calculating LTE excitation state'
       allocate(Nexcite(ix,jx,kx,6)) !Allocate the fractional array
       Eion=[13.6,3.4,1.51,0.85,0.54,0.0] !in eV
       Eion=Eion/13.6*2.18e-18 !Convert to joules (to be dimensionally correct)
@@ -46,11 +46,11 @@ subroutine shock_tube_ion
       Nexcite(:,:,:,1:5)=n0/Nexcite(:,:,:,1:5)
       Nexcite=Nexcite/n0
       Nexcite=Nexcite/sum(Nexcite(1,1,1,:))
-print*,'finding equilibrium'
+if (my_rank.eq.0) print*,'finding equilibrium'
       !print*,Nexcite(1,1,1,:)
 allocate(expinttab(4,10000)) !table for the exponential integral table
 allocate(Colrat(ix,jx,kx,6,6))
-if (flag_rad .eq. 1) allocate(radrat(ix,jx,kx,6,6))
+if (flag_rad .ge. 2) allocate(radrat(ix,jx,kx,6,6))
 call expintread
       call get_col_ion_coeff(T0+0.d0*U_m(:,:,:,1),n0+0.d0*U_m(:,:,:,1),Gm_ion,Gm_rec) 
 !      call get_col_ion_coeff_aprox(spread(spread(spread(T0,1,ix),2,jx),3,kx),&
@@ -61,8 +61,8 @@ call expintread
 !print*,'Colrat'
 !print*,colrat(1,1,1,:,:)
       tstep=0.1*minval(1.0/colrat(1,1,1,:,:))
-      if (flag_rad .eq. 1) then
-        call get_radrat_fixed(rad_temp,T0+0.d0*U_m(:,:,:,1),n0+0.d0*U_m(:,:,:,1),Gm_ion_rad,Gm_rec_rad)
+      if (flag_rad .ge. 2) then
+        call get_radrat_fixed(rad_temp,T0+0.d0*U_m(:,:,:,1),T0+0.d0*U_m(:,:,:,1),n0+0.d0*U_m(:,:,:,1),Gm_ion_rad,Gm_rec_rad)
         tstep=min(tstep,0.1*minval(1.0/radrat(1,1,1,:,:)))
 !print*,'Radrat'
 !print*,radrat(1,1,1,:,:)
@@ -90,7 +90,7 @@ call expintread
       n0fac=f_p
 !print*,Nexcite(1,1,1,:)
 !stop
-      print*,f_n,f_p
+      !print*,f_n,f_p
       if (f_n*f_p .le. 0) then
             print*,'Something wrong with initial conditions'
             stop
@@ -117,7 +117,7 @@ call expintread
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=0.0d0 ;end(1)=1500.0d0          !400.0d0/f_p
+  start(1)=0.0d0 ;end(1)=150.0d0          !400.0d0/f_p
   start(2)=-1.0d0 ;end(2)=1.0d0
   start(3)=-1.0d0 ;end(3)=1.0d0
   call set_coordinate(start,end)
