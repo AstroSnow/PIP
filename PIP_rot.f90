@@ -97,7 +97,7 @@ contains
     integer,intent(inout)::flag_IR
     if (flag_IR.eq.0) return    
     allocate(Gm_rec(ix,jx,kx),Gm_ion(ix,jx,kx))
-    if (flag_rad .eq. 1) allocate(Gm_rec_rad(ix,jx,kx),Gm_ion_rad(ix,jx,kx))
+    if (flag_rad .ge. 2) allocate(Gm_rec_rad(ix,jx,kx),Gm_ion_rad(ix,jx,kx))
     IR_type=flag_IR
   end subroutine initialize_IR
 
@@ -281,8 +281,8 @@ contains
 !stop
 !Get the radiative rates
 !print*,Te_p!,T0,tfac
-    if (flag_rad .eq. 1) then
-        call get_radrat_fixed(rad_temp,Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion_rad,Gm_rec_rad)
+    if (flag_rad .ge. 2) then
+        call get_radrat_fixed(rad_temp,Te_p*T0/tfac,Te_n*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion_rad,Gm_rec_rad)
 
     !Normalise the rates based on intial collisional recombination rate
         Gm_ion_rad=Gm_ion_rad/U_h(:,:,:,1)/Gm_rec_ref*t_ir
@@ -661,9 +661,9 @@ endif
 
   end subroutine get_col_ion_coeff  
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine get_radrat_fixed(Trad,Telec,nelec,Gm_ion_rad,Gm_rec_rad)
+  subroutine get_radrat_fixed(Trad,Telec,Tneut,nelec,Gm_ion_rad,Gm_rec_rad)
 !use the fixed ratiative rates from Sollum 2003 thesis
-    double precision,intent(in)::Trad,Telec(ix,jx,kx),nelec(ix,jx,kx)
+    double precision,intent(in)::Trad,Telec(ix,jx,kx),Tneut(ix,jx,kx),nelec(ix,jx,kx)
     double precision,intent(out)::Gm_ion_rad(ix,jx,kx),Gm_rec_rad(ix,jx,kx)
     double precision::nuarr(6,6),fosc(6,6),gfac(6),E(6),dneut(6),Tradarr(ix,jx,kx)
     double precision::nu0,sol,oldsol,s1c,alp0,diff,exf,sahasol
@@ -738,7 +738,7 @@ endif
     !Excitation states
         do ii=1,5 
         	Tradarr(:,:,:)=Trad
-        	if (ii.eq. 1) Tradarr(:,:,:)=Telec
+        	if ((flag_rad .eq. 3) .and. (ii.eq. 1)) Tradarr(:,:,:)=Tneut !Some appoximation of optically thick Lyman
             do jj=ii+1,5
                 radrat(:,:,:,ii,jj)=(4.d0*pi/h/nuarr(ii,jj))*(pi*ech**2/melec/cli)*fosc(ii,jj)&
                     *(2.d0*h*nuarr(ii,jj)**3/cli/cli)/(dexp(h*nuarr(ii,jj)/kboltz/Tradarr(:,:,:))-1.d0)
@@ -748,60 +748,128 @@ endif
         do jj=2,5
             do ii=jj-1,1,-1
                 Tradarr(:,:,:)=Trad
-        	    if (ii.eq. 1) Tradarr(:,:,:)=Telec
+        	    if ((flag_rad .eq. 3) .and. (ii.eq. 1)) Tradarr(:,:,:)=Tneut !Some appoximation of optically thick Lyman
                 radrat(:,:,:,jj,ii)=radrat(:,:,:,ii,jj)*gfac(ii)/gfac(jj)*exp(h*nuarr(ii,jj)/kboltz/Tradarr(:,:,:))
             enddo
         enddo
 
-    !Ionisation rates (Sollum eq 3.5)
     do ii=1,5
-    	do i=1,ix;do j=1,jx;do k=1,kx
-		    Tradarr(i,j,k)=Trad
-			if (ii.eq. 1) Tradarr(i,j,k)=Telec(i,j,k)
-		    !Evaluate the integral
-		    sol=0.d0
-		    oldsol=sol
-		    diff=1.d0
-		    iii=1
-		    do while (diff .GT. 0.0001)
-		        oldsol=sol
-		        call expintruttonn1(dble(iii)*h*nuarr(ii,6)/kboltz/Tradarr(i,j,k),exf)
-		        sol=sol+exf
-		        diff=abs((sol-oldsol)/sol)
-		        iii=iii+1
-		    enddo
-			alp0=2.815e29*1.0d0**4/dble(ii)**5/nuarr(ii,6)**3*gfac(ii) !NOT SURE ABOUT THIS, NEED TO CHECK
-		    radrat(i,j,k,ii,6)=8.d0*pi*alp0*(1.d0*nuarr(ii,6))**3/cli/cli*sol
-		 enddo;enddo;enddo
-    enddo
-!print*,'ONLY DONE UP TO HERE!'
-    !Recombination rates
-    do ii=1,5
-
-        do k=1,kx;do j=1,jx; do i=1,ix
-    	    Tradarr(i,j,k)=Trad
-			if (ii.eq. 1) Tradarr(i,j,k)=Telec(i,j,k)
+    
+    	if (flag_rad .eq. 2) then
+    	!Optically thin for all transitions
+    		!print*,'NOT DONE YET'
+			!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			!Ionisation rates (Sollum eq 3.5)
 			!Evaluate the integral
-		    !sol=0.d0
-		    call expintruttonn1(h*nuarr(ii,6)/kboltz/Tradarr(i,j,k),sol)
-		    oldsol=sol
-		    diff=1.0d0
-		    iii=1
-		    do while (diff .GT. 0.0001)
-		        oldsol=sol
-		        call expintruttonn1(dble(iii)*h*nuarr(ii,6)/kboltz/Tradarr(i,j,k)+h*nuarr(ii,6)/kboltz/Telec(i,j,k),exf)
-		        sol=sol+exf
-		        diff=abs((sol-oldsol)/sol)
-		        iii=iii+1
-		    enddo
-		    sahasol=(2.d0/nelec(i,j,k)*gfac(6)/gfac(ii)*(2.d0*pi*melec*kboltz*Telec(i,j,k)/h/h)**(3.d0/2.d0)*&
-		            dexp(-E(ii)/kboltz/Telec(i,j,k)))
-			alp0=2.815e29/dble(ii)**5/nuarr(ii,6)**3*gfac(ii) !NOT SURE ABOUT THIS, NEED TO CHECK
-		    radrat(i,j,k,6,ii)=8.d0*pi*alp0*(1.d0*nuarr(ii,6))**3/cli/cli*sol/sahasol
+			sol=0.d0
+			oldsol=sol
+			diff=1.d0
+			iii=1
+			do while (diff .GT. 0.0001)
+			    oldsol=sol
+			    call expintruttonn1(dble(iii)*h*nuarr(ii,6)/kboltz/Trad,exf)
+			    sol=sol+exf
+			    diff=abs((sol-oldsol)/sol)
+			    iii=iii+1
+			enddo
+			alp0=2.815e29*1.0d0**4/dble(ii)**5/nuarr(ii,6)**3*gfac(ii) !NOT SURE ABOUT THIS, NEED TO CHECK
+			radrat(:,:,:,ii,6)=8.d0*pi*alp0*(1.d0*nuarr(ii,6))**3/cli/cli*sol
+			
+			!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!		
+			!Recombination rates  
+			do i=1,ix;do j=1,jx;do k=1,kx  
+				sol=0.d0
+				call expintruttonn1(h*nuarr(ii,6)/kboltz/Trad,sol)
+				oldsol=sol
+				diff=1.0d0
+				iii=1
+				do while (diff .GT. 0.0001)
+					oldsol=sol
+					call expintruttonn1(dble(iii)*h*nuarr(ii,6)/kboltz/Tradarr(i,j,k)+h*nuarr(ii,6)/kboltz/Telec(i,j,k),exf)
+					sol=sol+exf
+					diff=abs((sol-oldsol)/sol)
+					iii=iii+1
+				enddo
+				sahasol=(2.d0/nelec(i,j,k)*gfac(6)/gfac(ii)*(2.d0*pi*melec*kboltz*Telec(i,j,k)/h/h)**(3.d0/2.d0)*&
+					    dexp(-E(ii)/kboltz/Telec(i,j,k)))
+				alp0=2.815e29/dble(ii)**5/nuarr(ii,6)**3*gfac(ii) !NOT SURE ABOUT THIS, NEED TO CHECK
+				radrat(i,j,k,6,ii)=8.d0*pi*alp0*(1.d0*nuarr(ii,6))**3/cli/cli*sol/sahasol
+			enddo;enddo;enddo
+    	endif
+    	
+    	if (flag_rad .eq. 3) then
+		!Some appoximation of optically thick Lyman tranistions    	
+			do i=1,ix;do j=1,jx;do k=1,kx
+				Tradarr(i,j,k)=Trad
+				if (ii.eq. 1) Tradarr(i,j,k)=Tneut(i,j,k)
+				
+				!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+				!Ionisation rates (Sollum eq 3.5)
+				!Evaluate the integral
+				sol=0.d0
+				oldsol=sol
+				diff=1.d0
+				iii=1
+				do while (diff .GT. 0.0001)
+				    oldsol=sol
+				    call expintruttonn1(dble(iii)*h*nuarr(ii,6)/kboltz/Tradarr(i,j,k),exf)
+				    sol=sol+exf
+				    diff=abs((sol-oldsol)/sol)
+				    iii=iii+1
+				enddo
+				alp0=2.815e29*1.0d0**4/dble(ii)**5/nuarr(ii,6)**3*gfac(ii) !NOT SURE ABOUT THIS, NEED TO CHECK
+				radrat(i,j,k,ii,6)=8.d0*pi*alp0*(1.d0*nuarr(ii,6))**3/cli/cli*sol
+				
+				!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!		
+				!Recombination rates    
+				sol=0.d0
+				call expintruttonn1(h*nuarr(ii,6)/kboltz/Tradarr(i,j,k),sol)
+				oldsol=sol
+				diff=1.0d0
+				iii=1
+				do while (diff .GT. 0.0001)
+				    oldsol=sol
+				    call expintruttonn1(dble(iii)*h*nuarr(ii,6)/kboltz/Tradarr(i,j,k)+h*nuarr(ii,6)/kboltz/Telec(i,j,k),exf)
+				    sol=sol+exf
+				    diff=abs((sol-oldsol)/sol)
+				    iii=iii+1
+				enddo
+				sahasol=(2.d0/nelec(i,j,k)*gfac(6)/gfac(ii)*(2.d0*pi*melec*kboltz*Telec(i,j,k)/h/h)**(3.d0/2.d0)*&
+				        dexp(-E(ii)/kboltz/Telec(i,j,k)))
+				alp0=2.815e29/dble(ii)**5/nuarr(ii,6)**3*gfac(ii) !NOT SURE ABOUT THIS, NEED TO CHECK
+				radrat(i,j,k,6,ii)=8.d0*pi*alp0*(1.d0*nuarr(ii,6))**3/cli/cli*sol/sahasol
+				
+			 enddo;enddo;enddo
+		endif
+    enddo
+!MOVED ALL THIS INTO THE PREVIOUS DO LOOPS
+    !Recombination rates
+ !   do ii=1,5
+
+  !      do k=1,kx;do j=1,jx; do i=1,ix
+ !   	    Tradarr(i,j,k)=Trad
+!			if (ii.eq. 1) Tradarr(i,j,k)=Telec(i,j,k)
+!			!Evaluate the integral
+!		    !sol=0.d0
+!		    call expintruttonn1(h*nuarr(ii,6)/kboltz/Tradarr(i,j,k),sol)
+!		    oldsol=sol
+!		    diff=1.0d0
+!		    iii=1
+!		    do while (diff .GT. 0.0001)
+!		        oldsol=sol
+!		        call expintruttonn1(dble(iii)*h*nuarr(ii,6)/kboltz/Tradarr(i,j,k)+h*nuarr(ii,6)/kboltz/Telec(i,j,k),exf)
+!		        sol=sol+exf
+!		        diff=abs((sol-oldsol)/sol)
+!		        iii=iii+1
+!		    enddo
+!		    sahasol=(2.d0/nelec(i,j,k)*gfac(6)/gfac(ii)*(2.d0*pi*melec*kboltz*Telec(i,j,k)/h/h)**(3.d0/2.d0)*&
+!		            dexp(-E(ii)/kboltz/Telec(i,j,k)))
+!			alp0=2.815e29/dble(ii)**5/nuarr(ii,6)**3*gfac(ii) !NOT SURE ABOUT THIS, NEED TO CHECK
+!		    radrat(i,j,k,6,ii)=8.d0*pi*alp0*(1.d0*nuarr(ii,6))**3/cli/cli*sol/sahasol
 !		    print*,ii,8.d0*pi*alp0*(1.d0*nuarr(ii,6))**3,sahasol,gfac(6)/gfac(ii),dexp(-E(ii)/kboltz/Telec(i,j,k))
 !			print*,ii,sol,sahasol,alp0
-        enddo;enddo;enddo
-    enddo
+!        enddo;enddo;enddo
+!    enddo
 !print*,radrat(1,1,1,:,:)
     Gm_ion_rad(:,:,:)=0.d0
     Gm_rec_rad(:,:,:)=0.d0
@@ -1112,7 +1180,7 @@ END subroutine
                 do jj=1,6 
                     dneutv(:,:,:,ii)=dneutv(:,:,:,ii)+Nexcite(:,:,:,jj)*colrat(:,:,:,jj,ii)/Gm_rec_ref*t_ir - &
                     			Nexcite(:,:,:,ii)*colrat(:,:,:,ii,jj)/Gm_rec_ref*t_ir
-                    if (flag_rad .eq. 1) then
+                    if (flag_rad .ge. 2) then
                         dneutv(:,:,:,ii)=dneutv(:,:,:,ii)+Nexcite(:,:,:,jj)*radrat(:,:,:,jj,ii)/Gm_rec_ref*t_ir - &
                         			Nexcite(:,:,:,ii)*radrat(:,:,:,ii,jj)/Gm_rec_ref*t_ir
                     endif
@@ -1380,7 +1448,7 @@ ieloss=ieloss+nexcite(:,:,:,1)*(colrat(:,:,:,1,2)*(Eev(1)-Eev(2))+colrat(:,:,:,1
 	S_m(:,:,:,1:5)=S_m(:,:,:,1:5)-ds(:,:,:,1:5)
 	endif
     !Radiative ionisation
-    if (flag_rad .eq. 1) then
+    if (flag_rad .ge. 2) then
        ds(:,:,:,1)=Gm_rec_rad*de-Gm_ion_rad*nde
        ds(:,:,:,2)=Gm_rec_rad*de*vx-Gm_ion_rad*nde*nvx
        ds(:,:,:,3)=Gm_rec_rad*de*vy-Gm_ion_rad*nde*nvy
