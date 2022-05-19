@@ -307,7 +307,7 @@ contains
 		  enddo
         end do
 		if(flag_ir_type .eq. 0) call write_3D_array("ion_loss",ion_pot)
-	    if(flag_rad .eq. 1) then
+	    if(flag_rad .ge. 2) then
 	      if(ion_sav.eq.0) call write_3D_array("ion_rad",Gm_ion_rad)
 	      if(rec_sav.eq.0) call write_3D_array("rec_rad",Gm_rec_rad)
           	do i=1,6
