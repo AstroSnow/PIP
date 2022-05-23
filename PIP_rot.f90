@@ -542,10 +542,10 @@ contains
 !                    call ionexpfitinterp1(yhat,2,E2y)
 !                    call ionexpfitinterp1(zhat,2,E2z)
                     !Quadratic interpolation
-                    call ionexpfitinterp2(yhat,1,E1y)
-                    call ionexpfitinterp2(zhat,1,E1z)
-                    call ionexpfitinterp2(yhat,2,E2y)
-                    call ionexpfitinterp2(zhat,2,E2z)
+                    call ionexpfitinterp2(1,yhat,1,E1y,0)
+                    call ionexpfitinterp2(1,zhat,1,E1z,0)
+                    call ionexpfitinterp2(1,yhat,2,E2y,0)
+                    call ionexpfitinterp2(1,zhat,2,E2z,0)
 
                     !Exponential fits (THESE NEED WORK)
                     !call ionexpfittest(yhat,1.d0,0.001d0,0.0001d0,E1y)   !Equation 8
@@ -580,33 +580,34 @@ contains
 !                call ionexpfitinterp1(zn,0,E0z)
 
                 !Quadratic interpolation
-                call ionexpfitinterp2(yn,1,E1y)
-                call ionexpfitinterp2(zn,1,E1z)
-                call ionexpfitinterp2(yn,2,E2y)
-                call ionexpfitinterp2(zn,2,E2z)
-                call ionexpfitinterp2(yn,0,E0y)
-                call ionexpfitinterp2(zn,0,E0z)
+                call ionexpfitinterp2(1,yn,1,E1y,0)
+                call ionexpfitinterp2(1,zn,1,E1z,0)
+                call ionexpfitinterp2(1,yn,2,E2y,0)
+                call ionexpfitinterp2(1,zn,2,E2z,0)
+                call ionexpfitinterp2(1,yn,0,E0y,0)
+                call ionexpfitinterp2(1,zn,0,E0z,0)
 !print*,'Quadratic table read'
 !print*,yn,E0y,E1y,E2y
 !print*,zn,E0z,E1z,E2z
 
                 ziyn=E0y-2.0d0*E1y+E2y !Equation 42
                 zizn=E0z-2.0d0*E1z+E2z !Equation 42
-                
-	if ((ziyn-zizn) .LT. 0.d0) then
-                !Call the hokey exponential integral
-                call ionexpfittest(yn,1.d0,0.001d0,0.0001d0,E1y)   !Equation 8
-                call ionexpfittest(zn,1.d0,0.001d0,0.0001d0,E1z)
-                call ionexpfittest(yn,2.d0,0.001d0,0.0001d0,E2y)
-                call ionexpfittest(zn,2.d0,0.001d0,0.0001d0,E2z)
-                call ionexpfittest(yn,0.d0,0.001d0,0.0001d0,E0y)
-                call ionexpfittest(zn,0.d0,0.001d0,0.0001d0,E0z)
-				!print*,'Function read'
-				!print*,yn,E0y,E1y,E2y
-				!print*,zn,E0z,E1z,E2z
-                ziyn=E0y-2.0d0*E1y+E2y !Equation 42
-                zizn=E0z-2.0d0*E1z+E2z !Equation 42
-	endif
+ 
+!	This shouldnt be needed any more               
+!	if ((ziyn-zizn) .LT. 0.d0) then
+!                !Call the hokey exponential integral
+!                call ionexpfittest(yn,1.d0,0.001d0,0.0001d0,E1y)   !Equation 8
+!                call ionexpfittest(zn,1.d0,0.001d0,0.0001d0,E1z)
+!                call ionexpfittest(yn,2.d0,0.001d0,0.0001d0,E2y)
+!                call ionexpfittest(zn,2.d0,0.001d0,0.0001d0,E2z)
+!                call ionexpfittest(yn,0.d0,0.001d0,0.0001d0,E0y)
+!                call ionexpfittest(zn,0.d0,0.001d0,0.0001d0,E0z)
+!				!print*,'Function read'
+!				!print*,yn,E0y,E1y,E2y
+!				!print*,zn,E0z,E1z,E2z
+!                ziyn=E0y-2.0d0*E1y+E2y !Equation 42
+!                zizn=E0z-2.0d0*E1z+E2z !Equation 42
+!	endif
 	
 	
                 if (ii .eq. 1) then 
@@ -701,7 +702,7 @@ endif
     double precision,intent(in)::Trad,Telec(ix,jx,kx),Tneut(ix,jx,kx),nelec(ix,jx,kx)
     double precision,intent(out)::Gm_ion_rad(ix,jx,kx),Gm_rec_rad(ix,jx,kx)
     double precision::nuarr(6,6),fosc(6,6),gfac(6),E(6),dneut(6),Tradarr(ix,jx,kx)
-    double precision::nu0,sol,oldsol,s1c,alp0,diff,exf,sahasol
+    double precision::nu0,sol,oldsol,s1c,alp0,diff,exf,sahasol,Tradtemp
     double precision::dntot
     integer::i,j,k,ii,jj,iii
     double precision,parameter::h=6.62607004e-34 !Planck's constant in m2 kg s^-1
@@ -795,36 +796,48 @@ endif
     		!print*,'NOT DONE YET'
 			!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			!Ionisation rates (Sollum eq 3.5)
+
 			!Evaluate the integral
-			sol=0.d0
-			oldsol=sol
-			diff=1.d0
-			iii=1
-			do while (diff .GT. 0.0001)
-			    oldsol=sol
-			    call expintruttonn1(dble(iii)*h*nuarr(ii,6)/kboltz/Trad,exf)
-			    sol=sol+exf
-			    diff=abs((sol-oldsol)/sol)
-			    iii=iii+1
-			enddo
+!			Old slow form
+!			sol=0.d0
+!			oldsol=sol
+!			diff=1.d0
+!			iii=1
+!			do while (diff .GT. 0.0001)
+!			    oldsol=sol
+!			    call expintruttonn1(dble(iii)*h*nuarr(ii,6)/kboltz/Trad,exf)
+!			    sol=sol+exf
+!			    diff=abs((sol-oldsol)/sol)
+!			    iii=iii+1
+!			enddo
+
+			!use the table
+			call ionexpfitinterp2(1,h*nuarr(ii,6)/kboltz/Trad,0,sol,1)
+
+
 			alp0=2.815e29*1.0d0**4/dble(ii)**5/nuarr(ii,6)**3*gfac(ii) !NOT SURE ABOUT THIS, NEED TO CHECK
 			radrat(:,:,:,ii,6)=8.d0*pi*alp0*(1.d0*nuarr(ii,6))**3/cli/cli*sol
 			
 			!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!		
 			!Recombination rates  
 			do i=1,ix;do j=1,jx;do k=1,kx  
-				sol=0.d0
-				call expintruttonn1(h*nuarr(ii,6)/kboltz/Trad,sol)
-				oldsol=sol
-				diff=1.0d0
-				iii=1
-				do while (diff .GT. 0.0001)
-					oldsol=sol
-					call expintruttonn1(dble(iii)*h*nuarr(ii,6)/kboltz/Trad+h*nuarr(ii,6)/kboltz/Telec(i,j,k),exf)
-					sol=sol+exf
-					diff=abs((sol-oldsol)/sol)
-					iii=iii+1
-				enddo
+
+				!Old slow routines
+!				sol=0.d0
+!				call expintruttonn1(h*nuarr(ii,6)/kboltz/Trad,sol)
+!				oldsol=sol
+!				diff=1.0d0
+!				iii=1
+!				do while (diff .GT. 0.0001)
+!					oldsol=sol
+!					call expintruttonn1(dble(iii)*h*nuarr(ii,6)/kboltz/Trad+h*nuarr(ii,6)/kboltz/Telec(i,j,k),exf)
+!					sol=sol+exf
+!					diff=abs((sol-oldsol)/sol)
+!					iii=iii+1
+!				enddo
+
+				call ionexpfitinterp2(3,h*nuarr(ii,6)/kboltz/Trad+h*nuarr(ii,6)/kboltz/Telec(i,j,k),2,sol,1)
+
 				sahasol=(2.d0/nelec(i,j,k)*gfac(6)/gfac(ii)*(2.d0*pi*melec*kboltz*Telec(i,j,k)/h/h)**(3.d0/2.d0)*&
 					    dexp(-E(ii)/kboltz/Telec(i,j,k)))
 				alp0=2.815e29/dble(ii)**5/nuarr(ii,6)**3*gfac(ii) !NOT SURE ABOUT THIS, NEED TO CHECK
@@ -835,40 +848,47 @@ endif
     	if (flag_rad .eq. 3) then
 		!Some appoximation of optically thick Lyman tranistions    	
 			do i=1,ix;do j=1,jx;do k=1,kx
-				Tradarr(i,j,k)=Trad
-				if (ii.eq. 1) Tradarr(i,j,k)=Tneut(i,j,k)
+				Tradtemp=Trad
+				if (ii.eq. 1) Tradtemp=Tneut(i,j,k)
 				
 				!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 				!Ionisation rates (Sollum eq 3.5)
-				!Evaluate the integral
-				sol=0.d0
-				oldsol=sol
-				diff=1.d0
-				iii=1
-				do while (diff .GT. 0.0001)
-				    oldsol=sol
-				    call expintruttonn1(dble(iii)*h*nuarr(ii,6)/kboltz/Tradarr(i,j,k),exf)
-				    sol=sol+exf
-				    diff=abs((sol-oldsol)/sol)
-				    iii=iii+1
-				enddo
+
+				!Old slow routines
+!				!Evaluate the integral
+!				sol=0.d0
+!				oldsol=sol
+!				diff=1.d0
+!				iii=1
+!				do while (diff .GT. 0.0001)
+!				    oldsol=sol
+!				    call expintruttonn1(dble(iii)*h*nuarr(ii,6)/kboltz/Tradarr(i,j,k),exf)
+!				    sol=sol+exf
+!				    diff=abs((sol-oldsol)/sol)
+!				    iii=iii+1
+!				enddo
+				call ionexpfitinterp2(1,h*nuarr(ii,6)/kboltz/Tradtemp,0,sol,1)
+
 				alp0=2.815e29*1.0d0**4/dble(ii)**5/nuarr(ii,6)**3*gfac(ii) !NOT SURE ABOUT THIS, NEED TO CHECK
 				radrat(i,j,k,ii,6)=8.d0*pi*alp0*(1.d0*nuarr(ii,6))**3/cli/cli*sol
 				
 				!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!		
 				!Recombination rates    
-				sol=0.d0
-				call expintruttonn1(h*nuarr(ii,6)/kboltz/Tradarr(i,j,k),sol)
-				oldsol=sol
-				diff=1.0d0
-				iii=1
-				do while (diff .GT. 0.0001)
-				    oldsol=sol
-				    call expintruttonn1(dble(iii)*h*nuarr(ii,6)/kboltz/Tradarr(i,j,k)+h*nuarr(ii,6)/kboltz/Telec(i,j,k),exf)
-				    sol=sol+exf
-				    diff=abs((sol-oldsol)/sol)
-				    iii=iii+1
-				enddo
+				!old slow routine
+!				sol=0.d0
+!				call expintruttonn1(h*nuarr(ii,6)/kboltz/Tradarr(i,j,k),sol)
+!				oldsol=sol
+!				diff=1.0d0
+!				iii=1
+!				do while (diff .GT. 0.0001)
+!				    oldsol=sol
+!				    call expintruttonn1(dble(iii)*h*nuarr(ii,6)/kboltz/Tradarr(i,j,k)+h*nuarr(ii,6)/kboltz/Telec(i,j,k),exf)
+!				    sol=sol+exf
+!				    diff=abs((sol-oldsol)/sol)
+!				    iii=iii+1
+!				enddo
+				call ionexpfitinterp2(3,h*nuarr(ii,6)/kboltz/Tradtemp+h*nuarr(ii,6)/kboltz/Telec(i,j,k),2,sol,1)
+
 				sahasol=(2.d0/nelec(i,j,k)*gfac(6)/gfac(ii)*(2.d0*pi*melec*kboltz*Telec(i,j,k)/h/h)**(3.d0/2.d0)*&
 				        dexp(-E(ii)/kboltz/Telec(i,j,k)))
 				alp0=2.815e29/dble(ii)**5/nuarr(ii,6)**3*gfac(ii) !NOT SURE ABOUT THIS, NEED TO CHECK
@@ -1076,25 +1096,25 @@ subroutine get_radrat_fixed_slow(Trad,Telec,nelec,Gm_ion_rad,Gm_rec_rad)
   end subroutine get_radrat_fixed_slow
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  subroutine ionexpfitinterp1(zhat,i,sol)
+  subroutine ionexpfitinterp1(colloc,zhat,i,sol)
     !Interpolate the exponential integtal using the table of exponential fits 
     !Linear interpolation
     double precision,intent(in)::zhat
-    integer,intent(in)::i
+    integer,intent(in)::i,colloc
     double precision,intent(out)::sol
     double precision::xmin,xmax,xrange,weight
     integer::xindex
 
-    xmin=expinttab(1,1)
-    xmax=expinttab(1,size(expinttab(1,:)))
+    xmin=expinttab(colloc,1)
+    xmax=expinttab(colloc,size(expinttab(colloc,:)))
     xrange=xmax-xmin
 
-    xindex=floor((zhat-xmin)/xrange*size(expinttab(1,:)))
+    xindex=floor((zhat-xmin)/xrange*size(expinttab(colloc,:)))
 
     if (xindex .le. 0) xindex=1
-    if (xindex .ge. size(expinttab(1,:))) xindex=size(expinttab(1,:))-1
+    if (xindex .ge. size(expinttab(colloc,:))) xindex=size(expinttab(colloc,:))-1
 
-    weight=(zhat - expinttab(1,xindex))/(expinttab(1,xindex+1)-expinttab(1,xindex))
+    weight=(zhat - expinttab(colloc,xindex))/(expinttab(colloc,xindex+1)-expinttab(colloc,xindex))
     sol = (1.0-weight)*expinttab(i+2,xindex) + weight*expinttab(i+2,xindex+1);
 !print*,xindex,xmin,zhat,xrange,xmax
 !print*,expinttab(1,xindex),zhat,expinttab(1,xindex+1)
@@ -1103,38 +1123,69 @@ subroutine get_radrat_fixed_slow(Trad,Telec,nelec,Gm_ion_rad,Gm_rec_rad)
   end subroutine ionexpfitinterp1
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  subroutine ionexpfitinterp2(zhat,i,sol)
+  subroutine ionexpfitinterp2(colloc,zhat,i,sol,rad)
     !Interpolate the exponential integtal using the table of exponential fits 
     !Quadratic interpolation
     !WORK IN PROGRESS
     double precision,intent(in)::zhat
-    integer,intent(in)::i
+    integer,intent(in)::i,colloc,rad
     double precision,intent(out)::sol
     double precision::xmin,xmax,xrange,weight0,weight1,weight2
     integer::xindex,xindex0,xindex1,xindex2
 
-    xmin=expinttab(1,1)
-    xmax=expinttab(1,size(expinttab(1,:)))
-    xrange=xmax-xmin
 
-    xindex=floor((zhat-xmin)/xrange*size(expinttab(1,:)))
+	if (rad .eq. 0) then
+		xmin=expinttab(colloc,1)
+		xmax=expinttab(colloc,size(expinttab(colloc,:)))
+		xrange=xmax-xmin
 
-    if (xindex .le. 0) xindex=1
-    if (xindex .ge. size(expinttab(1,:))) xindex=size(expinttab(1,:))-1
+		xindex=floor((zhat-xmin)/xrange*size(expinttab(colloc,:)))
 
-    xindex0=xindex
-    xindex1=xindex+1
-    xindex2=xindex+2
+		if (xindex .le. 0) xindex=1
+		if (xindex .ge. size(expinttab(colloc,:))) xindex=size(expinttab(colloc,:))-1
 
-    weight0=((zhat                -expinttab(1,xindex1))*(zhat                - expinttab(1,xindex2)))/&
-            ((expinttab(1,xindex0)-expinttab(1,xindex1))*(expinttab(1,xindex0)- expinttab(1,xindex2)))
-    weight1=((zhat                -expinttab(1,xindex0))*(zhat                - expinttab(1,xindex2)))/&
-            ((expinttab(1,xindex1)-expinttab(1,xindex0))*(expinttab(1,xindex1)- expinttab(1,xindex2)))
-    weight2=((zhat                -expinttab(1,xindex0))*(zhat                - expinttab(1,xindex1)))/&
-            ((expinttab(1,xindex2)-expinttab(1,xindex0))*(expinttab(1,xindex2)- expinttab(1,xindex1)))
+		xindex0=xindex
+		xindex1=xindex+1
+		xindex2=xindex+2
 
-    
-    sol = weight0*expinttab(i+2,xindex0)+weight1*expinttab(i+2,xindex1)+weight2*expinttab(i+2,xindex2)
+		weight0=((zhat                -expinttab(colloc,xindex1))*(zhat                - expinttab(colloc,xindex2)))/&
+		        ((expinttab(colloc,xindex0)-expinttab(colloc,xindex1))*(expinttab(colloc,xindex0)- expinttab(colloc,xindex2)))
+		weight1=((zhat                -expinttab(colloc,xindex0))*(zhat                - expinttab(colloc,xindex2)))/&
+		        ((expinttab(colloc,xindex1)-expinttab(colloc,xindex0))*(expinttab(colloc,xindex1)- expinttab(colloc,xindex2)))
+		weight2=((zhat                -expinttab(colloc,xindex0))*(zhat                - expinttab(colloc,xindex1)))/&
+		        ((expinttab(colloc,xindex2)-expinttab(colloc,xindex0))*(expinttab(colloc,xindex2)- expinttab(colloc,xindex1)))
+
+		
+		sol = weight0*expinttab(i+2,xindex0)+weight1*expinttab(i+2,xindex1)+weight2*expinttab(i+2,xindex2)
+	elseif (rad .eq. 1) then
+		xmin=radexpinttab(colloc,1)
+		xmax=radexpinttab(colloc,size(radexpinttab(colloc,:)))
+		xrange=xmax-xmin
+
+		xindex=floor((zhat-xmin)/xrange*size(radexpinttab(colloc,:)))
+
+		if (xindex .le. 0) xindex=1
+		if (xindex .ge. size(radexpinttab(colloc,:))) xindex=size(radexpinttab(colloc,:))-1
+
+		xindex0=xindex
+		xindex1=xindex+1
+		xindex2=xindex+2
+
+		weight0=((zhat - radexpinttab(colloc,xindex1))*(zhat - radexpinttab(colloc,xindex2)))/&
+		        ((radexpinttab(colloc,xindex0)-radexpinttab(colloc,xindex1))*&
+				(radexpinttab(colloc,xindex0)- radexpinttab(colloc,xindex2)))
+		weight1=((zhat - radexpinttab(colloc,xindex0))*(zhat - radexpinttab(colloc,xindex2)))/&
+		        ((radexpinttab(colloc,xindex1)-radexpinttab(colloc,xindex0))*&
+				(radexpinttab(colloc,xindex1)- radexpinttab(colloc,xindex2)))
+		weight2=((zhat - radexpinttab(colloc,xindex0))*(zhat - radexpinttab(colloc,xindex1)))/&
+		        ((radexpinttab(colloc,xindex2)-radexpinttab(colloc,xindex0))*&
+				(radexpinttab(colloc,xindex2)- radexpinttab(colloc,xindex1)))
+		
+		sol = weight0*radexpinttab(i+2,xindex0)+weight1*radexpinttab(i+2,xindex1)+weight2*radexpinttab(i+2,xindex2)
+	else
+		print*,'Something wrong with the integral tables!'
+		stop
+	endif
 !print*,xindex,xmin,zhat,xrange,xmax
 !print*,expinttab(1,xindex),zhat,expinttab(1,xindex+1)
 !print*,expinttab(i+2,xindex),sol,expinttab(i+2,xindex+1)
