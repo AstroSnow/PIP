@@ -48,7 +48,7 @@ if (my_rank.eq.0)       print*,'Calculating LTE excitation state'
       Nexcite=Nexcite/sum(Nexcite(1,1,1,:))
 if (my_rank.eq.0) print*,'finding equilibrium'
       !print*,Nexcite(1,1,1,:)
-allocate(expinttab(4,10000)) !table for the exponential integral table
+!allocate(expinttab(4,10000)) !table for the exponential integral table, doesnt need to be done here anymore
 allocate(Colrat(ix,jx,kx,6,6))
 if (flag_rad .ge. 2) allocate(radrat(ix,jx,kx,6,6))
 call expintread
@@ -117,7 +117,7 @@ call expintread
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=0.0d0 ;end(1)=150.0d0          !400.0d0/f_p
+  start(1)=0.0d0 ;end(1)=15000.0d0          !400.0d0/f_p
   start(2)=-1.0d0 ;end(2)=1.0d0
   start(3)=-1.0d0 ;end(3)=1.0d0
   call set_coordinate(start,end)
