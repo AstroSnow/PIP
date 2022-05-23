@@ -33,6 +33,7 @@ use HDF5
 
 !Table for the exponential integral
   double precision,allocatable,save::expinttab(:,:) !columns for input and i=0,1,2
+  double precision,allocatable,save::radexpinttab(:,:)
 
 !These are the variables for heat condution, viscosity, resistivity and gravity
 
