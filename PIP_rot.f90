@@ -2,7 +2,7 @@ module PIP_rot
   use globalvar,only:ix,jx,kx,ac,xi_n,gm_rec,gm_ion,nvar_h,nvar_m,&
        flag_pip_imp,gm,n_fraction,t_ir,col,x,y,z,beta,T0, n0,my_rank,flag_IR_type,flag_col,arb_heat,nout,flag_restart,Colrat,&
         Nexcite,n0,f_p_ini,f_p_p_ini,n0fac,Gm_rec_ref,expinttab,&
-        rad_temp,flag_rad,gm_ion_rad,gm_rec_rad,radrat,ion_pot
+        rad_temp,flag_rad,gm_ion_rad,gm_rec_rad,radrat,ion_pot,radexpinttab
   use scheme_rot,only:get_Te_HD,get_Te_MHD,cq2pv_HD,cq2pv_MHD,get_vel_diff
   use parameters,only:T_r_p,deg1,deg2,pi
   implicit none
@@ -257,7 +257,7 @@ contains
 
         !get the arbitraty heating
         allocate(arb_heat(ix,jx,kx))
-	allocate(ion_pot(ix,jx,kx))
+		allocate(ion_pot(ix,jx,kx))
         call IRgetionpot(U_h(:,:,:,1),arb_heat) 
         call IRgetionpot(U_h(:,:,:,1),ion_pot) 
     endif
@@ -297,26 +297,61 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine expintread
     !Read the exponential integral data calculated using IDL code
-    double precision::ytemp,i0temp,i1temp,i2temp
-    integer::i
+!    double precision::ytemp,i0temp,i1temp,i2temp
+	double precision::ymin,ymax,yn,E0y,E1y,E2y
+	double precision::iontemp,ionsol,radtemp,radsol,Tradtemp,nsampstemp
+    integer::i,Tradtempint,nsampstempint
 
+!old read routine using the IDL data
 !    open (unit=17, file='exptab2_i0.txt', status='old', action='read')
 !    open (unit=18, file='exptab2_i1.txt', status='old', action='read')
 !    open (unit=19, file='exptab2_i2.txt', status='old', action='read')
-    open (unit=17, file='exptab2_i0_e5.txt', status='old', action='read')
-    open (unit=18, file='exptab2_i1_e5.txt', status='old', action='read')
-    open (unit=19, file='exptab2_i2_e5.txt', status='old', action='read')
+!    open (unit=17, file='exptab2_i0_e5.txt', status='old', action='read')
+!    open (unit=18, file='exptab2_i1_e5.txt', status='old', action='read')
+!    open (unit=19, file='exptab2_i2_e5.txt', status='old', action='read')
+!    do i=1,10000
+!        read(17,*) ytemp, i0temp
+!        read(18,*) ytemp, i1temp
+!        read(19,*) ytemp, i2temp
+!        expinttab(1,i)=ytemp
+!        expinttab(2,i)=i0temp
+!        expinttab(3,i)=i1temp
+!        expinttab(4,i)=i2temp
+!        !print*,expinttab(:,i)
+!    enddo
+!	close (unit=17)
+!	close (unit=18)
+!	close (unit=19)
 
-    do i=1,10000
-        read(17,*) ytemp, i0temp
-        read(18,*) ytemp, i1temp
-        read(19,*) ytemp, i2temp
-        expinttab(1,i)=ytemp
-        expinttab(2,i)=i0temp
-        expinttab(3,i)=i1temp
-        expinttab(4,i)=i2temp
-        !print*,expinttab(:,i)
-    enddo
+	open (unit=17, file='expintcalc/colexp.dat', status='old', action='read')
+	read(17,*) nsampstemp,ymin,ymax
+	nsampstempint=int(nsampstemp)
+	allocate(expinttab(4,nsampstempint))
+	do i=1,nsampstempint
+		read(17,*) yn,E0y,E1y,E2y
+		expinttab(1,i)=yn
+		expinttab(2,i)=E0y
+		expinttab(3,i)=E1y
+		expinttab(4,i)=E2y
+	enddo
+	close(unit=17)
+
+	if (flag_rad .ge. 2) then
+		open (unit=17, file='expintcalc/radexp.dat', status='old', action='read')
+		read(17,*) Tradtemp,nsampstemp
+		Tradtempint=int(Tradtemp)
+		nsampstempint=int(nsampstemp)
+		allocate(radexpinttab(4,nsampstempint))
+		do i=1,nsampstempint
+			read(17,*) iontemp,ionsol,radtemp,radsol
+			radexpinttab(1,i)=iontemp
+			radexpinttab(2,i)=ionsol
+			radexpinttab(3,i)=radtemp
+			radexpinttab(4,i)=radsol
+		enddo
+		close(unit=17)
+	endif
+
 
   end subroutine expintread
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
