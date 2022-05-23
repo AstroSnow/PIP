@@ -1,7 +1,8 @@
 PROGRAM radexpintcalc
 	IMPLICIT NONE
 	double precision::sol,oldsol,diff,Trad,sol2,Telec
-	double precision::nuarr,exf,dion,ionval
+	double precision::nuarr,exf,dion,ionval,ionmin,ionmax
+	double precision::recmin,recmax,drec
 	double precision,parameter::cli=299792458.d0 !Speed of light in m/s
 	double precision,parameter::kboltz=1.38064852e-23 !Boltzmann Constant [m^2 kg s^-2 K^-1]
 	double precision,parameter::h=6.62607004e-34 !Planck's constant in m2 kg s^-1
@@ -17,6 +18,11 @@ PROGRAM radexpintcalc
     nsamps=1000
 
 	dion=(ionmax-ionmin)/(nsamps)
+	
+	recmin=h*cli/121.57e-9/kboltz/100000.d0
+	recmax=h*cli/2279.0e-9/kboltz/100.d0
+    
+    drec=(recmax-recmin)/(nsamps)
     
 	do ti=0,nsamps
 ! 		Trad=ti*100.d0
