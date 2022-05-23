@@ -2,7 +2,7 @@ PROGRAM radexpintcalc
 	IMPLICIT NONE
 	double precision::sol,oldsol,diff,Trad,sol2,Telec
 	double precision::nuarr,exf,dion,ionval,ionmin,ionmax
-	double precision::recmin,recmax,drec
+	double precision::recmin,recmax,drec,recval
 	double precision,parameter::cli=299792458.d0 !Speed of light in m/s
 	double precision,parameter::kboltz=1.38064852e-23 !Boltzmann Constant [m^2 kg s^-2 K^-1]
 	double precision,parameter::h=6.62607004e-34 !Planck's constant in m2 kg s^-1
@@ -12,13 +12,15 @@ PROGRAM radexpintcalc
     open(1, file = 'radexp.dat', status = 'replace')  
    
     Trad=5000.0
+	nsamps=100000
+
+	write(1,*) Trad,nsamps+1
     
     ionmin=cli/121.57e-9*h/kboltz/100000.d0
     ionmax=cli/2279.0e-9*h/kboltz/100.d0
-    nsamps=1000
 
 	dion=(ionmax-ionmin)/(nsamps)
-	
+
 	recmin=h*cli/121.57e-9/kboltz/100000.d0
 	recmax=h*cli/2279.0e-9/kboltz/100.d0
     
@@ -31,7 +33,7 @@ PROGRAM radexpintcalc
 !	 	nuarr=cli/2279.0e-9
 
 		ionval=ionmin+ti*dion
-			 
+		recval=recmin+ti*drec
 	 
 	 	!IONISATION VALUES
 		sol=0.d0
@@ -52,20 +54,20 @@ PROGRAM radexpintcalc
 !USE EQUATION 3.12 in Sollum to simplify!	 
 		!Recombination rates    
 		sol2=0.d0
-		call expintrutton1(h*nuarr/kboltz/Trad,sol2)
+		call expintrutton1(recval,sol2)
 		oldsol=sol2
 		diff=1.0d0
 		iii=1
 		do while (diff .GT. 0.0001)
 		    oldsol=sol2
-		    call expintrutton1(dble(iii)*h*nuarr/kboltz/Trad+h*nuarr/kboltz/Telec,exf)
+		    call expintrutton1(dble(iii)*h*nuarr/kboltz/Trad+recval,exf)
 		    sol2=sol2+exf
 		    diff=abs((sol2-oldsol)/sol2)
 		    iii=iii+1
 		enddo
 				
 				
-	   write(1,*) h*nuarr/kboltz/Trad, sol,h*nuarr/kboltz/Trad+h*nuarr/kboltz/Telec,sol2
+	   write(1,*) ionval, sol,recval,sol2
 	 enddo
 	 
 	 close(1) 
