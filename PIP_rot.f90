@@ -785,7 +785,7 @@ endif
 				iii=1
 				do while (diff .GT. 0.0001)
 					oldsol=sol
-					call expintruttonn1(dble(iii)*h*nuarr(ii,6)/kboltz/Tradarr(i,j,k)+h*nuarr(ii,6)/kboltz/Telec(i,j,k),exf)
+					call expintruttonn1(dble(iii)*h*nuarr(ii,6)/kboltz/Trad+h*nuarr(ii,6)/kboltz/Telec(i,j,k),exf)
 					sol=sol+exf
 					diff=abs((sol-oldsol)/sol)
 					iii=iii+1
