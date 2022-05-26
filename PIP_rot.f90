@@ -841,7 +841,8 @@ endif
 !					iii=iii+1
 !				enddo
 
-				call ionexpfitinterp2(3,h*nuarr(ii,6)/kboltz/Trad+h*nuarr(ii,6)/kboltz/Telec(i,j,k),2,sol,1)
+				!call ionexpfitinterp2(3,h*nuarr(ii,6)/kboltz/Trad+h*nuarr(ii,6)/kboltz/Telec(i,j,k),2,sol,1)
+                      		call ionexpfitinterp2(3,h/kboltz/Telec(i,j,k),1+ii,sol,1)
 
 				sahasol=(2.d0/nelec(i,j,k)*gfac(6)/gfac(ii)*(2.d0*pi*melec*kboltz*Telec(i,j,k)/h/h)**(3.d0/2.d0)*&
 					    dexp(-E(ii)/kboltz/Telec(i,j,k)))
