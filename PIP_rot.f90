@@ -880,18 +880,18 @@ endif
 				!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!		
 				!Recombination rates    
 				!old slow routine
-				sol=0.d0
-				call expintruttonn1(h*nuarr(ii,6)/kboltz/Telec(i,j,k),sol)
-				oldsol=sol
-				diff=1.0d0
-				iii=1
-				do while (diff .GT. 0.0001)
-				    oldsol=sol
-				    call expintruttonn1(dble(iii)*h*nuarr(ii,6)/kboltz/Trad+h*nuarr(ii,6)/kboltz/Telec(i,j,k),exf)
-				    sol=sol+exf
-				    diff=abs((sol-oldsol)/sol)
-				    iii=iii+1
-				enddo
+!				sol=0.d0
+!				call expintruttonn1(h*nuarr(ii,6)/kboltz/Telec(i,j,k),sol)
+!				oldsol=sol
+!				diff=1.0d0
+!				iii=1
+!				do while (diff .GT. 0.0001)
+!				    oldsol=sol
+!				    call expintruttonn1(dble(iii)*h*nuarr(ii,6)/kboltz/Trad+h*nuarr(ii,6)/kboltz/Telec(i,j,k),exf)
+!				    sol=sol+exf
+!				    diff=abs((sol-oldsol)/sol)
+!				    iii=iii+1
+!				enddo
 
 !print*,'old routines',ii,h/kboltz/Telec(i,j,k),sol!,Telec(i,j,k)
 
