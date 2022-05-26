@@ -300,6 +300,7 @@ contains
 !    double precision::ytemp,i0temp,i1temp,i2temp
 	double precision::ymin,ymax,yn,E0y,E1y,E2y
 	double precision::iontemp,ionsol,radtemp,radsol,Tradtemp,nsampstemp
+	double precision::radsol2,radsol3,radsol4,radsol5
     integer::i,Tradtempint,nsampstempint
 
 !old read routine using the IDL data
@@ -341,13 +342,17 @@ contains
 		read(17,*) Tradtemp,nsampstemp
 		Tradtempint=int(Tradtemp)
 		nsampstempint=int(nsampstemp)
-		allocate(radexpinttab(4,nsampstempint))
+		allocate(radexpinttab(8,nsampstempint))
 		do i=1,nsampstempint
-			read(17,*) iontemp,ionsol,radtemp,radsol
+			read(17,*) iontemp,ionsol,radtemp,radsol,radsol2,radsol3,radsol4,radsol5
 			radexpinttab(1,i)=iontemp
 			radexpinttab(2,i)=ionsol
 			radexpinttab(3,i)=radtemp
 			radexpinttab(4,i)=radsol
+			radexpinttab(5,i)=radsol2
+			radexpinttab(6,i)=radsol3
+			radexpinttab(7,i)=radsol4
+			radexpinttab(8,i)=radsol5
 		enddo
 		close(unit=17)
 	endif
@@ -875,19 +880,27 @@ endif
 				!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!		
 				!Recombination rates    
 				!old slow routine
-!				sol=0.d0
-!				call expintruttonn1(h*nuarr(ii,6)/kboltz/Tradarr(i,j,k),sol)
-!				oldsol=sol
-!				diff=1.0d0
-!				iii=1
-!				do while (diff .GT. 0.0001)
-!				    oldsol=sol
-!				    call expintruttonn1(dble(iii)*h*nuarr(ii,6)/kboltz/Tradarr(i,j,k)+h*nuarr(ii,6)/kboltz/Telec(i,j,k),exf)
-!				    sol=sol+exf
-!				    diff=abs((sol-oldsol)/sol)
-!				    iii=iii+1
-!				enddo
-				call ionexpfitinterp2(3,h*nuarr(ii,6)/kboltz/Tradtemp+h*nuarr(ii,6)/kboltz/Telec(i,j,k),2,sol,1)
+				sol=0.d0
+				call expintruttonn1(h*nuarr(ii,6)/kboltz/Telec(i,j,k),sol)
+				oldsol=sol
+				diff=1.0d0
+				iii=1
+				do while (diff .GT. 0.0001)
+				    oldsol=sol
+				    call expintruttonn1(dble(iii)*h*nuarr(ii,6)/kboltz/Trad+h*nuarr(ii,6)/kboltz/Telec(i,j,k),exf)
+				    sol=sol+exf
+				    diff=abs((sol-oldsol)/sol)
+				    iii=iii+1
+				enddo
+
+!print*,'old routines',ii,h/kboltz/Telec(i,j,k),sol!,Telec(i,j,k)
+
+!				call ionexpfitinterp2(3,h*nuarr(ii,6)/kboltz/Tradtemp+h*nuarr(ii,6)/kboltz/Telec(i,j,k),2,sol,1)
+				call ionexpfitinterp2(3,h/kboltz/Telec(i,j,k),1+ii,sol,1)
+
+!print*,'new routines',ii,h/kboltz/Telec(i,j,k),sol
+
+!stop
 
 				sahasol=(2.d0/nelec(i,j,k)*gfac(6)/gfac(ii)*(2.d0*pi*melec*kboltz*Telec(i,j,k)/h/h)**(3.d0/2.d0)*&
 				        dexp(-E(ii)/kboltz/Telec(i,j,k)))
@@ -897,6 +910,7 @@ endif
 			 enddo;enddo;enddo
 		endif
     enddo
+!stop
 !MOVED ALL THIS INTO THE PREVIOUS DO LOOPS
     !Recombination rates
  !   do ii=1,5
@@ -1182,13 +1196,14 @@ subroutine get_radrat_fixed_slow(Trad,Telec,nelec,Gm_ion_rad,Gm_rec_rad)
 				(radexpinttab(colloc,xindex2)- radexpinttab(colloc,xindex1)))
 		
 		sol = weight0*radexpinttab(i+2,xindex0)+weight1*radexpinttab(i+2,xindex1)+weight2*radexpinttab(i+2,xindex2)
+!print*,colloc,i+2,xindex
+!print*,radexpinttab(colloc,xindex),zhat,radexpinttab(colloc,xindex+1)
+!print*,radexpinttab(i+2,xindex),sol,radexpinttab(i+2,xindex+1)
 	else
 		print*,'Something wrong with the integral tables!'
 		stop
 	endif
 !print*,xindex,xmin,zhat,xrange,xmax
-!print*,expinttab(1,xindex),zhat,expinttab(1,xindex+1)
-!print*,expinttab(i+2,xindex),sol,expinttab(i+2,xindex+1)
 !stop
   end subroutine ionexpfitinterp2
 
@@ -1234,7 +1249,7 @@ subroutine expintruttonn1(x,sol)
         oldsol=sol
         diff=1.0
         i=1
-        do while (diff .GT. 0.0001)
+        do while (diff .GT. 0.0000001)
             oldsol=sol
             sol=sol-(-1.d0)**i*x**i/(dble(i)*dgamma(dble(i+1))) !gamma(i+1)=i! I think
             diff=abs((sol-oldsol)/sol)
