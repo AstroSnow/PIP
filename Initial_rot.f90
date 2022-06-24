@@ -1,9 +1,9 @@
-module initial_rot 
+module initial_rot
 !====================================================================
 ! This is the initial module for the PIP code.
 ! Module for a personal library of your initial conditions
-! First version - 2013/04/26 NN  
-! Second version - 2013/07/17 NN Move shocktube setting to shock_tube.f90  
+! First version - 2013/04/26 NN
+! Second version - 2013/07/17 NN Move shocktube setting to shock_tube.f90
 !====================================================================
   use model_rot,only:get_parameters,allocate_vars,set_dsc
   use globalvar,only:ix,jx,kx,time,dt,flag_stop,&
@@ -13,13 +13,13 @@ module initial_rot
   use IO_rot,only:restart,output
   use solver_rot,only:set_coefficients
   use boundary_rot,only:initialize_bnd,PIPbnd
-  use Scheme_rot,only:cfl  
+  use Scheme_rot,only:cfl
   implicit none
 contains
   !============================================================================
   !start main part of initial setting
   !============================================================================
-  subroutine prologue    
+  subroutine prologue
     integer i
     time=0.d0
     nt=0
@@ -27,78 +27,78 @@ contains
     flag_stop=0
     !get parameters from setting file
     call get_parameters
-    if(flag_mpi.eq.1)then 
+    if(flag_mpi.eq.1)then
        call set_mpi
     else
        write(cno,"(i4.4)")0
        neighbor(:)=-1
-    endif    
+    endif
     !allocate variables array
     call allocate_vars
 
     !set initial coordinates and physical variables
     if(flag_restart.ge.0) then
-       call restart       
+       call restart
        call set_dsc
        start_t=time
        if (my_rank.eq.0) print *, start_t,time
-    else         
+    else
        select case(flag_ini)
-       case('linear_wave')          
+       case('linear_wave')
           call linear_wave
-       case('shock_tube') 
+       case('shock_tube')
           call shock_tube
-       case('explosion')          
+       case('explosion')
           call explosion
-       case('currentsheet')          
+       case('currentsheet')
           call currentsheet
-       case('RT')          
+       case('RT')
           call RT
-       case('KH')          
+       case('KH')
           call KH
        case('Orszag_Tang')
           call Orszag_Tang
-       case('FieldLoop')          
+       case('FieldLoop')
           call FieldLoop
-       case('ambipolar')          
+       case('ambipolar')
           call ambipolar
-       case('PNcoupling')          
+       case('PNcoupling')
           call PNcoupling
-       case('HCtest')          
+       case('HCtest')
           call HCtest
        case('HCtest_Tonly')
           call HCtest_Tonly
-       case('Flare')          
+       case('Flare')
           call Flare
-       case('Coalescence')          
+       case('Coalescence')
           call Coalescence
-       case('Sedov')          
+       case('Sedov')
           call Sedov
-       case('tearing')          
+       case('tearing')
           call tearing
-       case('NUwave')          
+       case('NUwave')
           call NUwave
-       case('Reconnection')          
+       case('Reconnection')
           call Reconnection
-       case('BMP_density')          
+       case('BMP_density')
           call BMP_density
-       case('Alfven_damping')          
+       case('Alfven_damping')
           call Alfven_damping
-       case('blob')          
+       case('blob')
           call blob
-       case('field_diffusion')          
+       case('field_diffusion')
           call field_diffusion
-       case('CS_collapse')          
+       case('CS_collapse')
           call CS_collapse
-       case('asym_currentsheet')          
+       case('asym_currentsheet')
           call asym_currentsheet
-       case('CSC')          
+       case('CSC')
           call CSC
-       case('cnd_tube') 
+       case('cnd_tube')
           call cnd_tube
-       case('MRI') 
+       case('MRI')
           call MRI
-       case('disk_flare') 
+       case('disk_flare')
           call disk_flare
        case('load_prom')
           call mass_load_prom
@@ -124,8 +124,10 @@ contains
           call Complete_spectrum
        case('kink_wave')
           call kink_wave
+       case('kink_instability')
+          call kink_instability
        end select
-       call set_coefficients(U_h,U_m,0)              
+       call set_coefficients(U_h,U_m,0)
        start_t=0.d0
     endif
 
@@ -136,18 +138,18 @@ contains
     dsc(1:jx,2)=dyc
     dsc(1:kx,3)=dzc
     call my_mpi_barrier
-    !set dt    
-    call cfl(U_h,U_m)    
+    !set dt
+    call cfl(U_h,U_m)
     if(flag_restart.lt.0) then
        nout=0
-       !first output 
+       !first output
        call output(0)
     endif
 !    start_time=0.d0
     !Boundary conditions to IC
     call PIPbnd(U_h,U_m,0)
 !    if(flag_grav.eq.1) call bnd_grav
-    
-    
+
+
   end subroutine prologue
 end module initial_rot
