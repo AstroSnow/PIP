@@ -54,8 +54,8 @@ subroutine RMI
   !-------------------------------------------------
 
   !atwood number
-  !atwood=3.0
-  atwood=1.0
+  atwood=3.0
+  !atwood=1.0
 
   !Define shock states
 	mach=2.d0
