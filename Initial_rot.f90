@@ -126,6 +126,8 @@ contains
           call kink_wave
        case('kink_instability')
           call kink_instability
+       case('RMI')
+          call RMI
        end select
        call set_coefficients(U_h,U_m,0)
        start_t=0.d0
