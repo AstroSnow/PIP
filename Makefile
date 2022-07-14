@@ -17,7 +17,7 @@ OBJECTS = Util_rot.o BMP_rot.o Matrix_rot.o \
 	MRI.o disk_flare.o mass_load_prom.o \
 	Initial_rot.o  main.o relax_prom.o relax_prom2.o procedures.o hsstatic.o\
 	resonator.o ionrectest.o  Complete_spectrum.o shock_tube_stab.o shock_tube_stab2.o\
-    shock_tube_stab3.o kink_wave.o downflowshock.o
+    shock_tube_stab3.o kink_wave.o downflowshock.o RMI.o kink_instability.o
 MOD_FILES = util_rot.mod globalvar.mod parameters.mod \
 	scheme_rot.mod hc_rot.mod \
 	res_rot.mod gra_rot.mod pip_rot.mod visc_rot.mod\
@@ -26,7 +26,7 @@ MOD_FILES = util_rot.mod globalvar.mod parameters.mod \
 	boundary_rot.mod solver_rot.mod matrix_rot.mod initial_rot.mod  procedures.mod
 
 #FC = gfortran
-FC = mpif90 -O2
+FC = h5pfc
 #FC = mpif90-mpich-mp -O2
 #FC = mpif90-mpich-mp
 
@@ -35,21 +35,20 @@ FFLAGS = -O2
 #FFLAGS = 
 LDFLAGS =
 LIB_DIR=.
-#DEBUG = -g -pg 
+#DEBUG = -g -pg
 #DEBUG= -ffpe-trap=invalid,zero,overflow -fbacktrace -fbounds-check -g
 DEBUG= -ffpe-trap=invalid,overflow -fbacktrace -fbounds-check -g
 #DEBUG= -fbacktrace -fbounds-check -g
 #DEBUG= -fbacktrace -g
-#DEBUG= 
+DEBUG=
 
 .SUFFIXES : .o .f90
 .f90.o:
-	${FC} ${FFLAGS} ${DEBUG} -c $< 
+	${FC} ${FFLAGS} ${DEBUG} -c $<
 
 
 ${TARGET} : ${OBJECTS}
-	${FC} ${DEBUG} ${LDFLAGS} -o $@ ${OBJECTS} \
-	-L$(LIB_DIR) 
+	${FC} ${DEBUG} -L$(LIB_DIR) ${LDFLAGS} -o $@ ${OBJECTS}
 #	rm ${OBJECTS} ${MOD_FILES}
 clean:
 	rm ${TARGET} ${OBJECTS} ${MOD_FILES}
@@ -58,4 +57,4 @@ datatidy:
 	rm Data/*
 
 print_vars:
-	@echo "FC='${FC}'" 
+	@echo "FC='${FC}'"

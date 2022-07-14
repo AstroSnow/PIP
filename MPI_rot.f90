@@ -1,55 +1,67 @@
 module mpi_rot
   use globalvar,only:total_prc,my_rank,nvar_h,nvar_m,mpi_siz,mpi_pos,margin,&
        ix,jx,kx,ndim,flag_mpi_split,neighbor,U_h,U_m,flag_mhd,flag_pip,&
-       cno,vmpi,flag_mpi,flag_bnd
+       cno,vmpi,flag_mpi,flag_bnd, &
+       dimsFile, ig
   implicit none
   include "mpif.h"
   integer ierr
   integer status(6)
 contains
-  subroutine set_mpi    
+  subroutine set_mpi
+    integer i
     !charm for MPI
     call mpi_init(ierr)
     call mpi_comm_size(MPI_COMM_WORLD,total_prc,ierr)
-    call mpi_comm_rank(MPI_COMM_WORLD,my_rank,ierr)   
- 
+    call mpi_comm_rank(MPI_COMM_WORLD,my_rank,ierr)
+
     if(flag_mpi.eq.0 .or.my_rank.eq.0) print *,"total cpu",total_prc
     vmpi=nvar_h+nvar_m
     write(cno,"(i4.4)")my_rank
-!   print *,"TOT",total_prc,my_rank,cno 
-   if(total_prc.eq.1) then
-       mpi_siz(:)=1
-       mpi_pos(:)=0       
+    !   print *,"TOT",total_prc,my_rank,cno
+    if(total_prc.eq.1) then
+      mpi_siz(:)=1
+      mpi_pos(:)=0
     else
-       call set_mpi_pos
+      call set_mpi_pos
     endif
-    ix=(ix-2*margin(1))/mpi_siz(1)+2*margin(1)
-    jx=(jx-2*margin(2))/mpi_siz(2)+2*margin(2)
-    kx=(kx-2*margin(3))/mpi_siz(3)+2*margin(3)    
+
+    ! store full ranges + margins for use in write-IO
+    dimsFile(1:3) = [ix, jx, kx]
+    ! compute # of grid-points for individual process
+    do i=1,3
+      ig(i) = (dimsFile(i)-2*margin(i))/mpi_siz(i)+2*margin(i)
+      ! Add excess grid-points from uneven splitting to last block along dimension
+      if (mpi_pos(i) .eq. (mpi_siz(i)-1)) then
+        ig(i) = ig(i) + mod(dimsFile(i)-2*margin(i), mpi_siz(i))
+      end if
+    end do
+    ! replace _x range values with those for the process
+    ix=ig(1); jx=ig(2); kx=ig(3)
   end subroutine set_mpi
-    
+
   subroutine set_mpi_pos
     integer n0,tmp!,tmp2,n2,n3
     integer n!ixy,iyz,izx
     if(mpi_siz(1)*mpi_siz(2)*mpi_siz(3).eq.0  &
-         .or. mpi_siz(1)*mpi_siz(2)*mpi_siz(3).ne.total_prc) then    
-       select case(flag_mpi_split)    
+         .or. mpi_siz(1)*mpi_siz(2)*mpi_siz(3).ne.total_prc) then
+       select case(flag_mpi_split)
        !1D domain decomposition
        case(1)
           mpi_siz(1)=total_prc
           mpi_siz(2)=1
-          mpi_siz(3)=1          
+          mpi_siz(3)=1
        !n-dimensional decomposition
        case(2)
           call set_domain_equally(mpi_siz(1),mpi_siz(2),mpi_siz(3),3,total_prc)
-       !adjust 
+       !adjust
        case(3)
           n0=0
           do n=1,3
              if(mpi_siz(n).eq.0) n0=n0+1
           enddo
           select case(n0)
-          case(1)             
+          case(1)
              do n=1,3
                 if(mpi_siz(n).eq.0) mpi_siz(n)=total_prc/ &
                      (mpi_siz(mod(n,3)+1)*mpi_siz(mod(n+1,3)+1))
