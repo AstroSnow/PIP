@@ -17,7 +17,7 @@ module scheme_rot
        flag_bnd,xi_n,flag_pip_imp,nt,eta_0,gra,scl_height,s_order,flag_sch,&
        x,y,z,col,n_fraction,flag_ir,gm_rec,gm_ion,t_ir,mpi_pos,my_rank,&
        debug_parameter,ro_lim,pr_lim,tiny,cmax,dsc,b_cr,damp_time,flag_damp,&
-       oldke_damp,flag_rad
+       oldke_damp,flag_rad,edref
   use MPI_rot,only:mpi_double_interface
   use Boundary_rot,only:bnd_divb
   implicit none
@@ -192,6 +192,7 @@ contains
           call cfl_hd(U_h)
        endif
     endif
+    if(flag_rad.ge.1) call cfl_rad_cool(U_m,U_h)
     if(flag_resi.ge.1) call cfl_resi
     if(flag_mpi.eq.1) then
        dt=mpi_double_interface(dt,1)
@@ -306,10 +307,19 @@ contains
    end subroutine cfl_pn_col
 
    subroutine cfl_pip_ir(U_m,U_h)
-
      double precision,intent(in)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
      dt=min(dt,min(safety,0.3d0)/max(maxval(gm_rec)+maxval(gm_ion),1.0d-5))   !,maxval(gm_rec/U_m(:,:,:,1))+maxval(gm_ion/U_h(:,:,:,1)) 
    end subroutine cfl_pip_ir
+
+!Radiative cooling timestep
+   subroutine cfl_rad_cool(U_m,U_h)
+    double precision,intent(inout)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)  
+    double precision::pr(ix,jx,kx)
+    call get_Pr_MHD(U_m,pr)
+     dt=min(dt,safety/max(maxval(edref(:,:,:,1)*U_m(:,:,:,1)*U_m(:,:,:,1)/(pr/(gm-1.d0))),1.0d-5)) 
+!print*,olddttest,dt,safety/maxval(edref(:,:,:,1)/U_m(:,:,:,5))
+!     dt=min(dt,safety/maxval(edref(:,:,:,1))) 
+   end subroutine cfl_rad_cool
 
   subroutine hd_fluxes(F_h,U_h)
     double precision,intent(inout):: F_h(ix,jx,kx,nvar_h,3)
@@ -890,14 +900,14 @@ if ((flag_damp.eq.1).or.(flag_damp.eq.2)) then
     U_m(:,:,:,2:4)=U_m(:,:,:,2:4)-spread(damp_time1,4,3)*dt*U_m(:,:,:,2:4)
     U_m(:,:,:,5)=U_m(:,:,:,5)-damp_time1*dt*(U_m(:,:,:,2)**2+U_m(:,:,:,3)**2 &
       +U_m(:,:,:,4)**2)/U_m(:,:,:,1)/2.d0
+    oldke_damp=0.9d0*maxval(U_m(:,:,:,5)-(U_m(:,:,:,2)**2+U_m(:,:,:,3)**2+U_m(:,:,:,4)**2)/U_m(:,:,:,1)/2.0d0)
     endif
     if(flag_mhd.eq.0.or.flag_pip.eq.1) then
     U_h(:,:,:,2:4)=U_h(:,:,:,2:4)-spread(damp_time1,4,3)*dt*U_h(:,:,:,2:4)
     U_h(:,:,:,5)=U_h(:,:,:,5)-damp_time1*dt*(U_h(:,:,:,2)**2+U_h(:,:,:,3)**2 &
       +U_h(:,:,:,4)**2)/U_h(:,:,:,1)/2.d0
+    oldke_damp=0.9d0*maxval(U_h(:,:,:,5)-(U_h(:,:,:,2)**2+U_h(:,:,:,3)**2+U_h(:,:,:,4)**2)/U_h(:,:,:,1)/2.0d0)
     endif
-
-    oldke_damp=0.9d0*maxval(U_h(:,:,:,5)-(U_h(:,:,:,2)**2+U_h(:,:,:,2)**2+U_h(:,:,:,2)**2)/U_h(:,:,:,1)/2.0d0)
 
 
 endif

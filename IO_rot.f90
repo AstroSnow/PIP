@@ -16,9 +16,10 @@ module io_rot
        total_iter,flag_amb,dtout,mpi_siz,nt,nmax,output_type,flag_ps,flag_divb,&
        flag_damp,damp_time,flag_rad,flag_ir_type,arb_heat,visc,esav,emsavtime,&
        ac_sav, xi_sav, ion_sav, rec_sav, col_sav, gr_sav, vs_sav, heat_sav, et_sav, ps_sav,&
-       Nexcite, &
+       Nexcite,edref,flag_rad, &
        file_id, plist_id, hdf5_error, filespace_id, memspace_id,&
        dimsFile, dimsMem, start_stop, hdf5_offset, neighbor, ig
+
   use mpi_rot,only:end_mpi
   use IOT_rot,only:initialize_IOT,get_next_output
   use Util_rot,only:get_word,get_value_integer
@@ -254,6 +255,9 @@ contains
     if(flag_pip.eq.1.and.flag_ir_type.eq.0.and.flag_IR.ne.0) then
       if(heat_sav.eq.0) call write_3D_array("aheat", arb_heat)
     endif
+!    if (flag_rad .ge. 1) then
+!        call save1param(edref,tno//'edref.dac.',1)
+!    endif
 
   end subroutine def_varfiles
 
@@ -308,6 +312,10 @@ contains
         call write_3D_array("viscy", visc(:,:,:,2))
         call write_3D_array("viscz", visc(:,:,:,3))
       endif
+    endif
+    if (flag_rad .ge. 1) then
+        call save1param(edref(:,:,:,1),tno//'edref_m.dac.',1)
+        if (flag_pip .eq. 1) call save1param(edref(:,:,:,2),tno//'edref_h.dac.',1)
     endif
     if(flag_pip.eq.1 .or.flag_mhd.eq.0) then
       do i=1,nvar_h

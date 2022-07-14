@@ -28,6 +28,9 @@ use HDF5
 !6 level collisional rates
   double precision,allocatable,save::Colrat(:,:,:,:,:),Nexcite(:,:,:,:)
 
+!MHD radiative losses
+  double precision,allocatable,save::edref(:,:,:,:)
+
 !Table for the exponential integral
   double precision,allocatable,save::expinttab(:,:) !columns for input and i=0,1,2
 
@@ -57,7 +60,8 @@ use HDF5
   double precision,save :: cmax
 ! Radiative losses
   integer,save :: flag_rad
-
+  double precision :: rad_ts,radrhoref
+  
 !for coordinate system
   integer,save::ix,jx,kx,nvar_h,nvar_m,margin(3),ndim,ig(3)
 ! marginz is set to 0 for 2d to let all the 3d codes that use margin work

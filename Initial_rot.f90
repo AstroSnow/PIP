@@ -8,19 +8,21 @@ module initial_rot
   use model_rot,only:get_parameters,allocate_vars,set_dsc
   use globalvar,only:ix,jx,kx,time,dt,flag_stop,&
        flag_mpi,cno,neighbor,nt,x,y,z,dx,dy,dz,gra,&
-       flag_restart,flag_ini,dsc,dxc,dyc,dzc,nout,U_m,U_h,tend,my_rank,start_t
+       flag_restart,flag_ini,dsc,dxc,dyc,dzc,nout,U_m,U_h,tend,my_rank,start_t,ndim
   use mpi_rot,only:set_mpi,set_mpi_neighbor,my_mpi_barrier
   use IO_rot,only:restart,output
   use solver_rot,only:set_coefficients
   use boundary_rot,only:initialize_bnd,PIPbnd
-  use Scheme_rot,only:cfl
+  use Scheme_rot,only:cfl  
+  use parameters,only:pi
   implicit none
 contains
   !============================================================================
   !start main part of initial setting
   !============================================================================
-  subroutine prologue
-    integer i
+
+  subroutine prologue    
+    integer i,j
     time=0.d0
     nt=0
     dt=0.d0
@@ -41,6 +43,20 @@ contains
        call restart
        call set_dsc
        start_t=time
+!Neutral density lump
+! do i=1,ix
+!    if ((x(i) .ge. 1.0) .and. (x(i) .lt. 1.2)) then 
+!    	ro_h(i,:,:)=ro_h(i,:,:)+10.0
+!	if (ndim .eq. 1) then
+ !       	U_h(i,:,:,1)=U_h(i,:,:,1)+20.0*(1.0-(dcos(x(i)*2.0*pi/0.2)+1.0)/2.0)
+!	elseif (ndim .eq. 2) then
+!		do j=1,jx
+!			U_h(i,j,:,1)=U_h(i,j,:,1)+50.0*(1.0-(dcos(x(i)*2.0*pi/0.2)+1.0)/2.0)*&
+!			(dcos(y(j)/1.0e0*pi)+1.d0)/2.d0
+!		enddo
+!	endif
+!    endif
+! enddo
        if (my_rank.eq.0) print *, start_t,time
     else
        select case(flag_ini)
@@ -128,6 +144,8 @@ contains
           call kink_instability
        case('RMI')
           call RMI
+       case('downflowshock')
+          call downflowshock
        end select
        call set_coefficients(U_h,U_m,0)
        start_t=0.d0
