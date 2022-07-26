@@ -50,9 +50,9 @@ subroutine KH
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=-0.5d0 ;end(1)=0.5d0
-  start(2)=-1.0d0 ;end(2)=1.0d0
-  start(3)=-8.0d0 ;end(3)=8.0d0
+  start(1)=-1.0d0 ;end(1)=1.0d0
+  start(2)=-1.5d0 ;end(2)=0.50
+  start(3)=-17.0d0 ;end(3)=17.0d0
   call set_coordinate(start,end)
   !---------------------------------------
 
@@ -68,8 +68,8 @@ subroutine KH
   !!!========================================================
   !density of lower fluid is unity
   ro_l=1.0d0
-  ro_u=1.0e2!10.0d0
-  vx_l=ro_u/(ro_u+ro_l)*dsqrt(1.d0/10.d0)
+  ro_u=100.0d0
+  vx_l=ro_u/(ro_u+ro_l)*dsqrt(4.d0/100.d0)
 !  if(flag_mhd.eq.1) then
 !  vx_l=vx_l*sqrt(1.d0+2.d0/(gm*beta))
 !  endif
@@ -79,48 +79,52 @@ subroutine KH
   scl_height=0.50
   if(scl_height.eq.0.0) scl_height=1.0
 
-!  ro_h=f_n*spread(spread(ro_l+(ro_u-ro_l)*(tanh(y/w_lay)+1.0) &
-!       *0.5d0,1,ix),3,kx)
-!  ro_m=f_p*spread(spread(ro_l+(ro_u-ro_l)*(tanh(y/w_lay)+1.0) &
-!       *0.5d0,1,ix),3,kx)
-!  vx_h=spread(spread(vx_l+(vx_u-vx_l)*(tanh(y/w_lay)+1.0)* &
-!       0.5d0,1,ix),3,kx)
-
   ro_h=f_n*spread(spread(ro_l+(ro_u-ro_l)*(tanh(y/w_lay)+1.0) &
+       *0.5d0,1,ix),3,kx)*0.0d0
+  ro_m=f_p*spread(spread(ro_l+(ro_u-ro_l)*(tanh(y/w_lay)+1.0) &
        *0.5d0,1,ix),3,kx)
-  ro_m=f_p*ro_h/f_n
-  vx_h=abs(ro_l*vx_l)*spread(spread(tanh(y/w_lay),1,ix),3,kx)/ro_h
+  vx_h=spread(spread(exp(-abs(pi*y))*tanh(y/w_lay),1,ix) & 
+       *spread(sin(pi*x),2,jx),3,kx)*0.0d0
+       
+  vx_h=spread(spread(vx_l+(vx_u-vx_l)*(tanh(y/w_lay)+1.0)* &
+       0.5d0,1,ix),3,kx)
+
+ ! ro_h=f_n*spread(spread(ro_l+(ro_u-ro_l)*(tanh(y/w_lay)+1.0) &
+ !      *0.5d0,1,ix),3,kx)
+ ! ro_m=f_p*ro_h/f_n
+ ! vx_h=abs(ro_l*vx_l)*spread(spread(tanh(y/w_lay),1,ix),3,kx)/ro_h
   vx_m=vx_h
 
-  theta=2.d0*pi*0.d0/360.d0
+  theta=0.d0*pi*90.d0/360.d0
   if(flag_mhd.eq.1) then
      b0=sqrt(2.0d0/(gm*beta))
-     !B0=0.d0 !Hydrodynamic case for testing
      B_z=B0*cos(theta)
      B_x=B0*sin(theta)
      B_y=0.0d0
   endif
 
 
-  P_h(:,:,:)=1.0/gm*f_p_n
-  P_m(:,:,:)=1.0/gm*f_p_p
+  P_h(:,:,:)=f_p_n/gm
+  P_m(:,:,:)=f_p_p/gm
 
 !  P_h(:,:,:)=2.5d0*f_p_n
 !  P_m(:,:,:)=2.5d0*f_p_p
 
-  vy_h=0.0d0;vz_h=0.0d0
-  vy_m=0.0d0;vz_m=0.0d0
+  vy_h=spread(spread(exp(-abs(pi*y)),1,ix)*spread(cos(pi*x),2,jx),3,kx)*0.d0
+  vz_h=0.0d0
+  vy_m=vy_h;vz_m=0.0d0
+ 
 
 !  print *, 'done', my_rank
 
   do k=1,kx
      do j=1,jx
         do i=1,ix
-        vy_h(i,j,k)=0.001d0*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
+        vy_h(i,j,k)=0.01d0*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
 !*dcos(x(i)*2.d0*pi)*exp(-2.d0*pi*abs(y(j))) &
 !                 *(-0.5d0*dtanh((dabs(y(j))-1.5d0)/0.15d0)+0.5d0 )
 !*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
-        vy_m(i,j,k)=0.001d0*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
+        vy_m(i,j,k)=0.01d0*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
 !dcos(x(i)*2.d0*pi)*exp(-2.d0*pi*abs(y(j))) &
 !(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
 !*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
@@ -144,6 +148,5 @@ subroutine KH
   !---------------------------------------------------------------------
 
 end subroutine KH
-
 
 
