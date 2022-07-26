@@ -61,6 +61,7 @@ use HDF5
 ! Radiative losses
   integer,save :: flag_rad
   double precision :: rad_ts,radrhoref
+  DOUBLE PRECISION, ALLOCATABLE::radlossfun(:,:)
   
 !for coordinate system
   integer,save::ix,jx,kx,nvar_h,nvar_m,margin(3),ndim,ig(3)

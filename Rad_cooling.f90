@@ -6,7 +6,7 @@ module rad_cooling
 !           rad_ts      - reference time scale for cooling
 
 use parameters,only:pi
-use globalvar,only:ix,jx,kx,nvar_h,nvar_m,ndim,flag_pip,flag_rad,edref,radrhoref,rad_ts
+use globalvar,only:ix,jx,kx,nvar_h,nvar_m,ndim,flag_pip,flag_rad,edref,radrhoref,rad_ts,radlossfun
 use scheme_rot,only:get_Te_HD,get_Te_MHD
 
 contains
@@ -77,7 +77,6 @@ USE HDF5
 	CHARACTER(LEN=65), PARAMETER :: dset1name = "temperature"  ! Dataset name
 	CHARACTER(LEN=65), PARAMETER :: dset2name = "rad_loss"     ! Dataset name
 	INTEGER::nelements,i
-	DOUBLE PRECISION, ALLOCATABLE::radlossfun(:,:)
 
 	if (flag_rad .ge. 1) then
 		allocate(edref(ix,jx,kx,2))
@@ -109,7 +108,7 @@ USE HDF5
 		CALL h5close_f(ErrorFlag)
 		
 		do i=1,nelements
-			print*,radlossfun(i,1),radlossfun(i,2)
+			print*,radlossfun(i,1),radlossfun(i,2)/maxval(radlossfun(:,2))
 		enddo
 		stop
 	endif
@@ -133,20 +132,6 @@ subroutine set_ref_rad_ed(U_h,U_m)
     endif
 
     print*,'setting edref'
-
-	if (flag_rad .eq. 3) then
-
-		open (unit=86, file="rlf.txt", status='old',    &
-             access='sequential', form='formatted', action='read' )
-
-		read(86,*) nrlf
-
-		do i=1,nrlf
-			read(86,*) tmp
-			
-		enddo
-
-	endif
 
 endsubroutine set_ref_rad_ed
 
