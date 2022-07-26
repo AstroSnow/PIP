@@ -8,7 +8,7 @@ Created on Mon Jul 25 14:17:43 2022
 import ChiantiPy.core as ch
 import numpy as np
 import matplotlib.pyplot as plt
-import pipreadmods_old as pipreadmods
+#import pipreadmods_old as pipreadmods
 import h5py
 
 #minabund=1.e-4 #H, He, C, O, Ne
@@ -26,7 +26,7 @@ rl.radLossPlot()
 
 hf = h5py.File('lossfunc.h5', 'w')
 
-hf.create_dataset('temperature', data=temp)
+hf.create_dataset('temperature', data=np.log10(temp))
 hf.create_dataset('rad_loss', data=rl.RadLoss['rate'])
 hf.create_dataset('minAbund', data=minabund)
 hf.create_dataset('Abundances', data=abundfile)
