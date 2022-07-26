@@ -64,17 +64,64 @@ end subroutine source_rad_cooling
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 subroutine initialize_radloss(flag_rad)
+USE HDF5
 	integer,intent(in)::flag_rad
+	INTEGER :: ErrorFlag	
+	INTEGER(HID_T) :: file_id
+    INTEGER(HID_T) :: dset_id       ! Dataset identifier
+    INTEGER(HID_T) :: space_id       ! Dataspace identifier
+    INTEGER(HID_T) :: dtype_id       ! Dataspace identifier
+    INTEGER(HSIZE_T), DIMENSION(2) :: data_dims
+    INTEGER(HSIZE_T), DIMENSION(2) :: max_dims
+	Character(len=65),parameter::filename='lossfunc.h5'
+	CHARACTER(LEN=65), PARAMETER :: dset1name = "temperature"  ! Dataset name
+	CHARACTER(LEN=65), PARAMETER :: dset2name = "rad_loss"     ! Dataset name
+	INTEGER::nelements,i
+	DOUBLE PRECISION, ALLOCATABLE::radlossfun(:,:)
 
 	if (flag_rad .ge. 1) then
 		allocate(edref(ix,jx,kx,2))
+	endif
+	
+	if (flag_rad .eq. 3) then
+	
+		CALL h5open_f(ErrorFlag)
+		CALL h5fopen_f (filename, H5F_ACC_RDWR_F, file_id, ErrorFlag)
+		CALL h5dopen_f(file_id, dset1name, dset_id, ErrorFlag)
+		CALL h5dget_space_f(dset_id, space_id,ErrorFlag)
+		
+		!Get dataspace dims
+		CALL h5sget_simple_extent_dims_f(space_id,data_dims, max_dims, ErrorFlag)
+
+		nelements = data_dims(1)
+
+		!Allocate dimensions to dset_data for reading
+		ALLOCATE(radlossfun(nelements,2))
+
+
+		!Get data
+		CALL h5dread_f(dset_id, H5T_NATIVE_DOUBLE, radlossfun(:,1), data_dims, ErrorFlag)
+		
+		CALL h5dopen_f(file_id, dset2name, dset_id, ErrorFlag)
+		CALL h5dget_space_f(dset_id, space_id,ErrorFlag)
+		CALL h5dread_f(dset_id, H5T_NATIVE_DOUBLE, radlossfun(:,2), data_dims, ErrorFlag)
+		
+		CALL h5close_f(ErrorFlag)
+		
+		do i=1,nelements
+			print*,radlossfun(i,1),radlossfun(i,2)
+		enddo
+		stop
 	endif
 
 end subroutine initialize_radloss
 
 subroutine set_ref_rad_ed(U_h,U_m)
 	double precision,intent(in)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)	
-		
+	integer:: nrlf
+	character*200::tmp
+
+	edref(:,:,:,:)=0.0d0
 
     if (flag_rad .eq. 2) then
 	    !Set the initial array to be zero
@@ -86,6 +133,20 @@ subroutine set_ref_rad_ed(U_h,U_m)
     endif
 
     print*,'setting edref'
+
+	if (flag_rad .eq. 3) then
+
+		open (unit=86, file="rlf.txt", status='old',    &
+             access='sequential', form='formatted', action='read' )
+
+		read(86,*) nrlf
+
+		do i=1,nrlf
+			read(86,*) tmp
+			
+		enddo
+
+	endif
 
 endsubroutine set_ref_rad_ed
 
