@@ -313,10 +313,13 @@ contains
         call write_3D_array("viscz", visc(:,:,:,3))
       endif
     endif
-    if (flag_rad .ge. 1) then
-        call save1param(edref(:,:,:,1),tno//'edref_m.dac.',1)
-        if (flag_pip .eq. 1) call save1param(edref(:,:,:,2),tno//'edref_h.dac.',1)
+    if(flag_mhd.eq.1.and.flag_pip.eq.0.and.flag_rad.ge.1) then
+      call write_3D_array("edref", edref)
     endif
+!    if (flag_rad .ge. 1) then
+!        call save1param(edref(:,:,:,1),tno//'edref_m.dac.',1)
+!        if (flag_pip .eq. 1) call save1param(edref(:,:,:,2),tno//'edref_h.dac.',1)
+!    endif
     if(flag_pip.eq.1 .or.flag_mhd.eq.0) then
       do i=1,nvar_h
         call write_3D_array(trim(file_h(i)), U_h(:,:,:,i))
