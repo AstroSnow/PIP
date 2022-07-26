@@ -6,7 +6,7 @@ module rad_cooling
 !           rad_ts      - reference time scale for cooling
 
 use parameters,only:pi
-use globalvar,only:ix,jx,kx,nvar_h,nvar_m,ndim,flag_pip,flag_rad,edref,radrhoref,rad_ts,radlossfun
+use globalvar,only:ix,jx,kx,nvar_h,nvar_m,ndim,flag_pip,flag_rad,edref,radrhoref,rad_ts,radlossfun,T0
 use scheme_rot,only:get_Te_HD,get_Te_MHD
 
 contains
@@ -44,6 +44,42 @@ subroutine source_rad_cooling(S_h,S_m,U_h,U_m)
 !Cool based of temperature. Centered on a temperature of 0.1
         call get_Te_MHD(U_m,Te_m) !This assumes a factor of 1/2 in temperature so put 2*Te in next line
         edref(:,:,:,1)=(1.d0-dtanh(dlog10(2.0*Te_m(:,:,:)/0.1)/2.d0*pi/0.2)**2 )/rad_time/rad_ts
+!        edref=max(edref-1.0e-5,0.d0)+1.0e-5 !This line doesn't work for some reason
+!print*,maxval(edref(:,:,:,1)),minval(Te_m)
+!Apply the energy sink of the form ro^2*Lambda
+!		S_m(:,:,:,5)=S_m(:,:,:,5)-(U_m(:,:,:,5)-edref(:,:,:,1))/rad_time/rad_ts
+		S_m(:,:,:,5)=S_m(:,:,:,5)-U_m(:,:,:,1)**2*(edref(:,:,:,1))
+
+		if (flag_pip .eq. 1) then
+            edref(:,:,:,2)=1.d0-dtanh((U_h(:,:,:,1)-1.25d0)*pi/0.1)**2
+            rad_time=1.d0!((U_h(:,:,:,1))/radrhoref)**(-1.7)
+!            S_h(:,:,:,5)=S_h(:,:,:,5)-(U_h(:,:,:,5)-edref(:,:,:,2))/rad_time/rad_ts
+            S_h(:,:,:,5)=S_h(:,:,:,5)-(edref(:,:,:,2))/rad_time/rad_ts
+		endif
+		
+	endif
+
+	!Cooling using the radiative loss functions from Chianti
+	if (flag_rad .eq. 3) then
+
+        rad_time=1.0
+
+		!Get temperature
+        call get_Te_MHD(U_m,Te_m) !This assumes a factor of 1/2 in temperature so put 2*Te in next line
+		Te_m=2.d0*Te_m
+
+		!Interpolate the losses
+		do i=1,ix
+		do j=1,jx
+		do k=1,kx
+			Tdim=dlog10(Te_m(i,j,k)*T0)
+			
+			edref(i,j,k,1)=
+		enddo
+		enddo
+		enddo
+
+        edref(:,:,:,1)=rad_time/rad_ts
 !        edref=max(edref-1.0e-5,0.d0)+1.0e-5 !This line doesn't work for some reason
 !print*,maxval(edref(:,:,:,1)),minval(Te_m)
 !Apply the energy sink of the form ro^2*Lambda
@@ -110,7 +146,7 @@ USE HDF5
 		do i=1,nelements
 			print*,radlossfun(i,1),radlossfun(i,2)/maxval(radlossfun(:,2))
 		enddo
-		stop
+		
 	endif
 
 end subroutine initialize_radloss
