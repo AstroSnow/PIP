@@ -3,13 +3,13 @@ Data/:indir; input directory
 MHD:flag_eqs;flag_for equation (HD,MHD, PIP) 
 -1:flag_restart; restart count (-1:no restart, 0: restart. nout at the end of config.txt will be read, >0: restart from No."flag_restart" data)
 2:ndim; dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
-64:ix; grid number for x-direction
-64:jx; grid number for y-direction
-2:kx; grid number for z-direction
-10.0 :dtout;  output period 100 
-400.0:tend;tend time for simulation (if lt 0 then default value is set) 20000
+10:ix; grid number for x-direction
+10:jx; grid number for y-direction
+300:kx; grid number for z-direction
+1.0 :dtout;  output period 100 
+70.0:tend;tend time for simulation (if lt 0 then default value is set) 20000
 0:esav; flag for save after given physical time
-600.d0:emsavtime; Physical time to save for esav
+3600.d0:emsavtime; Physical time to save for esav
 0 :flag_cyl; set to 1 when you use Cylindrical coordinates (x=>r,y=>z,z=>phi) NB: Only ndim=2 is allowed (rz-plane)
 5.0    :gm_d; 
 3.0    :gm_n;
@@ -36,7 +36,7 @@ KH:flag_ini; flag for initial setting
 -1    :flag_bnd_z_l; flag for z-boundary (if 0 then default value is set)
 -1    :flag_bnd_z_r; flag for z+boundary (if 0 then default value is set)
 ===For MHD===;
-0.1:beta; initial plasma beta 
+0.05:beta; initial plasma beta 
 0:flag_amb; flag for resistive of not (Ambipolar)
 1:flag_divb; flag for divB cleaning (0: no cleaning, 1:9-wave, 2:iterative 9-wave)
 0.7 :db_clean; paramter for divb cleaning
@@ -68,8 +68,8 @@ KH:flag_ini; flag for initial setting
 1.0:sor_omega; SOR-omega parameter (for iterative method)
 ==For MPI====;
 1     :flag_mpi;flag for mpi
-2     :mpi_x;node number for x-direction
-3     :mpi_y;node number for y-direction
+5     :mpi_x;node number for x-direction
+6     :mpi_y;node number for y-direction
 1     :mpi_z;node number for z-direction
 1     :flag_mpi_split;flag for splitting domain (Activated ONLY WHEN A=mpi_x*mpi_y*mpi_z=0 or A ne total_prc)
 ==For debug==;
@@ -81,10 +81,10 @@ KH:flag_ini; flag for initial setting
 0:no_advection;neglect advection term of induction equation 
 ==For damping==
 0     :flag_damp; flag for damping
-100000.0   :damp_time; timescale for damping
+1000000.0   :damp_time; timescale for damping
 ==Radiative losses==;
-0     :flag_rad; radiative losses
-1.0e6:rad_ts; Time scale for radiative losses
+3     :flag_rad; radiative losses
+1.0e0:rad_ts; Time scale for radiative losses
 1.0d0:radrhoref; Reference density for losses
 ==Normalisation parameters==
 10000.0d0 :T_norm; Temperature in K (13.6 eV = 157814.4 K)

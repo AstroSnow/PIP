@@ -15,6 +15,8 @@ subroutine source_rad_cooling(S_h,S_m,U_h,U_m)
 	double precision,intent(inout)::S_h(ix,jx,kx,nvar_h),S_m(ix,jx,kx,nvar_m)
 	double precision,intent(inout)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
 	double precision::rad_time(ix,jx,kx),Te_m(ix,jx,kx)
+	double precision::deltatrad,Tdimindc,weight1,weight2,Tdim
+	integer::Tdimindl,Tdimindu
 
 	!Newton Cooling
 	!https://warwick.ac.uk/fac/sci/physics/research/cfsa/people/pastmembers/leakej/publications/4099.pdf
@@ -63,22 +65,33 @@ subroutine source_rad_cooling(S_h,S_m,U_h,U_m)
 	if (flag_rad .eq. 3) then
 
         rad_time=1.0
+		deltatrad=radlossfun(2,1)-radlossfun(1,1)
 
 		!Get temperature
         call get_Te_MHD(U_m,Te_m) !This assumes a factor of 1/2 in temperature so put 2*Te in next line
 		Te_m=2.d0*Te_m
-
+!print*,radlossfun(2,1),radlossfun(1,1),radlossfun(2,1)-radlossfun(1,1),deltatrad
+!stop
 		!Interpolate the losses
 		do i=1,ix
 		do j=1,jx
 		do k=1,kx
 			Tdim=dlog10(Te_m(i,j,k)*T0)
 			
-			edref(i,j,k,1)=
-		enddo
-		enddo
-		enddo
+			Tdimindl=floor((Tdim-3.d0)*deltatrad) !NEED TO INCLUDE THE DELTA
+			Tdimindc=(Tdim-3.d0)
+			Tdimindu=ceiling((Tdim-3.d0)*deltatrad)
 
+			print*,deltatrad,(Tdim-3.d0),(Tdim-3.d0)/deltatrad
+
+			weight1=(radlossfun(Tdimindu,1)-Tdimindc)/(radlossfun(Tdimindu,1)-radlossfun(Tdimindl,1))
+			weight2=(Tdimindc-radlossfun(Tdimindl,1))/(radlossfun(Tdimindu,1)-radlossfun(Tdimindl,1))
+
+			edref(i,j,k,1)=radlossfun(Tdimindl,2)*weight1+radlossfun(Tdimindu,2)*weight2
+		enddo
+		enddo
+		enddo
+stop
         edref(:,:,:,1)=rad_time/rad_ts
 !        edref=max(edref-1.0e-5,0.d0)+1.0e-5 !This line doesn't work for some reason
 !print*,maxval(edref(:,:,:,1)),minval(Te_m)
