@@ -78,33 +78,34 @@ subroutine source_rad_cooling(S_h,S_m,U_h,U_m)
 		do k=1,kx
 			Tdim=dlog10(Te_m(i,j,k)*T0)
 			
-			Tdimindl=floor((Tdim-3.d0)*deltatrad) !NEED TO INCLUDE THE DELTA
+			Tdimindl=floor((Tdim-3.d0)/deltatrad+1) !NEED TO INCLUDE THE DELTA
 			Tdimindc=(Tdim-3.d0)
-			Tdimindu=ceiling((Tdim-3.d0)*deltatrad)
+			Tdimindu=ceiling((Tdim-3.d0)/deltatrad+1)
 
-			print*,deltatrad,(Tdim-3.d0),(Tdim-3.d0)/deltatrad
+!			print*,deltatrad,(Tdim-3.d0),Te_m(i,j,k)*T0,(Tdim-3.d0)/deltatrad
+!			print*,dlog10(Te_m(i,j,k)*T0),radlossfun(floor((Tdim-3.d0)/deltatrad+1.0),1),radlossfun(ceiling((Tdim-3.d0)/deltatrad+1.0),1)
 
-			weight1=(radlossfun(Tdimindu,1)-Tdimindc)/(radlossfun(Tdimindu,1)-radlossfun(Tdimindl,1))
-			weight2=(Tdimindc-radlossfun(Tdimindl,1))/(radlossfun(Tdimindu,1)-radlossfun(Tdimindl,1))
+!			weight1=(radlossfun(Tdimindu,1)-Tdimindc)/(radlossfun(Tdimindu,1)-radlossfun(Tdimindl,1))
+!			weight2=(Tdimindc-radlossfun(Tdimindl,1))/(radlossfun(Tdimindu,1)-radlossfun(Tdimindl,1))
 
-			edref(i,j,k,1)=radlossfun(Tdimindl,2)*weight1+radlossfun(Tdimindu,2)*weight2
+			if (Tdim .LE. 3.5d0) then
+				edref(i,j,k,1)=0.d0
+			elseif (Tdimindl .eq. Tdimindu) then
+				edref(i,j,k,1)=radlossfun(Tdimindl,2)
+			else 
+!				edref(i,j,k,1)=radlossfun(Tdimindl,2)*weight1+radlossfun(Tdimindu,2)*weight2
+				edref(i,j,k,1)=radlossfun(Tdimindl,2)+(radlossfun(Tdimindu,2)-radlossfun(Tdimindl,2))*&
+							(Tdim-radlossfun(Tdimindl,1))/(radlossfun(Tdimindu,1)-radlossfun(Tdimindl,1))
+			endif
+!			print*,Tdim,edref(i,j,k,1),rad_ts
 		enddo
 		enddo
 		enddo
-stop
-        edref(:,:,:,1)=rad_time/rad_ts
-!        edref=max(edref-1.0e-5,0.d0)+1.0e-5 !This line doesn't work for some reason
-!print*,maxval(edref(:,:,:,1)),minval(Te_m)
-!Apply the energy sink of the form ro^2*Lambda
-!		S_m(:,:,:,5)=S_m(:,:,:,5)-(U_m(:,:,:,5)-edref(:,:,:,1))/rad_time/rad_ts
+!stop
+        edref(:,:,:,1)=edref(:,:,:,1)/rad_ts
+        
 		S_m(:,:,:,5)=S_m(:,:,:,5)-U_m(:,:,:,1)**2*(edref(:,:,:,1))
 
-		if (flag_pip .eq. 1) then
-            edref(:,:,:,2)=1.d0-dtanh((U_h(:,:,:,1)-1.25d0)*pi/0.1)**2
-            rad_time=1.d0!((U_h(:,:,:,1))/radrhoref)**(-1.7)
-!            S_h(:,:,:,5)=S_h(:,:,:,5)-(U_h(:,:,:,5)-edref(:,:,:,2))/rad_time/rad_ts
-            S_h(:,:,:,5)=S_h(:,:,:,5)-(edref(:,:,:,2))/rad_time/rad_ts
-		endif
 		
 	endif
 
@@ -114,6 +115,7 @@ end subroutine source_rad_cooling
 
 subroutine initialize_radloss(flag_rad)
 USE HDF5
+
 	integer,intent(in)::flag_rad
 	INTEGER :: ErrorFlag	
 	INTEGER(HID_T) :: file_id
@@ -132,9 +134,9 @@ USE HDF5
 	endif
 	
 	if (flag_rad .eq. 3) then
-	
+	print*,'Reading file'
 		CALL h5open_f(ErrorFlag)
-		CALL h5fopen_f (filename, H5F_ACC_RDWR_F, file_id, ErrorFlag)
+		CALL h5fopen_f (filename, H5F_ACC_RDONLY_F, file_id, ErrorFlag)
 		CALL h5dopen_f(file_id, dset1name, dset_id, ErrorFlag)
 		CALL h5dget_space_f(dset_id, space_id,ErrorFlag)
 		
@@ -155,11 +157,13 @@ USE HDF5
 		CALL h5dread_f(dset_id, H5T_NATIVE_DOUBLE, radlossfun(:,2), data_dims, ErrorFlag)
 		
 		CALL h5close_f(ErrorFlag)
-		
-		do i=1,nelements
-			print*,radlossfun(i,1),radlossfun(i,2)/maxval(radlossfun(:,2))
-		enddo
-		
+
+		radlossfun(:,2)=radlossfun(:,2)/maxval(radlossfun(:,2))
+		print*,'file read'
+!		do i=1,nelements
+!			print*,radlossfun(i,1),radlossfun(i,2)!/maxval(radlossfun(:,2))
+!		enddo
+
 	endif
 
 end subroutine initialize_radloss
@@ -171,14 +175,14 @@ subroutine set_ref_rad_ed(U_h,U_m)
 
 	edref(:,:,:,:)=0.0d0
 
-    if (flag_rad .eq. 2) then
-	    !Set the initial array to be zero
-    	edref(:,:,:,:)=0.0d0
-    else
-    	!Set the reference internal energy
-    	edref(:,:,:,1)=U_m(:,:,:,5)
-        if (flag_pip .eq. 1) edref(:,:,:,2)=U_h(:,:,:,5)
-    endif
+!    if (flag_rad .eq. 2) then
+!	    !Set the initial array to be zero
+!    	edref(:,:,:,:)=0.0d0
+!    else
+!    	!Set the reference internal energy
+!    	edref(:,:,:,1)=U_m(:,:,:,5)
+!        if (flag_pip .eq. 1) edref(:,:,:,2)=U_h(:,:,:,5)
+!    endif
 
     print*,'setting edref'
 

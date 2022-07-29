@@ -316,7 +316,8 @@ contains
     double precision,intent(inout)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)  
     double precision::pr(ix,jx,kx)
     call get_Pr_MHD(U_m,pr)
-     dt=min(dt,safety/max(maxval(edref(:,:,:,1)*U_m(:,:,:,1)*U_m(:,:,:,1)/(pr/(gm-1.d0))),1.0d-5)) 
+    !dt=min(dt,0.1d0/max(maxval(edref(:,:,:,1)*U_m(:,:,:,1)*U_m(:,:,:,1)/(pr/(gm-1.d0))),1.0d-5))
+	dt=min(dt,0.1d0/max(maxval(1.d0*U_m(:,:,:,1)*U_m(:,:,:,1)/(pr/(gm-1.d0))),1.0d-5)) 
 !print*,olddttest,dt,safety/maxval(edref(:,:,:,1)/U_m(:,:,:,5))
 !     dt=min(dt,safety/maxval(edref(:,:,:,1))) 
    end subroutine cfl_rad_cool

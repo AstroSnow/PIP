@@ -40,7 +40,7 @@ LIB_DIR=.
 DEBUG= -ffpe-trap=invalid,overflow -fbacktrace -fbounds-check -g
 #DEBUG= -fbacktrace -fbounds-check -g
 #DEBUG= -fbacktrace -g
-DEBUG=
+#DEBUG=
 
 .SUFFIXES : .o .f90
 .f90.o:

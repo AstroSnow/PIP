@@ -3,8 +3,8 @@ Data/:indir; input directory
 MHD:flag_eqs;flag_for equation (HD,MHD, PIP) 
 -1:flag_restart; restart count (-1:no restart, 0: restart. nout at the end of config.txt will be read, >0: restart from No."flag_restart" data)
 2:ndim; dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
-10:ix; grid number for x-direction
-10:jx; grid number for y-direction
+200:ix; grid number for x-direction
+200:jx; grid number for y-direction
 300:kx; grid number for z-direction
 1.0 :dtout;  output period 100 
 70.0:tend;tend time for simulation (if lt 0 then default value is set) 20000
@@ -84,10 +84,10 @@ KH:flag_ini; flag for initial setting
 1000000.0   :damp_time; timescale for damping
 ==Radiative losses==;
 3     :flag_rad; radiative losses
-1.0e0:rad_ts; Time scale for radiative losses
+1.0e2:rad_ts; Time scale for radiative losses
 1.0d0:radrhoref; Reference density for losses
 ==Normalisation parameters==
-10000.0d0 :T_norm; Temperature in K (13.6 eV = 157814.4 K)
+1000000.0d0 :T_norm; Temperature in K (13.6 eV = 157814.4 K)
 1.0d15  :n_norm; number density
 3.d5    :L_norm; Length scale
 ==Optional save flags (0 on, -1 off) TOGGLE AT YOUR PERIL! MAY PREVENT RESTARTS==;
