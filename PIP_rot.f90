@@ -1322,7 +1322,7 @@ END subroutine
 ! calculate the ionisation potential loss
   double precision,intent(in)::nde(ix,jx,kx)
   double precision,intent(out)::enloss(ix,jx,kx)
-  double precision::ieloss(ix,jx,kx),Eev(6)
+  double precision::ieloss(ix,jx,kx),iegain(ix,jx,kx),Eev(6)
 
 Eev=[13.6,3.4,1.51,0.85,0.54,0.0]
 
@@ -1340,6 +1340,21 @@ ieloss=ieloss+nexcite(:,:,:,1)*(colrat(:,:,:,1,2)*(Eev(1)-Eev(2))+colrat(:,:,:,1
                     colrat(:,:,:,2,5)*(Eev(2)-Eev(5)))+&
               nexcite(:,:,:,3)*(colrat(:,:,:,3,4)*(Eev(3)-Eev(4))+colrat(:,:,:,3,5)*(Eev(3)-Eev(5)))+&
               nexcite(:,:,:,4)*(colrat(:,:,:,4,5)*(Eev(4)-Eev(5)))
+
+!Recombination gain
+iegain(:,:,:)=colrat(:,:,:,6,1)*13.6*nexcite(:,:,:,1)+&
+        colrat(:,:,:,6,2)*3.4*nexcite(:,:,:,2)+&
+        colrat(:,:,:,6,3)*1.51*nexcite(:,:,:,3)+&
+        colrat(:,:,:,6,4)*0.85*nexcite(:,:,:,4)+&
+        colrat(:,:,:,6,5)*0.54*nexcite(:,:,:,5)
+        
+!deexcitation gain              
+iegain=iegain+nexcite(:,:,:,1)*(colrat(:,:,:,2,1)*(Eev(1)-Eev(2))+colrat(:,:,:,3,1)*(Eev(1)-Eev(3))+&
+                    colrat(:,:,:,4,1)*(Eev(1)-Eev(4))+colrat(:,:,:,5,1)*(Eev(1)-Eev(5)))+&
+              nexcite(:,:,:,2)*(colrat(:,:,:,3,2)*(Eev(2)-Eev(3))+colrat(:,:,:,4,2)*(Eev(2)-Eev(4))+&
+                    colrat(:,:,:,5,2)*(Eev(2)-Eev(5)))+&
+              nexcite(:,:,:,3)*(colrat(:,:,:,4,3)*(Eev(3)-Eev(4))+colrat(:,:,:,5,3)*(Eev(3)-Eev(5)))+&
+              nexcite(:,:,:,4)*(colrat(:,:,:,5,4)*(Eev(4)-Eev(5)))
 !print*,minval(ieloss),minval(colrat),minval(nexcite)
     if(mod(flag_col,2) .eq. 1) then
 !	    enloss=nde/gm/T0/8.6173e-5*(&
@@ -1351,7 +1366,7 @@ ieloss=ieloss+nexcite(:,:,:,1)*(colrat(:,:,:,1,2)*(Eev(1)-Eev(2))+colrat(:,:,:,1
 !                (Nexcite(:,:,:,1)+Nexcite(:,:,:,2)+Nexcite(:,:,:,3)+Nexcite(:,:,:,4)+Nexcite(:,:,:,5)) 
 !	    enloss=nde/gm/T0/8.6173e-5*ieloss/&
 !                (Nexcite(:,:,:,1)+Nexcite(:,:,:,2)+Nexcite(:,:,:,3)+Nexcite(:,:,:,4)+Nexcite(:,:,:,5)) 
-    	    enloss=ieloss/gm/T0/8.6173e-5
+    	    enloss=(ieloss-iegain)/gm/T0/8.6173e-5
     elseif(mod(flag_col,2) .eq. 0) then
 !	    enloss=nde*(beta/T0/2.d0/8.6173e-5)*(&
 !                (13.6d0*max(Nexcite(:,:,:,1)*colrat(:,:,:,1,6),0.d0))+& !ground state
@@ -1362,7 +1377,7 @@ ieloss=ieloss+nexcite(:,:,:,1)*(colrat(:,:,:,1,2)*(Eev(1)-Eev(2))+colrat(:,:,:,1
 !                (Nexcite(:,:,:,1)+Nexcite(:,:,:,2)+Nexcite(:,:,:,3)+Nexcite(:,:,:,4)+Nexcite(:,:,:,5))
 !	    enloss=nde*(beta/T0/2.d0/8.6173e-5)*ieloss/& 
 !                (Nexcite(:,:,:,1)+Nexcite(:,:,:,2)+Nexcite(:,:,:,3)+Nexcite(:,:,:,4)+Nexcite(:,:,:,5))  
-	    enloss=ieloss/(beta/T0/2.d0/8.6173e-5)
+	    enloss=(ieloss-iegain)/(beta/T0/2.d0/8.6173e-5)
     else
 	    print*,'option not included!'
 	    stop
