@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-#fname='../Data/'
-fname='../simdata/nleveltest_rad/Data/'
+fname='../Data/'
+#fname='../simdata/nleveltest_rad/Data/'
 #fname='../simdata/nleveltest_rad_thick_st'
 
 ds=PIPpy.pipread(fname,5)
@@ -25,7 +25,7 @@ ndif=ds['ro_n']-nntot
 #plt.plot(ds['ion_rad']/ds['ion_rad'][-1])
 #plt.plot(ds['rec_rad']/ds['rec'])
 
-fig, axs = plt.subplots(2, 2)
+fig, axs = plt.subplots(2, 2,dpi=300)
 axs[0,0].plot(ds['xgrid'],ds['ion'],label='ion')
 axs[0,0].plot(ds['xgrid'],ds['rec'],label='rec')
 axs[0,0].plot(ds['xgrid'],ds['ion_rad'],label='ion_rad')
@@ -53,6 +53,8 @@ axs[1,1].plot(ds['xgrid'],ds['nexcite6'],label='c')
 axs[1,1].legend()
 axs[1,1].set_xscale('log')
 axs[1,1].set_yscale('log')
+
+plt.savefig('test_plot.png',dpi=300)
 
 """
 fig, axs = plt.subplots(2, 2)
