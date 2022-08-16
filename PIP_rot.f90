@@ -258,8 +258,9 @@ contains
         !get the arbitraty heating
         allocate(arb_heat(ix,jx,kx))
 		allocate(ion_pot(ix,jx,kx))
-        call IRgetionpot(U_h(:,:,:,1),arb_heat) 
         call IRgetionpot(U_h(:,:,:,1),ion_pot) 
+!        call IRgetionpot(U_h(:,:,:,1),arb_heat) 
+		arb_heat=0.d0!ion_pot
     endif
 !print*,Gm_rec_ref
 !stop
@@ -1342,19 +1343,25 @@ ieloss=ieloss+nexcite(:,:,:,1)*(colrat(:,:,:,1,2)*(Eev(1)-Eev(2))+colrat(:,:,:,1
               nexcite(:,:,:,4)*(colrat(:,:,:,4,5)*(Eev(4)-Eev(5)))
 
 !Recombination gain
-iegain(:,:,:)=colrat(:,:,:,6,1)*13.6*nexcite(:,:,:,1)+&
-        colrat(:,:,:,6,2)*3.4*nexcite(:,:,:,2)+&
-        colrat(:,:,:,6,3)*1.51*nexcite(:,:,:,3)+&
-        colrat(:,:,:,6,4)*0.85*nexcite(:,:,:,4)+&
-        colrat(:,:,:,6,5)*0.54*nexcite(:,:,:,5)
+iegain(:,:,:)=colrat(:,:,:,6,1)*13.6*nexcite(:,:,:,6)+&
+        colrat(:,:,:,6,2)*3.4*nexcite(:,:,:,6)+&
+        colrat(:,:,:,6,3)*1.51*nexcite(:,:,:,6)+&
+        colrat(:,:,:,6,4)*0.85*nexcite(:,:,:,6)+&
+        colrat(:,:,:,6,5)*0.54*nexcite(:,:,:,6)
         
 !deexcitation gain              
-iegain=iegain+nexcite(:,:,:,1)*(colrat(:,:,:,2,1)*(Eev(1)-Eev(2))+colrat(:,:,:,3,1)*(Eev(1)-Eev(3))+&
-                    colrat(:,:,:,4,1)*(Eev(1)-Eev(4))+colrat(:,:,:,5,1)*(Eev(1)-Eev(5)))+&
-              nexcite(:,:,:,2)*(colrat(:,:,:,3,2)*(Eev(2)-Eev(3))+colrat(:,:,:,4,2)*(Eev(2)-Eev(4))+&
-                    colrat(:,:,:,5,2)*(Eev(2)-Eev(5)))+&
-              nexcite(:,:,:,3)*(colrat(:,:,:,4,3)*(Eev(3)-Eev(4))+colrat(:,:,:,5,3)*(Eev(3)-Eev(5)))+&
-              nexcite(:,:,:,4)*(colrat(:,:,:,5,4)*(Eev(4)-Eev(5)))
+iegain=iegain+nexcite(:,:,:,2)*(colrat(:,:,:,2,1)*(Eev(1)-Eev(2)))+&
+			nexcite(:,:,:,3)*(colrat(:,:,:,3,1)*(Eev(1)-Eev(3))+colrat(:,:,:,3,2)*(Eev(3)-Eev(2)))+&
+			nexcite(:,:,:,4)*(colrat(:,:,:,4,1)*(Eev(1)-Eev(4))+colrat(:,:,:,4,2)*(Eev(2)-Eev(4))+&
+				colrat(:,:,:,4,3)*(Eev(3)-Eev(4)))+&
+			nexcite(:,:,:,5)*(colrat(:,:,:,5,1)*(Eev(1)-Eev(5))+colrat(:,:,:,5,2)*(Eev(2)-Eev(5))+&
+				colrat(:,:,:,5,3)*(Eev(3)-Eev(5))+colrat(:,:,:,5,4)*(Eev(4)-Eev(5)))
+!iegain=iegain+nexcite(:,:,:,1)*(colrat(:,:,:,2,1)*(Eev(1)-Eev(2))+colrat(:,:,:,3,1)*(Eev(1)-Eev(3))+&
+!                    colrat(:,:,:,4,1)*(Eev(1)-Eev(4))+colrat(:,:,:,5,1)*(Eev(1)-Eev(5)))+&
+!              nexcite(:,:,:,2)*(colrat(:,:,:,3,2)*(Eev(2)-Eev(3))+colrat(:,:,:,4,2)*(Eev(2)-Eev(4))+&
+!                    colrat(:,:,:,5,2)*(Eev(2)-Eev(5)))+&
+!              nexcite(:,:,:,3)*(colrat(:,:,:,4,3)*(Eev(3)-Eev(4))+colrat(:,:,:,5,3)*(Eev(3)-Eev(5)))+&
+!              nexcite(:,:,:,4)*(colrat(:,:,:,5,4)*(Eev(4)-Eev(5)))
 !print*,minval(ieloss),minval(colrat),minval(nexcite)
     if(mod(flag_col,2) .eq. 1) then
 !	    enloss=nde/gm/T0/8.6173e-5*(&
