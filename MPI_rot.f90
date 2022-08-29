@@ -504,9 +504,9 @@ contains
   end subroutine end_mpi
 
   subroutine my_mpi_barrier
-  print*,'calling MPI barrier'
+!  print*,'calling MPI barrier'
     call MPI_barrier(MPI_COMM_WORLD)
-  print*,'called MPI barrier'
+!  print*,'called MPI barrier'
   end subroutine my_mpi_barrier  
 
 end module mpi_rot
