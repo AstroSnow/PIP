@@ -314,7 +314,7 @@ contains
       endif
     endif
     if(flag_mhd.eq.1.and.flag_pip.eq.0.and.flag_rad.ge.1) then
-      call write_3D_array("edref", edref)
+      call write_3D_array("edref_m", edref(:,:,:,1))
     endif
 !    if (flag_rad .ge. 1) then
 !        call save1param(edref(:,:,:,1),tno//'edref_m.dac.',1)
