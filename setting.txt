@@ -3,11 +3,11 @@ Data/:indir; input directory
 MHD:flag_eqs;flag_for equation (HD,MHD, PIP) 
 -1:flag_restart; restart count (-1:no restart, 0: restart. nout at the end of config.txt will be read, >0: restart from No."flag_restart" data)
 1:ndim; dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
-12800:ix; grid number for x-direction
+512000:ix; grid number for x-direction
 50:jx; grid number for y-direction
 2:kx; grid number for z-direction
-100.0 :dtout;  output period 100 
-5000.0:tend;tend time for simulation (if lt 0 then default value is set) 20000
+500.0 :dtout;  output period 100 
+10000.0:tend;tend time for simulation (if lt 0 then default value is set) 20000
 0:esav; flag for save after given physical time
 0001.d0:emsavtime; Physical time to save for esav
 0 :flag_cyl; set to 1 when you use Cylindrical coordinates (x=>r,y=>z,z=>phi) NB: Only ndim=2 is allowed (rz-plane)
@@ -56,8 +56,8 @@ shock_tube_ion:flag_ini; flag for initial setting
 0:flag_IR_type; (0:new, 1:Khomenko, 2:Singh)
 1.0e-5:t_IR;time scale of ionization and recombination relative to collisional time
 ==Radiative losses==;
-0:flag_rad; (0:no radiative IR, 2:Black-body radiative)
-5000.d0:rad_temp; Black-body radiation temperature
+3:flag_rad; (0:no radiative IR, 2:Black-body radiative)
+6000.d0:rad_temp; Black-body radiation temperature
 ==For heat condution===;
 0 :flag_heat;heat conduction flag (0:switch-off, 1:switch-on)
 1 :hc_type; type of heat conduction (0:constant-type, 1:Spitzer-type)
@@ -86,8 +86,8 @@ shock_tube_ion:flag_ini; flag for initial setting
 0     :flag_damp; flag for damping
 100000.0   :damp_time; timescale for damping
 ==Normalisation parameters==
-6000.0d0 :T_norm; Temperature in K (13.6 eV = 157814.4 K)
-7.6e16  :n_norm; number density
+5030.0d0 :T_norm; Temperature in K (13.6 eV = 157814.4 K)
+7.5e16  :n_norm; number density
 3.d5    :L_norm; Length scale
 ==Optional save flags (0 on, -1 off) TOGGLE AT YOUR PERIL! MAY PREVENT RESTARTS==;
 0:ac_sav;collisional coefficient
