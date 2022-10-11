@@ -3,11 +3,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-fname='../Data/'
+#fname='../Data/'
 #fname='../simdata/nleveltest_rad/Data/'
 #fname='../simdata/nleveltest_rad_thick_st'
+#fname='../simdata/T_6220_long/Data/'
+#fname='../simdata/isca_midc/Data/'
+#fname='../simdata/isca_midc_ltest/Data/'
+fname='../simdata/isca_lowc_long/Data/'
 
-ds=PIPpy.pipread(fname,5)
+ds=PIPpy.pipread(fname,12)
 
 nntot=ds['nexcite1']+ds['nexcite2']+ds['nexcite3']+ds['nexcite4']+ds['nexcite5']
 
@@ -26,35 +30,41 @@ ndif=ds['ro_n']-nntot
 #plt.plot(ds['rec_rad']/ds['rec'])
 
 fig, axs = plt.subplots(2, 2,dpi=300)
-axs[0,0].plot(ds['xgrid'],ds['ion'],label='ion')
-axs[0,0].plot(ds['xgrid'],ds['rec'],label='rec')
-axs[0,0].plot(ds['xgrid'],ds['ion_rad'],label='ion_rad')
-axs[0,0].plot(ds['xgrid'],ds['rec_rad'],label='rec_rad')
+fig.set_size_inches(9.7, 6)
+
+axs[0,0].plot(ds['xgrid']/ds['time'],ds['ion'],label='ion')
+axs[0,0].plot(ds['xgrid']/ds['time'],ds['rec'],label='rec')
+axs[0,0].plot(ds['xgrid']/ds['time'],ds['ion_rad'],label='ion_rad')
+axs[0,0].plot(ds['xgrid']/ds['time'],ds['rec_rad'],label='rec_rad')
 axs[0,0].set_yscale('log')
 axs[0,0].set_xscale('log')
+axs[0,0].set_xlim([0.01,2.0])
 axs[0,0].legend()
 
-axs[0,1].plot(ds['xgrid'],ds['vx_p'],label='vx_p')
-axs[0,1].plot(ds['xgrid'],ds['vx_n'],label='vx_n')
+axs[0,1].plot(ds['xgrid']/ds['time'],ds['vx_p'],label='vx_p')
+axs[0,1].plot(ds['xgrid']/ds['time'],ds['vx_n'],label='vx_n')
 axs[0,1].set_xscale('log')
+axs[0,1].set_xlim([0.01,2.0])
 axs[0,1].legend()
 
-axs[1,0].plot(ds['xgrid'],ds['pr_p']/ds['ro_p']*5.0/6.0,label='T_p')
-axs[1,0].plot(ds['xgrid'],ds['pr_n']/ds['ro_n']*5.0/3.0,label='T_n')
+axs[1,0].plot(ds['xgrid']/ds['time'],ds['pr_p']/ds['ro_p']*5.0/6.0,label='T_p')
+axs[1,0].plot(ds['xgrid']/ds['time'],ds['pr_n']/ds['ro_n']*5.0/3.0,label='T_n')
 axs[1,0].legend()
+axs[1,0].set_xlim([0.01,2.0])
 axs[1,0].set_xscale('log')
 
-axs[1,1].plot(ds['xgrid'],ds['nexcite1'],label='n0')
-axs[1,1].plot(ds['xgrid'],ds['nexcite2'],label='n1')
-axs[1,1].plot(ds['xgrid'],ds['nexcite3'],label='n2')
-axs[1,1].plot(ds['xgrid'],ds['nexcite4'],label='n3')
-axs[1,1].plot(ds['xgrid'],ds['nexcite5'],label='n4')
-axs[1,1].plot(ds['xgrid'],ds['nexcite6'],label='c')
+axs[1,1].plot(ds['xgrid']/ds['time'],ds['nexcite1'],label='n1')
+axs[1,1].plot(ds['xgrid']/ds['time'],ds['nexcite2'],label='n2')
+axs[1,1].plot(ds['xgrid']/ds['time'],ds['nexcite3'],label='n3')
+axs[1,1].plot(ds['xgrid']/ds['time'],ds['nexcite4'],label='n4')
+axs[1,1].plot(ds['xgrid']/ds['time'],ds['nexcite5'],label='n5')
+axs[1,1].plot(ds['xgrid']/ds['time'],ds['nexcite6'],label='c')
 axs[1,1].legend()
 axs[1,1].set_xscale('log')
 axs[1,1].set_yscale('log')
+axs[1,1].set_xlim([0.01,2.0])
 
-plt.savefig('test_plot.png',dpi=300)
+#plt.savefig('test_plot.png',dpi=300)
 
 """
 fig, axs = plt.subplots(2, 2)
