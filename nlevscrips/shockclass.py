@@ -68,7 +68,7 @@ axs[0,1].set_xlim([xmin-vs,xmax-vs])
 #axs[0,1].set_ylim([0.1,1.0])
 #axs[0,1].legend()
 axs[0,1].set_xlabel('$x_s$')
-axs[0,1].set_ylabel('$neutral fraction$')
+axs[0,1].set_ylabel('$density$')
 
 axs[1,0].plot(xs,csn,label='cs_n',color='r',linewidth=lthick)
 axs[1,0].plot(xs,csp,label='cs_p',color='y',linewidth=lthick)

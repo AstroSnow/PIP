@@ -13,12 +13,12 @@ import numpy as np
 #fname='../Data/'
 #fname='../simdata/nleveltest_rad/Data/'
 #fname='../simdata/nleveltest_rad_thick_st'
-fname='../simdata/T_6220_long/Data/'; T0=6220.0
+#fname='../simdata/T_6220_long/Data/'; T0=6220.0; etime=30; sname='contextplot.png'
 #fname='../simdata/isca_midc/Data/'
-#fname='../simdata/isca_midc_ltest/Data/'
-#fname='../simdata/isca_lowc_test/Data/'
+#fname='../simdata/isca_midc_ltest/Data/' ; T0=5030.0; etime=40; sname='context_midc.png'
+fname='../simdata/isca_lowc_long/Data/'; T0=5180.0; etime=21; sname='context_lowc.png'
 
-ds=PIPpy.pipread(fname,20)
+ds=PIPpy.pipread(fname,etime)
 dsm=PIPpy.pipread('../simdata/MHD_ref/',50)
 
 nntot=ds['nexcite1']+ds['nexcite2']+ds['nexcite3']+ds['nexcite4']+ds['nexcite5']
@@ -106,8 +106,8 @@ axs[1,1].set_xlim([0.01,2.0])
 axs[1,1].set_xlabel('$x/t$')
 axs[1,1].set_ylabel('Density')
 
-plt.savefig('contextplot.png',dpi=300)
-#plt.savefig('context_midc.png',dpi=300)
+#plt.savefig('contextplot.png',dpi=300)
+plt.savefig(sname,dpi=300)
 
 """
 fig, axs = plt.subplots(2, 2)

@@ -11,7 +11,7 @@ import numpy as np
 #fname='../simdata/isca_midc_ltest/Data/'
 fname='../simdata/isca_lowc_long/Data/'
 
-ds=PIPpy.pipread(fname,12)
+ds=PIPpy.pipread(fname,21)
 
 nntot=ds['nexcite1']+ds['nexcite2']+ds['nexcite3']+ds['nexcite4']+ds['nexcite5']
 
