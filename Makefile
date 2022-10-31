@@ -37,10 +37,10 @@ LDFLAGS =
 LIB_DIR=.
 #DEBUG = -g -pg
 #DEBUG= -ffpe-trap=invalid,zero,overflow -fbacktrace -fbounds-check -g
-DEBUG= -ffpe-trap=invalid,overflow -fbacktrace -fbounds-check -g
+#DEBUG= -ffpe-trap=invalid,overflow -fbacktrace -fbounds-check -g
 #DEBUG= -fbacktrace -fbounds-check -g
 #DEBUG= -fbacktrace -g
-#DEBUG=
+DEBUG=
 
 .SUFFIXES : .o .f90
 .f90.o:

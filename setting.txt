@@ -3,8 +3,8 @@ Data/:indir; input directory
 MHD:flag_eqs;flag_for equation (HD,MHD, PIP) 
 -1:flag_restart; restart count (-1:no restart, 0: restart. nout at the end of config.txt will be read, >0: restart from No."flag_restart" data)
 2:ndim; dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
-200:ix; grid number for x-direction
-200:jx; grid number for y-direction
+800:ix; grid number for x-direction
+800:jx; grid number for y-direction
 300:kx; grid number for z-direction
 1.0 :dtout;  output period 100 
 70.0:tend;tend time for simulation (if lt 0 then default value is set) 20000
@@ -24,7 +24,7 @@ KH:flag_ini; flag for initial setting
 0    :flag_visc;  flag for viscosity
 1.0e-3  :nu_0; Value of viscosity
 -1:flag_artvis;flag for artificial viscosity (default :-1)
-1.8 :theta; parameterfor artificial viscosity (set between 1 and 2 inclusive)
+1.2 :theta; parameterfor artificial viscosity (set between 1 and 2 inclusive)
 ===For limits===;
 0.00000001 :ro_lim; Lower limit for density
 0.00000001 :pr_lim; Lower limit for pressure
