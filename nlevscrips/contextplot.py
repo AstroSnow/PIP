@@ -13,10 +13,11 @@ import numpy as np
 #fname='../Data/'
 #fname='../simdata/nleveltest_rad/Data/'
 #fname='../simdata/nleveltest_rad_thick_st'
-#fname='../simdata/T_6220_long/Data/'; T0=6220.0; etime=30; sname='contextplot.png'
+fname='../simdata/T_6220_long/Data/'; T0=6220.0; etime=30; sname='contextplot.png'
 #fname='../simdata/isca_midc/Data/'
 #fname='../simdata/isca_midc_ltest/Data/' ; T0=5030.0; etime=40; sname='context_midc.png'
-fname='../simdata/isca_lowc_long/Data/'; T0=5180.0; etime=21; sname='context_lowc.png'
+#fname='../simdata/isca_lowc_long/Data/'; T0=5180.0; etime=21; sname='context_lowc.png'
+
 
 ds=PIPpy.pipread(fname,etime)
 dsm=PIPpy.pipread('../simdata/MHD_ref/',50)
@@ -54,9 +55,19 @@ axs[0,1].set_ylabel('$\Gamma$')"""
 
 axs[0,0].plot(ds['xgrid']/ds['time'],ds['vx_p'],label='vx_p',color='b',linewidth=lthick)
 axs[0,0].plot(ds['xgrid']/ds['time'],ds['vx_n'],label='vx_n',color='r',linewidth=lthick)
-axs[0,0].plot(dsm['xgrid']/dsm['time'],dsm['vx_p'],label='vx_p (MHD)',color='k',linewidth=lthick)
+axs[0,0].plot(dsm['xgrid']/dsm['time'],dsm['vx_p'],label='vx (MHD)',color='k',linewidth=lthick)
 axs[0,0].set_xscale('log')
 axs[0,0].set_xlim([0.01,2.0])
+axs[0,0].text(0.2,-0.05,'rarefaction',color='k')
+axs[0,0].text(0.28,-0.07,'wave',color='k')
+axs[0,0].arrow(0.4,-0.08,0.3,-0.05,color='g',width=0.002,head_width=0.02,head_length=0.05)
+axs[0,0].text(0.18,-0.23,'inflow',color='k')
+axs[0,0].arrow(0.25,-0.215,0.0,0.02,color='g',width=0.002,head_width=0.02,head_length=0.01)
+axs[0,0].arrow(0.25,-0.235,0.0,-0.02,color='g',width=0.002,head_width=0.02,head_length=0.01)
+axs[0,0].text(0.012,-0.1,'slow-mode',color='k')
+axs[0,0].text(0.015,-0.12,'shock',color='k')
+axs[0,0].arrow(0.032,-0.115,0.03,0.0,color='g',width=0.002,head_width=0.02,head_length=0.01)
+#axs[0,0].arrow(0.25,-0.235,0.0,-0.02,color='g',width=0.002,head_width=0.02,head_length=0.01)
 axs[0,0].legend()
 axs[0,0].set_xlabel('$x/t$')
 axs[0,0].set_ylabel('$v_x$')

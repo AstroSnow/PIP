@@ -13,9 +13,14 @@ import numpy as np
 #fname='../Data/'
 #fname='../simdata/nleveltest_rad/Data/'
 #fname='../simdata/nleveltest_rad_thick_st'
-#fname='../simdata/T_6220_long/Data/' ;xmin=0.075;xmax=0.08 ;sname='shocksub2_plot_upc.png'; etime=30;T0=6220
+fname='../simdata/T_6220_long/Data/' ;xmin=0.0748;xmax=0.08 ;sname='shocksub2_plot_upc.png'; etime=30;T0=6220
 #fname='../simdata/isca_midc_ltest/Data/' ;xmin=0.052;xmax=0.074 ;sname='shocksub2_plot_midc.png'; etime=40; T0=5030
-fname='../simdata/isca_lowc_long/Data/' ;xmin=0.04;xmax=0.1 ;sname='shocksub2_plot_lowc.png'; etime=21; T0=5180
+#fname='../simdata/isca_lowc_long/Data/' ;xmin=0.04;xmax=0.1 ;sname='shocksub2_plot_lowc.png'; etime=21; T0=5180
+#fname='../simdata/T_5300_n_7.5e16/' ;xmin=0.05;xmax=0.08 ;sname='shocksub2_plot_T5300.png'; etime=40;T0=5300
+#fname='../simdata/T_5600_n_7.5e16/' ;xmin=0.05;xmax=0.068 ;sname='shocksub2_plot_T5600.png'; etime=80;T0=5600
+#fname='../simdata/T_6000_n_7.5e16/' ;xmin=0.05;xmax=0.06 ;sname='shocksub2_plot_T6000.png'; etime=40;T0=6000
+#fname='../simdata/T_6100_n_7.5e16/' ;xmin=0.06;xmax=0.064 ;sname='shocksub2_plot_T6100.png'; etime=40;T0=5600
+#fname='../simdata/T_6500_n_7.5e16/' ;xmin=0.141;xmax=0.144;sname='shocksub2_plot_T6500.png'; etime=40;T0=6500
 
 ds=PIPpy.pipread(fname,etime)
 dsm=PIPpy.pipread('../simdata/MHD_ref/',50)
@@ -45,6 +50,10 @@ vap=ds['bx']/np.sqrt(ds['ro_p'])
 csn=np.sqrt(5.0/3.0*ds['pr_n']/ds['ro_n'])
 csp=np.sqrt(5.0/3.0*ds['pr_p']/ds['ro_p'])
 
+cs=np.sqrt(5.0/3.0*(ds['pr_n']+ds['pr_p'])/(ds['ro_n']+ds['ro_p']))
+theta=np.arctan(ds['by']/ds['bx'])
+slow=np.sqrt(va**2+cs**2-np.sqrt((va**2+cs**2)**2-4.0*va**2*cs**2*np.cos(theta)**2))
+
 #plt.plot(ds['pr_p']/ds['ro_p'])
 #plt.plot(ds['vx_n'])
 #plt.plot(ds['by'])
@@ -66,12 +75,27 @@ axs[0,0].plot(xs,ds['vx_p'],label='vx_p',color='b',linewidth=lthick)
 axs[0,0].plot(xs,ds['vx_n'],label='vx_n',color='r',linewidth=lthick)
 #axs[0,0].set_xscale('log')
 axs[0,0].set_xlim([xmin-vs,xmax-vs])
-#axs[0,0].set_ylim([-0.16,0.16])
+axs[0,0].set_ylim([-0.3,0.02])
 axs[0,0].legend()
 axs[0,0].set_xlabel('$x_s$')
 axs[0,0].set_ylabel('$v_\perp$')
+#axs[0,0].plot()
+if fname=='../simdata/T_6220_long/Data/':
+    axs[0,0].fill_between([xs[bn],0.002],[-0.3,-0.3], [0.02,0.02], alpha=0.3,facecolor='green')
+    axs[0,0].fill_between([-0.004,-0.002],[-0.3,-0.3], [0.02,0.02], alpha=0.3,facecolor='green')
+#    axs[0,0].text(-0.0018,-0.28,'Neutral shock',color='red')
+#    axs[0,0].arrow(-0.0003,-0.27,0.00045,0.035,color='k',width=0.00002)
+#    axs[0,0].text(0.00025,-0.25,'Neutral shock',color='red')
+#    axs[0,0].arrow(0.00022,-0.25,-0.00045,0.0,color='k',width=0.00002)
+#    axs[0,0].text(-0.0018,-0.22,'Plasma shock',color='blue')
+    axs[0,0].text(-0.0032,-0.22,'post-shock',color='k')
+    axs[0,0].text(0.0005,-0.22,'pre-shock',color='k')
+    axs[0,0].text(-0.0016,-0.22,'finite-width',color='k')
+    axs[0,0].plot([xs[bn],xs[bn]],[-1,1],'r--')
+    axs[0,0].plot([xs[b],xs[b]],[-1,1],'b--')
+    
 
-axs[0,1].plot(xs,(ds['vx_n']-vsn)/csn,label='Sonic',color='r',linewidth=lthick)
+axs[0,1].plot(xs,(ds['vx_n']-vsn)/csn,label='Meutral Sonic',color='r',linewidth=lthick)
 axs[0,1].plot(xs,(ds['vx_p']-vs)/va,label='Bulk Alfven',color='g',linewidth=lthick)
 axs[0,1].plot(xs,(ds['vx_p']-vs)/vap,label='Plasma Alfven',color='b',linewidth=lthick)
 #axs[0,0].set_xscale('log')
@@ -80,6 +104,20 @@ axs[0,1].set_xlim([xmin-vs,xmax-vs])
 axs[0,1].legend()
 axs[0,1].set_xlabel('$x_s$')
 axs[0,1].set_ylabel('Mach number')
+#if fname=='../simdata/T_6220_long/Data/':
+#    axs[0,1].fill_between([xs[bn],0.002],[-0.3,-0.3], [0.02,0.02], alpha=0.3,facecolor='green')
+#    axs[0,1].fill_between([-0.004,-0.002],[-0.3,-0.3], [0.02,0.02], alpha=0.3,facecolor='green')
+#    axs[0,0].text(-0.0018,-0.28,'Neutral shock',color='red')
+#    axs[0,0].arrow(-0.0003,-0.27,0.00045,0.035,color='k',width=0.00002)
+#    axs[0,0].text(0.00025,-0.25,'Neutral shock',color='red')
+#    axs[0,0].arrow(0.00022,-0.25,-0.00045,0.0,color='k',width=0.00002)
+#    axs[0,0].text(-0.0018,-0.22,'Plasma shock',color='blue')
+#    axs[0,0].text(-0.0032,-0.22,'post-shock',color='k')
+#    axs[0,0].text(0.0005,-0.22,'pre-shock',color='k')
+#    axs[0,0].text(-0.0016,-0.22,'finite-width',color='k')
+#    axs[0,0].plot([xs[bn],xs[bn]],[-1,1],'r--')
+#    axs[0,0].plot([xs[b],xs[b]],[-1,1],'b--')
+#    axs[0,1].plot(xs,(ds['vx_p']-vs)/slow,'k--')
 
 axs[1,0].plot(xs,ds['ion'],label='ion',linewidth=lthick)
 axs[1,0].plot(xs,ds['rec'],label='rec',linewidth=lthick)
@@ -125,11 +163,12 @@ T1=ds['pr_p'][-1]/ds['ro_p'][-1]*5.0/6.0
 T=ds['pr_p']/ds['ro_p']*5.0/6.0
 tpost=np.interp(xmin,ds['xgrid']/ds['time'],T*T0/T1)
 tpre=np.interp(xmax,ds['xgrid']/ds['time'],T*T0/T1)
-tmax=np.max(T[1000:-1]*T0/T1)
+tmax=np.max(T[100:-1]*T0/T1)
 ropost=np.interp(xmin,ds['xgrid']/ds['time'],ds['ro_p']+ds['ro_n'])
 ropre=np.interp(xmax,ds['xgrid']/ds['time'],ds['ro_p']+ds['ro_n'])
+xn=ds['ro_n']/(ds['ro_p']+ds['ro_n'])
 
-print(tpre,tpost,tmax,ropost/ropre)
+print(tpre,tpost,tmax,ropost/ropre,xn[-1])
 
 """
 fig, axs = plt.subplots(2, 2)
