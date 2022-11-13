@@ -234,8 +234,9 @@ contains
 
     !Normalise the temperature 
 	if(mod(flag_col,2) .eq. 1) then
-		tfac=0.5d0*f_p_p_ini/f_p_ini
-		!print*,tfac
+		!tfac=5.d0/6.d0*f_p_p_ini/f_p_ini
+		tfac=T0/(5.0/3.0*f_p_p_ini/f_p_ini)
+		!print*,Te_p*T0/tfac
 	elseif(mod(flag_col,2) .eq. 0) then
 		tfac=beta/2.0d0*f_p_p_ini*5.0d0/6.0d0/f_p_ini
 	else
@@ -247,7 +248,7 @@ contains
 
 !        allocate(expinttab(4,10000)) !table for the exponential integral table
 !        call expintread
- 
+ !print*,Te_p*T0/tfac
 !	    allocate(Colrat(ix,jx,kx,6,6)) !Allocate the rate array
         call get_col_ion_coeff(Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion,Gm_rec)
 !        call get_col_ion_coeff(Te_p*T0/tfac,spread(spread(spread(n0,1,ix),2,jx),3,kx),Gm_ion,Gm_rec)

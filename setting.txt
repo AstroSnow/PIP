@@ -1,21 +1,21 @@
 Data/:outdir; output directory (This should written at the first line in this file!!)
 Data/:indir; input directory
-MHD:flag_eqs;flag_for equation (HD,MHD, PIP) 
+PIP:flag_eqs;flag_for equation (HD,MHD, PIP) 
 -1:flag_restart; restart count (-1:no restart, 0: restart. nout at the end of config.txt will be read, >0: restart from No."flag_restart" data)
-1:ndim; dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
-512000:ix; grid number for x-direction
-50:jx; grid number for y-direction
+2:ndim; dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
+128:ix; grid number for x-direction
+128:jx; grid number for y-direction
 2:kx; grid number for z-direction
-500.0 :dtout;  output period 100 
-10000.0:tend;tend time for simulation (if lt 0 then default value is set) 20000
+1.0 :dtout;  output period 100 
+10.0:tend;tend time for simulation (if lt 0 then default value is set) 20000
 0:esav; flag for save after given physical time
 0001.d0:emsavtime; Physical time to save for esav
 0 :flag_cyl; set to 1 when you use Cylindrical coordinates (x=>r,y=>z,z=>phi) NB: Only ndim=2 is allowed (rz-plane)
 5.0    :gm_d; 
 3.0    :gm_n;
 0.8  :safety;  safety factor
-shock_tube_ion:flag_ini; flag for initial setting   
-0:flag_sch;  flag for numerical scheme (0:HLL-branch, 1:SLW)
+KHnlev:flag_ini; flag for initial setting   
+1:flag_sch;  flag for numerical scheme (0:HLL-branch, 1:SLW)
 2:flag_hll; flag for HLL branch (0:HLL,1:Rusanov,2:HLLD)
 1:s_order;order of space for HLL branch (1, 2)
 0:flag_time; flag for time integration method (0:RK, 1: SSPRK)
@@ -51,7 +51,7 @@ shock_tube_ion:flag_ini; flag for initial setting
 1.0:col;for collisional coefficient
 0     :flag_pip_imp;for implicit scheme in source term
 10.0   :pip_imp_factor;cfl condition factor for pip_implicit scheme
-2    :flag_col;flag for collisional coefficient
+3    :flag_col;flag for collisional coefficient
 4:flag_IR;flag for ionization and recombination (0:none, 1:Single level, 2:Empirical)
 0:flag_IR_type; (0:new, 1:Khomenko, 2:Singh)
 1.0e-5:t_IR;time scale of ionization and recombination relative to collisional time
@@ -71,8 +71,8 @@ shock_tube_ion:flag_ini; flag for initial setting
 1.0:sor_omega; SOR-omega parameter (for iterative method)
 ==For MPI====;
 1     :flag_mpi;flag for mpi
-8     :mpi_x;node number for x-direction
-1     :mpi_y;node number for y-direction
+4     :mpi_x;node number for x-direction
+2     :mpi_y;node number for y-direction
 1     :mpi_z;node number for z-direction
 1     :flag_mpi_split;flag for splitting domain (Activated ONLY WHEN A=mpi_x*mpi_y*mpi_z=0 or A ne total_prc)
 ==For debug==;
@@ -86,7 +86,7 @@ shock_tube_ion:flag_ini; flag for initial setting
 0     :flag_damp; flag for damping
 100000.0   :damp_time; timescale for damping
 ==Normalisation parameters==
-5030.0d0 :T_norm; Temperature in K (13.6 eV = 157814.4 K)
+5500.0d0 :T_norm; Temperature in K (13.6 eV = 157814.4 K)
 7.5e16  :n_norm; number density
 3.d5    :L_norm; Length scale
 ==Optional save flags (0 on, -1 off) TOGGLE AT YOUR PERIL! MAY PREVENT RESTARTS==;

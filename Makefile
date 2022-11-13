@@ -14,7 +14,7 @@ OBJECTS = Util_rot.o BMP_rot.o Matrix_rot.o \
 	NUwave.o Reconnection.o BMP_density.o blob.o field_diffusion.o\
 	CS_collapse.o asym_currentsheet.o CSC.o\
 	Alfven_Damping.o cnd_tube.o shock_tube_ion.o\
-	MRI.o disk_flare.o mass_load_prom.o \
+	MRI.o disk_flare.o mass_load_prom.o KHnlev.o\
 	Initial_rot.o  main.o relax_prom.o relax_prom2.o procedures.o hsstatic.o\
 	resonator.o ionrectest.o  Complete_spectrum.o shock_tube_stab.o shock_tube_stab2.o shock_tube_stab3.o kink_wave.o
 MOD_FILES = util_rot.mod globalvar.mod parameters.mod \
@@ -39,7 +39,7 @@ LIB_DIR=.
 #DEBUG= -ffpe-trap=invalid,overflow -fbacktrace -fbounds-check -g
 #DEBUG= -fbacktrace -fbounds-check -g
 #DEBUG= -fbacktrace -g
-DEBUG=
+DEBUG=-fallow-argument-mismatch -ffpe-trap=invalid,zero,overflow -fbacktrace -fbounds-check -g
 
 .SUFFIXES : .o .f90
 .f90.o:

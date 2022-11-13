@@ -504,6 +504,8 @@ contains
   end subroutine end_mpi
 
   subroutine my_mpi_barrier
+    !if (my_rank .eq. 0) 
+    print*,'Setting MPI barrier'
     call MPI_barrier(MPI_COMM_WORLD)
   end subroutine my_mpi_barrier  
 

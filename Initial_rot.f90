@@ -56,6 +56,8 @@ contains
           call RT
        case('KH')          
           call KH
+       case('KHnlev')          
+          call KHnlev
        case('Orszag_Tang')
           call Orszag_Tang
        case('FieldLoop')          
