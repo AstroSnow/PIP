@@ -45,10 +45,12 @@ subroutine KHnlev
    call random_number(HARVEST=harvest)
 
 !Set the reference values
-T0down=6555.84
+!T0down=6555.84250200805d0
 T0up=5500
+T0down=12284.274572709573
 n0up=7.5e16
-n0down=n0up*10.d0
+!n0down=n0up*10.d0
+n0down=n0up*50.d0
 
 if(flag_IR .ne. 4) then
 	print*,'set flag_IR=4 for this routine'
@@ -111,7 +113,7 @@ f_p_pdown=ppdown/n0up!(pnup+ppup)
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
   start(1)=-0.5d0 ;end(1)=0.5d0
-  start(2)=-1.5d0 ;end(2)=0.5d0
+  start(2)=-1.0d0 ;end(2)=1.0d0
   start(3)=-8.0d0 ;end(3)=8.0d0
   call set_coordinate(start,end)
   !---------------------------------------
@@ -127,8 +129,8 @@ f_p_pdown=ppdown/n0up!(pnup+ppup)
 
   !!!========================================================
   !density of lower fluid is unity
-  ro_l=1.0d0
-  ro_u=10.0d0
+  ro_l=nnup+n0up
+  ro_u=nndown+n0down
   vx_l=ro_u/(ro_u+ro_l)*dsqrt(1.d0/10.d0)
 !  if(flag_mhd.eq.1) then
 !  vx_l=vx_l*sqrt(1.d0+2.d0/(gm*beta))
@@ -170,12 +172,12 @@ f_p_pdown=ppdown/n0up!(pnup+ppup)
   	     *0.5d0,1,ix),3,kx)
   enddo
 !  ro_m=f_p*ro_h/f_n
-  vx_h=abs(ro_l*vx_l)*spread(spread(tanh(y/w_lay),1,ix),3,kx)/ro_h
+  vx_h=abs((nnup+n0up)*vx_l)*spread(spread(tanh(y/w_lay),1,ix),3,kx)/(nnup+n0up)
   vx_m=vx_h
 
   theta=2.d0*pi*0.d0/360.d0
   if(flag_mhd.eq.1) then
-     b0=0.d0!sqrt(2.0d0/(gm*beta))
+     b0=sqrt(2.0d0/(gm*beta))
      B_z=B0*cos(theta)
      B_x=B0*sin(theta)
      B_y=0.0d0
@@ -196,11 +198,11 @@ f_p_pdown=ppdown/n0up!(pnup+ppup)
   do k=1,kx
      do j=1,jx
         do i=1,ix
-        vy_h(i,j,k)=0.001d0*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
+        vy_h(i,j,k)=0.01d0*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
 !*dcos(x(i)*2.d0*pi)*exp(-2.d0*pi*abs(y(j))) &
 !                 *(-0.5d0*dtanh((dabs(y(j))-1.5d0)/0.15d0)+0.5d0 )
 !*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
-        vy_m(i,j,k)=0.001d0*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
+        vy_m(i,j,k)=0.01d0*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
 !dcos(x(i)*2.d0*pi)*exp(-2.d0*pi*abs(y(j))) &
 !(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
 !*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)

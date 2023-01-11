@@ -39,7 +39,7 @@ LIB_DIR=.
 #DEBUG= -ffpe-trap=invalid,overflow -fbacktrace -fbounds-check -g
 #DEBUG= -fbacktrace -fbounds-check -g
 #DEBUG= -fbacktrace -g
-DEBUG=-fallow-argument-mismatch -ffpe-trap=invalid,zero,overflow -fbacktrace -fbounds-check -g
+DEBUG=  #-fallow-argument-mismatch -ffpe-trap=invalid,zero,overflow -fbacktrace -fbounds-check -g
 
 .SUFFIXES : .o .f90
 .f90.o:
