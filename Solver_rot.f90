@@ -216,7 +216,7 @@ contains
        endif
 
     if (flag_IR .eq. 4) then
-        call hydrogen_excitation_update(dt_sub,U_m(:,:,:,1),U_h(:,:,:,1))
+        call hydrogen_excitation_update(dt_sub,U_m(:,:,:,:),U_h(:,:,:,:))
     endif
 
     case(1) !! optimal Strong Stability Preserving RK (SSPRK) Ref:Gottlieb+2009

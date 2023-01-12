@@ -2,8 +2,8 @@ module PIP_rot
   use globalvar,only:ix,jx,kx,ac,xi_n,gm_rec,gm_ion,nvar_h,nvar_m,&
        flag_pip_imp,gm,n_fraction,t_ir,col,x,y,z,beta,T0, n0,my_rank,flag_IR_type,flag_col,arb_heat,nout,flag_restart,Colrat,&
         Nexcite,n0,f_p_ini,f_p_p_ini,n0fac,Gm_rec_ref,expinttab,&
-        rad_temp,flag_rad,gm_ion_rad,gm_rec_rad,radrat,ion_pot,radexpinttab
-  use scheme_rot,only:get_Te_HD,get_Te_MHD,cq2pv_HD,cq2pv_MHD,get_vel_diff
+        rad_temp,flag_rad,gm_ion_rad,gm_rec_rad,radrat,ion_pot,radexpinttab,flag_sch,s_order,ndim
+  use scheme_rot,only:get_Te_HD,get_Te_MHD,cq2pv_HD,cq2pv_MHD,get_vel_diff,derivative
   use parameters,only:T_r_p,deg1,deg2,pi
   implicit none
   integer,save::col_type,IR_type,xin_type,is_IR,IR_T_dependence
@@ -1265,14 +1265,17 @@ subroutine expintruttonn1(x,sol)
 END subroutine
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine hydrogen_excitation_update(dt,rom,roh)
+  subroutine hydrogen_excitation_update(dt,U_h,U_m)
 ! update the hydrogen excitation states
-  double precision,intent(in)::dt,rom(ix,jx,kx),roh(ix,jx,kx)
-  double precision::dneut(6)
+  double precision,intent(in)::dt,U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
+  double precision::dneut(6),rom(ix,jx,kx),roh(ix,jx,kx)
   double precision::dntot
   double precision::dneutv(ix,jx,kx,6)
+  double precision::conv(ix,jx,kx,6),conv_temp(ix,jx,kx)
   double precision::dntotv(ix,jx,kx)
   integer::i,j,k,ii,jj,nmaxloc
+  rom(:,:,:)=U_m(:,:,:,1)
+  roh(:,:,:)=U_h(:,:,:,1)
 !Vector form
 !The new number of electrons/protons is:
     !Nexcite(:,:,:,6)=rom
@@ -1288,10 +1291,43 @@ END subroutine
                         dneutv(:,:,:,ii)=dneutv(:,:,:,ii)+Nexcite(:,:,:,jj)*radrat(:,:,:,jj,ii)/Gm_rec_ref*t_ir - &
                         			Nexcite(:,:,:,ii)*radrat(:,:,:,ii,jj)/Gm_rec_ref*t_ir
                     endif
+                    	 
+                    
 !                    print*,ii,jj,Nexcite(1,1,1,jj)*colrat(1,1,1,jj,ii)/Gm_rec_ref*t_ir,&
 !                    	Nexcite(1,1,1,ii)*colrat(1,1,1,ii,jj)/Gm_rec_ref*t_ir
 !print*,ii,jj,dneutv(1,1,1,ii)
                 enddo
+                
+                !Convective term (neutrals)
+                if (s_order .ne. 4) then
+                	print*,'Convective term only works in 4th order at the moment'
+                	stop
+            	endif
+                if (ii .le. 5) then
+		            call derivative(conv_temp,Nexcite(:,:,:,ii),1)
+		            conv(:,:,:,ii)=conv_temp*U_h(:,:,:,2)/U_h(:,:,:,1)
+		            if (ndim .gt. 1) then
+		            	call derivative(conv_temp,Nexcite(:,:,:,ii),2)
+		            	conv(:,:,:,ii)=conv(:,:,:,ii)+conv_temp*U_h(:,:,:,3)/U_h(:,:,:,1)
+		           		if (ndim .gt. 2) then
+		           			call derivative(conv_temp,Nexcite(:,:,:,ii),3)
+		           			conv(:,:,:,ii)=conv(:,:,:,ii)+conv_temp*U_h(:,:,:,4)/U_h(:,:,:,1)
+	           			endif
+           			endif
+       			endif
+       			!Convective term (plasma)
+                if (ii .eq. 6) then
+		            call derivative(conv_temp,Nexcite(:,:,:,ii),1)
+		            conv(:,:,:,ii)=conv_temp*U_m(:,:,:,2)/U_m(:,:,:,1)
+		            if (ndim .gt. 1) then
+		            	call derivative(conv_temp,Nexcite(:,:,:,ii),2)
+		            	conv(:,:,:,ii)=conv(:,:,:,ii)+conv_temp*U_m(:,:,:,3)/U_m(:,:,:,1)
+		           		if (ndim .gt. 2) then
+		           			call derivative(conv_temp,Nexcite(:,:,:,ii),3)
+		           			conv(:,:,:,ii)=conv(:,:,:,ii)+conv_temp*U_m(:,:,:,4)/U_m(:,:,:,1)
+	           			endif
+           			endif
+       			endif
             enddo
 !print*,dneut
 !print*,colrat(i,j,k,:,:)

@@ -45,12 +45,12 @@ subroutine KHnlev
    call random_number(HARVEST=harvest)
 
 !Set the reference values
-!T0down=6555.84250200805d0
+T0down=6555.84250200805d0
 T0up=5500
-T0down=12284.274572709573
+!T0down=12284.274572709573
 n0up=7.5e16
-!n0down=n0up*10.d0
-n0down=n0up*50.d0
+n0down=n0up*10.d0
+!n0down=n0up*50.d0
 
 if(flag_IR .ne. 4) then
 	print*,'set flag_IR=4 for this routine'
