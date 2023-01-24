@@ -1265,7 +1265,7 @@ subroutine expintruttonn1(x,sol)
 END subroutine
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine hydrogen_excitation_update(dt,U_h,U_m)
+  subroutine hydrogen_excitation_update(dt,U_m,U_h)
 ! update the hydrogen excitation states
   double precision,intent(in)::dt,U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
   double precision::dneut(6),rom(ix,jx,kx),roh(ix,jx,kx)
@@ -1316,19 +1316,22 @@ END subroutine
            			endif
        			endif
        			!Convective term (plasma)
-                if (ii .eq. 6) then
-		            call derivative(conv_temp,Nexcite(:,:,:,ii),1)
-		            conv(:,:,:,ii)=conv_temp*U_m(:,:,:,2)/U_m(:,:,:,1)
-		            if (ndim .gt. 1) then
-		            	call derivative(conv_temp,Nexcite(:,:,:,ii),2)
-		            	conv(:,:,:,ii)=conv(:,:,:,ii)+conv_temp*U_m(:,:,:,3)/U_m(:,:,:,1)
-		           		if (ndim .gt. 2) then
-		           			call derivative(conv_temp,Nexcite(:,:,:,ii),3)
-		           			conv(:,:,:,ii)=conv(:,:,:,ii)+conv_temp*U_m(:,:,:,4)/U_m(:,:,:,1)
-	           			endif
-           			endif
-       			endif
+				!Not actually needed since ro_p is sorted out by the main code
+!                if (ii .eq. 6) then
+!		            call derivative(conv_temp,Nexcite(:,:,:,ii),1)
+!		            conv(:,:,:,ii)=conv_temp*U_m(:,:,:,2)/U_m(:,:,:,1)
+!		            if (ndim .gt. 1) then
+!		            	call derivative(conv_temp,Nexcite(:,:,:,ii),2)
+!		            	conv(:,:,:,ii)=conv(:,:,:,ii)+conv_temp*U_m(:,:,:,3)/U_m(:,:,:,1)
+!		           		if (ndim .gt. 2) then
+!		           			call derivative(conv_temp,Nexcite(:,:,:,ii),3)
+!		           			conv(:,:,:,ii)=conv(:,:,:,ii)+conv_temp*U_m(:,:,:,4)/U_m(:,:,:,1)
+!	           			endif
+!          			endif
+!      			endif
             enddo
+	    !Include the convective derivative
+!	    dneutv(:,:,:,1:6)=dneutv(:,:,:,1:6)-conv(:,:,:,1:6)
 !print*,dneut
 !print*,colrat(i,j,k,:,:)
 !print*,Nexcite(1,1,1,:)
@@ -1340,6 +1343,13 @@ END subroutine
             elsewhere
                 Nexcite = 1.e-16
             end where
+!Find the total 'new' neutral density
+!			dntotv(:,:,:)=sum(Nexcite(:,:,:,1:5),DIM=4)
+!			Nexcite(:,:,:,1)=Nexcite(:,:,:,1)/dntotv(:,:,:)*roh
+!			Nexcite(:,:,:,2)=Nexcite(:,:,:,2)/dntotv(:,:,:)*roh
+!			Nexcite(:,:,:,3)=Nexcite(:,:,:,3)/dntotv(:,:,:)*roh
+!			Nexcite(:,:,:,4)=Nexcite(:,:,:,4)/dntotv(:,:,:)*roh
+!			Nexcite(:,:,:,5)=Nexcite(:,:,:,5)/dntotv(:,:,:)*roh
 !print*,Nexcite(1,1,1,:),sum(Nexcite(1,1,1,1:5))
             dntotv(:,:,:)=sum(Nexcite(:,:,:,1:5),DIM=4)-roh
             Nexcite(:,:,:,1)=Nexcite(:,:,:,1)-dntotv

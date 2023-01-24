@@ -46,7 +46,7 @@ subroutine KHnlev
 
 !Set the reference values
 T0down=6555.84250200805d0
-T0up=5500
+T0up=5500.d0
 !T0down=12284.274572709573
 n0up=7.5e16
 n0down=n0up*10.d0
