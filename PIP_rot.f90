@@ -5,6 +5,7 @@ module PIP_rot
         rad_temp,flag_rad,gm_ion_rad,gm_rec_rad,radrat,ion_pot,radexpinttab,flag_sch,s_order,ndim
   use scheme_rot,only:get_Te_HD,get_Te_MHD,cq2pv_HD,cq2pv_MHD,get_vel_diff,derivative
   use parameters,only:T_r_p,deg1,deg2,pi
+  use Boundary_rot,only:bnd_energy
   implicit none
   integer,save::col_type,IR_type,xin_type,is_IR,IR_T_dependence
   double precision factor,factor2,mu_p,mu_n,T_ionization,factor3
@@ -1331,7 +1332,11 @@ END subroutine
 !      			endif
             enddo
 	    !Include the convective derivative
-!	    dneutv(:,:,:,1:6)=dneutv(:,:,:,1:6)-conv(:,:,:,1:6)
+!print*,conv(3,:,1,2)
+!print*,'dneut'
+!print*,dneutv(3,:,1,2)
+!stop
+	    dneutv(:,:,:,1:6)=dneutv(:,:,:,1:6)-conv(:,:,:,1:6)
 !print*,dneut
 !print*,colrat(i,j,k,:,:)
 !print*,Nexcite(1,1,1,:)
@@ -1360,6 +1365,10 @@ END subroutine
 !            Nexcite(:,:,:,4)=roh(:,:,:)*Nexcite(:,:,:,4)/dntotv(:,:,:)
 !            Nexcite(:,:,:,5)=roh(:,:,:)*Nexcite(:,:,:,5)/dntotv(:,:,:)
 		Nexcite(:,:,:,6)=rom(:,:,:)!*Nexcite(:,:,:,6)/dntotv(:,:,:)
+	!Boundary exchange for neutral level population
+	do ii=1,5
+		call bnd_energy(Nexcite(:,:,:,ii))
+	enddo
 !stop
 !    enddo;enddo;enddo
 !print*,Nexcite(1,1,1,6),rom(1,1,1),sum(Nexcite(1,1,1,1:5)),roh(1,1,1)
