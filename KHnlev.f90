@@ -167,13 +167,20 @@ f_p_pdown=ppdown/n0up!(pnup+ppup)
        *0.5d0,1,ix),3,kx)
   P_h=spread(spread(pnup+(pndown-pnup)*(tanh(y/w_lay)+1.0) &
        *0.5d0,1,ix),3,kx)
-  do i=1,6
-  	Nexcite(:,:,:,i)=spread(spread(Nexciteup(i)+(Nexcitedown(i)-Nexciteup(i))*(tanh(y/w_lay)+1.0) &
+  do i=1,5
+  	Nexcite(:,:,:,i)=ro_h*spread(spread(Nexciteup(i)+(Nexcitedown(i)-Nexciteup(i))*(tanh(y/w_lay)+1.0) &
   	     *0.5d0,1,ix),3,kx)
   enddo
+ Nexcite(:,:,:,6)=ro_m*spread(spread(Nexciteup(6)+(Nexcitedown(6)-Nexciteup(6))*(tanh(y/w_lay)+1.0) &
+             *0.5d0,1,ix),3,kx)
 !  ro_m=f_p*ro_h/f_n
   vx_h=abs((nnup+n0up)*vx_l)*spread(spread(tanh(y/w_lay),1,ix),3,kx)/(nnup+n0up)
   vx_m=vx_h
+
+print*,sum(Nexcite(1,1,1,1:5)),ro_h(1,1,1)
+print*,Nexcite(1,1,1,6),ro_m(1,1,1)
+
+stop
 
   theta=2.d0*pi*0.d0/360.d0
   if(flag_mhd.eq.1) then
@@ -215,6 +222,7 @@ P_m=P_m/5.0*3.0/ppup
 P_h=P_h/5.0*3.0/ppup
 ro_m=ro_m/n0up!*T0up
 ro_h=ro_h/n0up!*T0up
+Nexcite=Nexcite/n0up
 
 !print*,ro_m+ro_h
 !print*,(P_m+P_h)/(ro_m+ro_h)*5.0/3.0!/(f_p_p_ini/f_p_ini*5.0/6.0)
