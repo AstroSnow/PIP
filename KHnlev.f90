@@ -69,21 +69,21 @@ Eion=[13.6,3.4,1.51,0.85,0.54,0.0] !in eV
 Eion=Eion/13.6*2.18e-18 !Convert to joules (to be dimensionally correct)
 
 Nexciteup(6)=n0up
-Nexciteup(1)=(2.0/n0up/2.d0*(2.0*pi*mehat*kbhat*T0up/hhat/hhat*1.0e14)**(3.0/2.0)*exp(-Eion(1)/kboltz/T0up))
-Nexciteup(2)=(2.0/n0up/8.d0*(2.0*pi*mehat*kbhat*T0up/hhat/hhat*1.0e14)**(3.0/2.0)*exp(-Eion(2)/kboltz/T0up))
-Nexciteup(3)=(2.0/n0up/18.d0*(2.0*pi*mehat*kbhat*T0up/hhat/hhat*1.0e14)**(3.0/2.0)*exp(-Eion(3)/kboltz/T0up))
-Nexciteup(4)=(2.0/n0up/32.d0*(2.0*pi*mehat*kbhat*T0up/hhat/hhat*1.0e14)**(3.0/2.0)*exp(-Eion(4)/kboltz/T0up))
-Nexciteup(5)=(2.0/n0up/50.d0*(2.0*pi*mehat*kbhat*T0up/hhat/hhat*1.0e14)**(3.0/2.0)*exp(-Eion(5)/kboltz/T0up))
+Nexciteup(1)=(2.d0/n0up/2.d0*(2.d0*pi*mehat*kbhat*T0up/hhat/hhat*1.0e14)**(3.d0/2.d0)*exp(-Eion(1)/kboltz/T0up))
+Nexciteup(2)=(2.d0/n0up/8.d0*(2.d0*pi*mehat*kbhat*T0up/hhat/hhat*1.0e14)**(3.d0/2.d0)*exp(-Eion(2)/kboltz/T0up))
+Nexciteup(3)=(2.d0/n0up/18.d0*(2.d0*pi*mehat*kbhat*T0up/hhat/hhat*1.0e14)**(3.d0/2.d0)*exp(-Eion(3)/kboltz/T0up))
+Nexciteup(4)=(2.d0/n0up/32.d0*(2.d0*pi*mehat*kbhat*T0up/hhat/hhat*1.0e14)**(3.d0/2.d0)*exp(-Eion(4)/kboltz/T0up))
+Nexciteup(5)=(2.d0/n0up/50.d0*(2.d0*pi*mehat*kbhat*T0up/hhat/hhat*1.0e14)**(3.d0/2.d0)*exp(-Eion(5)/kboltz/T0up))
 Nexciteup(1:5)=n0up/Nexciteup(1:5)
 Nexciteup=Nexciteup/n0up
 Nexciteup=Nexciteup/sum(Nexciteup(:))
 
 Nexcitedown(6)=n0down
-Nexcitedown(1)=(2.0/n0down/2.d0*(2.0*pi*mehat*kbhat*T0down/hhat/hhat*1.0e14)**(3.0/2.0)*exp(-Eion(1)/kboltz/T0down))
-Nexcitedown(2)=(2.0/n0down/8.d0*(2.0*pi*mehat*kbhat*T0down/hhat/hhat*1.0e14)**(3.0/2.0)*exp(-Eion(2)/kboltz/T0down))
-Nexcitedown(3)=(2.0/n0down/18.d0*(2.0*pi*mehat*kbhat*T0down/hhat/hhat*1.0e14)**(3.0/2.0)*exp(-Eion(3)/kboltz/T0down))
-Nexcitedown(4)=(2.0/n0down/32.d0*(2.0*pi*mehat*kbhat*T0down/hhat/hhat*1.0e14)**(3.0/2.0)*exp(-Eion(4)/kboltz/T0down))
-Nexcitedown(5)=(2.0/n0down/50.d0*(2.0*pi*mehat*kbhat*T0down/hhat/hhat*1.0e14)**(3.0/2.0)*exp(-Eion(5)/kboltz/T0down))
+Nexcitedown(1)=(2.d0/n0down/2.d0*(2.d0*pi*mehat*kbhat*T0down/hhat/hhat*1.0e14)**(3.d0/2.d0)*exp(-Eion(1)/kboltz/T0down))
+Nexcitedown(2)=(2.d0/n0down/8.d0*(2.d0*pi*mehat*kbhat*T0down/hhat/hhat*1.0e14)**(3.d0/2.d0)*exp(-Eion(2)/kboltz/T0down))
+Nexcitedown(3)=(2.d0/n0down/18.d0*(2.d0*pi*mehat*kbhat*T0down/hhat/hhat*1.0e14)**(3.d0/2.d0)*exp(-Eion(3)/kboltz/T0down))
+Nexcitedown(4)=(2.d0/n0down/32.d0*(2.d0*pi*mehat*kbhat*T0down/hhat/hhat*1.0e14)**(3.d0/2.d0)*exp(-Eion(4)/kboltz/T0down))
+Nexcitedown(5)=(2.d0/n0down/50.d0*(2.d0*pi*mehat*kbhat*T0down/hhat/hhat*1.0e14)**(3.d0/2.d0)*exp(-Eion(5)/kboltz/T0down))
 Nexcitedown(1:5)=n0down/Nexcitedown(1:5)
 Nexcitedown=Nexcitedown/n0down
 Nexcitedown=Nexcitedown/sum(Nexcitedown(:))
@@ -131,12 +131,22 @@ f_p_pdown=ppdown/n0up!(pnup+ppup)
   !density of lower fluid is unity
   ro_l=nnup+n0up
   ro_u=nndown+n0down
+
   vx_l=ro_u/(ro_u+ro_l)*dsqrt(1.d0/10.d0)
 !  if(flag_mhd.eq.1) then
 !  vx_l=vx_l*sqrt(1.d0+2.d0/(gm*beta))
 !  endif
   vx_u=-vx_l*ro_l/ro_u
   w_lay=0.003d0
+
+!Put the up and down fractions as densities
+  Nexciteup(1:5)=Nexciteup(1:5)*(nnup+n0up)
+  Nexcitedown(1:5)=Nexcitedown(1:5)*(nndown+n0down)
+  Nexciteup(6)=Nexciteup(6)*(nnup+n0up)
+  Nexcitedown(6)=Nexcitedown(6)*(nndown+n0down)
+  
+!print*,sum(Nexciteup(1:5)),nnup,sum(Nexcitedown(1:5)),nndown
+!print*,Nexciteup(6),n0up,Nexcitedown(6),n0down
 
   scl_height=0.50
   if(scl_height.eq.0.0) scl_height=1.0
@@ -168,19 +178,21 @@ f_p_pdown=ppdown/n0up!(pnup+ppup)
   P_h=spread(spread(pnup+(pndown-pnup)*(tanh(y/w_lay)+1.0) &
        *0.5d0,1,ix),3,kx)
   do i=1,5
-  	Nexcite(:,:,:,i)=ro_h*spread(spread(Nexciteup(i)+(Nexcitedown(i)-Nexciteup(i))*(tanh(y/w_lay)+1.0) &
+  	Nexcite(:,:,:,i)=spread(spread(Nexciteup(i)+(Nexcitedown(i)-Nexciteup(i))*(tanh(y/w_lay)+1.0) &
   	     *0.5d0,1,ix),3,kx)
   enddo
- Nexcite(:,:,:,6)=ro_m*spread(spread(Nexciteup(6)+(Nexcitedown(6)-Nexciteup(6))*(tanh(y/w_lay)+1.0) &
+ Nexcite(:,:,:,6)=spread(spread(Nexciteup(6)+(Nexcitedown(6)-Nexciteup(6))*(tanh(y/w_lay)+1.0) &
              *0.5d0,1,ix),3,kx)
 !  ro_m=f_p*ro_h/f_n
   vx_h=abs((nnup+n0up)*vx_l)*spread(spread(tanh(y/w_lay),1,ix),3,kx)/(nnup+n0up)
   vx_m=vx_h
 
-print*,sum(Nexcite(1,1,1,1:5)),ro_h(1,1,1)
-print*,Nexcite(1,1,1,6),ro_m(1,1,1)
+!print*,nnup+(nndown-nnup)*(tanh(y(1)/w_lay)+1.0)*0.5d0
+!print*,y(1)
+!print*,sum(Nexcite(1,1,1,1:5)),ro_h(1,1,1),nnup,nndown
+!print*,Nexcite(1,1,1,6),ro_m(1,1,1),n0up,n0down
 
-stop
+!stop
 
   theta=2.d0*pi*0.d0/360.d0
   if(flag_mhd.eq.1) then
@@ -223,6 +235,10 @@ P_h=P_h/5.0*3.0/ppup
 ro_m=ro_m/n0up!*T0up
 ro_h=ro_h/n0up!*T0up
 Nexcite=Nexcite/n0up
+
+!print*,nnup+(nndown-nnup)*(tanh(y(1)/w_lay)+1.0)*0.5d0
+!print*,sum(Nexcite(1,1,1,1:5)),ro_h(1,1,1)
+!print*,Nexcite(1,1,1,6),ro_m(1,1,1)
 
 !print*,ro_m+ro_h
 !print*,(P_m+P_h)/(ro_m+ro_h)*5.0/3.0!/(f_p_p_ini/f_p_ini*5.0/6.0)
