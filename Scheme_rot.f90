@@ -20,6 +20,7 @@ module scheme_rot
        oldke_damp,flag_rad,ion_pot,flag_IR_type
   use MPI_rot,only:mpi_double_interface
   use Boundary_rot,only:bnd_divb
+  use PIP_rot,only:hydrogen_excitation_timestep
   implicit none
   integer i,j,k,ierr
 
@@ -186,6 +187,7 @@ contains
        call cfl_hd(U_h,dttemp)
        call cfl_pn_col(U_m,U_h,dttemp)
        if(flag_ir.ge.1) call cfl_pip_ir(U_m,U_h,dttemp)
+       if(flag_ir.eq.4) call cfl_pip_ir_nexcite(U_m,U_h,dttemp)
     else
        if(flag_mhd.eq.1) then
           call cfl_mhd(U_m,dttemp)
@@ -319,6 +321,17 @@ contains
      	dt=min(dt,safety/max(maxval(ion_pot/(pr/(gm-1.d0))),1.0d-5)) 
      endif
    end subroutine cfl_pip_ir
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine cfl_pip_ir_nexcite(U_m,U_h,dttemp)
+     double precision,intent(inout)::dttemp
+     double precision,intent(inout)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
+     double precision::dneut(ix,jx,kx,5)
+     call hydrogen_excitation_timestep(U_m,U_h,dneut)
+     dttemp=min(dttemp,min(safety,0.3d0)/max(maxval(dneut),1.0d-5))
+   end subroutine cfl_pip_ir_nexcite
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
   subroutine hd_fluxes(F_h,U_h)
     double precision,intent(inout):: F_h(ix,jx,kx,nvar_h,3)
