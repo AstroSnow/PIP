@@ -658,14 +658,18 @@ endif
                     if (ii .eq. jj) then 
                         colrat(i,j,k,ii,jj)=0.d0
                     else if (jj .gt. ii) then 
-                        colrat(i,j,k,ii,jj)=gweight(ii)/gweight(jj)*Colex(ii,jj)*dsqrt(Telec(i,j,k)) 
+!                        colrat(i,j,k,ii,jj)=gweight(ii)/gweight(jj)*Colex(ii,jj)*dsqrt(Telec(i,j,k)) 
+                        colrat(i,j,k,ii,jj)=gweight(ii)/gweight(jj)*Colex(ii,jj)!*dsqrt(Telec(i,j,k)) 
                     else
-                        colrat(i,j,k,ii,jj)=Colex(jj,ii)*dsqrt(Telec(i,j,k))*&
+!                        colrat(i,j,k,ii,jj)=Colex(jj,ii)*dsqrt(Telec(i,j,k))*&
+!                            exp(-(Eion(jj)-Eion(ii))/kboltz/Telec(i,j,k))
+                        colrat(i,j,k,ii,jj)=Colex(jj,ii)*&
                             exp(-(Eion(jj)-Eion(ii))/kboltz/Telec(i,j,k))
                     endif
                 enddo
                 !Ionisation rates
-                colrat(i,j,k,ii,6)=Colex(ii,6)*dsqrt(Telec(i,j,k))*exp(-(Eion(6)-Eion(ii))/kboltz/Telec(i,j,k))
+!                colrat(i,j,k,ii,6)=Colex(ii,6)*dsqrt(Telec(i,j,k))*exp(-(Eion(6)-Eion(ii))/kboltz/Telec(i,j,k))
+				colrat(i,j,k,ii,6)=Colex(ii,6)*exp(-(Eion(6)-Eion(ii))/kboltz/Telec(i,j,k))
             enddo
 
             do ii=1,5
