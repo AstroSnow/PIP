@@ -1272,6 +1272,7 @@ END subroutine
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine hydrogen_excitation_update(dt,U_m,U_h)
 ! update the hydrogen excitation states
+!This routine is copied in scheme rot so double changes needed. Should fix at some point
   double precision,intent(in)::dt,U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
   double precision::dneut(6),rom(ix,jx,kx),roh(ix,jx,kx)
   double precision::dntot
@@ -1304,10 +1305,10 @@ END subroutine
                 enddo
                 
                 !Convective term (neutrals)
-                if (s_order .ne. 4) then
-                	print*,'Convective term only works in 4th order at the moment'
-                	stop
-            	endif
+!                if (s_order .ne. 4) .or. (s_order .ne. 1) then
+!                	print*,'Convective term only works in 1st and 4th order at the moment'
+!                	stop
+!            	endif
                 if (ii .le. 5) then
 		            call derivative(conv_temp,Nexcite(:,:,:,ii),1)
 		            conv(:,:,:,ii)=conv_temp*U_h(:,:,:,2)/U_h(:,:,:,1)
