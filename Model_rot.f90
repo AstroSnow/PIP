@@ -473,7 +473,7 @@ subroutine get_parameters
          enddo
          do j=1,margin(2)
             dyc(j)=dyc(2*margin(2)+1-j)
-            dyc(jx+1-j)=dxc(jx-2*margin(2)+j)
+            dyc(jx+1-j)=dyc(jx-2*margin(2)+j)
          enddo         
       else
          dyc=dy(1)

@@ -505,7 +505,7 @@ contains
 
   subroutine my_mpi_barrier
 !  print*,'calling MPI barrier'
-    call MPI_barrier(MPI_COMM_WORLD)
+    call MPI_barrier(MPI_COMM_WORLD,ierr)
 !  print*,'called MPI barrier'
   end subroutine my_mpi_barrier  
 
