@@ -15,7 +15,7 @@ module scheme_rot
        pip_imp_factor,dt,db_clean,flag_b_stg,dx,dy,dz,theta,ndim,flag_divb,&
        flag_amb,flag_mhd,flag_pip,flag_amb,flag_mpi,flag_resi,margin,gm,&
        flag_bnd,xi_n,flag_pip_imp,nt,eta_0,gra,scl_height,s_order,flag_sch,&
-       x,y,z,col,n_fraction,flag_ir,gm_rec,gm_ion,t_ir,mpi_pos,my_rank,&
+       x,y,z,col,n_fraction,flag_ir,gm_rec,gm_ion,gm_rec_rad,gm_ion_rad,t_ir,mpi_pos,my_rank,&
        debug_parameter,ro_lim,pr_lim,tiny,cmax,dsc,b_cr,damp_time,flag_damp,&
        oldke_damp,flag_rad,ion_pot,flag_IR_type,nexcite,colrat,radrat,gm_rec_ref
   use MPI_rot,only:mpi_double_interface
@@ -318,7 +318,10 @@ contains
      dttemp=min(dttemp,min(safety,0.1d0)/max(maxval(gm_rec),maxval(gm_ion),1.0d-5))   !,maxval(gm_rec/U_m(:,:,:,1))+maxval(gm_ion/U_h(:,:,:,1)) 
      if (flag_IR_type .eq. 0) then
          call get_Pr_MHD(U_m,pr)
-     	dt=min(dt,safety/max(maxval(ion_pot/(pr/(gm-1.d0))),1.0d-5)) 
+     	dttemp=min(dttemp,safety/max(maxval(ion_pot/(pr/(gm-1.d0))),1.0d-5)) 
+     endif
+     if (flag_rad .eq. 3) then 
+     	dttemp=min(dttemp,min(safety,0.1d0)/max(maxval(gm_rec_rad),maxval(gm_ion_rad),1.0d-5)) 
      endif
    end subroutine cfl_pip_ir
 
@@ -690,22 +693,45 @@ contains
     double precision,intent(in)::var(ix,jx,kx)
     double precision,intent(inout)::der(ix,jx,kx)
     
-    if(direct.eq.1) then 
-       do i=3,ix-2 
-          der(i,:,:)=(-var(i+2,:,:)+8.0d0*var(i+1,:,:) &
-               -8.0d0*var(i-1,:,:)+var(i-2,:,:))/(12.0d0*dx(i))
-       enddo
-    else if(direct.eq.2) then
-       do j=3,jx-2 
-          der(:,j,:)=(-var(:,j+2,:)+8.0d0*var(:,j+1,:) &
-               -8.0d0*var(:,j-1,:)+var(:,j-2,:))/(12.0d0*dy(j))
-       enddo
-    else if(direct.eq.3) then
-       do k=3,kx-2 
-          der(:,:,k)=(-var(:,:,k+2)+8.0d0*var(:,:,k+1) &
-               -8.0d0*var(:,:,k-1)+var(:,:,k-2))/(12.0d0*dz(k))
-       enddo
+    !4th order derivative
+    if (s_order .eq. 4) then
+	    if(direct.eq.1) then 
+	       do i=3,ix-2 
+		  der(i,:,:)=(-var(i+2,:,:)+8.0d0*var(i+1,:,:) &
+		       -8.0d0*var(i-1,:,:)+var(i-2,:,:))/(12.0d0*dx(i))
+	       enddo
+	    else if(direct.eq.2) then
+	       do j=3,jx-2 
+		  der(:,j,:)=(-var(:,j+2,:)+8.0d0*var(:,j+1,:) &
+		       -8.0d0*var(:,j-1,:)+var(:,j-2,:))/(12.0d0*dy(j))
+	       enddo
+	    else if(direct.eq.3) then
+	       do k=3,kx-2 
+		  der(:,:,k)=(-var(:,:,k+2)+8.0d0*var(:,:,k+1) &
+		       -8.0d0*var(:,:,k-1)+var(:,:,k-2))/(12.0d0*dz(k))
+	       enddo
+	    endif
     endif
+    !1st order derivative
+    if (s_order .eq. 1) then
+	    if(direct.eq.1) then 
+	       do i=2,ix-1 
+		  der(i,:,:)=(var(i+1,:,:) &
+		       -var(i-1,:,:))/(2.d0*dx(i))
+	       enddo
+	    else if(direct.eq.2) then
+	       do j=2,jx-1 
+		  der(:,j,:)=(var(:,j+1,:) &
+		       -var(:,j-1,:))/(2.d0*dy(j))
+	       enddo
+	    else if(direct.eq.3) then
+	       do k=2,kx-1 
+		  der(:,:,k)=(var(:,:,k+1) &
+		       -var(:,:,k-1))/(2.d0*dz(k))
+	       enddo
+	    endif
+    endif
+    
   end subroutine derivative
 
 !  subroutine source_divb(S_m,U_m)
@@ -1000,10 +1026,10 @@ endif
                 enddo
                 
                 !Convective term (neutrals)
-                if (s_order .ne. 4) then
-                	print*,'Convective term only works in 4th order at the moment'
-                	stop
-            	endif
+!                if (s_order .ne. 4) then
+!                	print*,'Convective term only works in 4th order at the moment'
+!                	stop
+!            	endif
                 if (ii .le. 5) then
 		            call derivative(conv_temp,Nexcite(:,:,:,ii),1)
 		            conv(:,:,:,ii)=conv_temp*U_h(:,:,:,2)/U_h(:,:,:,1)

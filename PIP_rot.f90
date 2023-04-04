@@ -660,14 +660,18 @@ endif
                     if (ii .eq. jj) then 
                         colrat(i,j,k,ii,jj)=0.d0
                     else if (jj .gt. ii) then 
-                        colrat(i,j,k,ii,jj)=gweight(ii)/gweight(jj)*Colex(ii,jj)*dsqrt(Telec(i,j,k)) 
+!                        colrat(i,j,k,ii,jj)=gweight(ii)/gweight(jj)*Colex(ii,jj)*dsqrt(Telec(i,j,k)) 
+                        colrat(i,j,k,ii,jj)=gweight(ii)/gweight(jj)*Colex(ii,jj)!*dsqrt(Telec(i,j,k)) 
                     else
-                        colrat(i,j,k,ii,jj)=Colex(jj,ii)*dsqrt(Telec(i,j,k))*&
+!                        colrat(i,j,k,ii,jj)=Colex(jj,ii)*dsqrt(Telec(i,j,k))*&
+!                            exp(-(Eion(jj)-Eion(ii))/kboltz/Telec(i,j,k))
+                        colrat(i,j,k,ii,jj)=Colex(jj,ii)*&
                             exp(-(Eion(jj)-Eion(ii))/kboltz/Telec(i,j,k))
                     endif
                 enddo
                 !Ionisation rates
-                colrat(i,j,k,ii,6)=Colex(ii,6)*dsqrt(Telec(i,j,k))*exp(-(Eion(6)-Eion(ii))/kboltz/Telec(i,j,k))
+!                colrat(i,j,k,ii,6)=Colex(ii,6)*dsqrt(Telec(i,j,k))*exp(-(Eion(6)-Eion(ii))/kboltz/Telec(i,j,k))
+				colrat(i,j,k,ii,6)=Colex(ii,6)*exp(-(Eion(6)-Eion(ii))/kboltz/Telec(i,j,k))
             enddo
 
             do ii=1,5
@@ -1268,6 +1272,7 @@ END subroutine
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine hydrogen_excitation_update(dt,U_m,U_h)
 ! update the hydrogen excitation states
+!This routine is copied in scheme rot so double changes needed. Should fix at some point
   double precision,intent(in)::dt,U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
   double precision::dneut(6),rom(ix,jx,kx),roh(ix,jx,kx)
   double precision::dntot
@@ -1300,10 +1305,10 @@ END subroutine
                 enddo
                 
                 !Convective term (neutrals)
-                if (s_order .ne. 4) then
-                	print*,'Convective term only works in 4th order at the moment'
-                	stop
-            	endif
+!                if (s_order .ne. 4) .or. (s_order .ne. 1) then
+!                	print*,'Convective term only works in 1st and 4th order at the moment'
+!                	stop
+!            	endif
                 if (ii .le. 5) then
 		            call derivative(conv_temp,Nexcite(:,:,:,ii),1)
 		            conv(:,:,:,ii)=conv_temp*U_h(:,:,:,2)/U_h(:,:,:,1)
