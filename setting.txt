@@ -1,15 +1,15 @@
-Data/:outdir; output directory (This should written at the first line in this file!!)
-Data/:indir; input directory
+KHIrl3d_norad/:outdir; output directory (This should written at the first line in this file!!)
+KHIrl3d_norad/:indir; input directory
 MHD:flag_eqs;flag_for equation (HD,MHD, PIP) 
--1:flag_restart; restart count (-1:no restart, 0: restart. nout at the end of config.txt will be read, >0: restart from No."flag_restart" data)
-2:ndim; dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
-800:ix; grid number for x-direction
-800:jx; grid number for y-direction
-300:kx; grid number for z-direction
-1.0 :dtout;  output period 100 
-70.0:tend;tend time for simulation (if lt 0 then default value is set) 20000
-0:esav; flag for save after given physical time
-3600.d0:emsavtime; Physical time to save for esav
+20:flag_restart; restart count (-1:no restart, 0: restart. nout at the end of config.txt will be read, >0: restart from No."flag_restart" data)
+3:ndim; dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
+400:ix; grid number for x-direction
+400:jx; grid number for y-direction
+500:kx; grid number for z-direction
+5.0 :dtout;  output period 100 
+100.0:tend;tend time for simulation (if lt 0 then default value is set) 20000
+1:esav; flag for save after given physical time
+863800.d0:emsavtime; Physical time to save for esav
 0 :flag_cyl; set to 1 when you use Cylindrical coordinates (x=>r,y=>z,z=>phi) NB: Only ndim=2 is allowed (rz-plane)
 5.0    :gm_d; 
 3.0    :gm_n;
@@ -68,9 +68,9 @@ KH:flag_ini; flag for initial setting
 1.0:sor_omega; SOR-omega parameter (for iterative method)
 ==For MPI====;
 1     :flag_mpi;flag for mpi
-5     :mpi_x;node number for x-direction
-6     :mpi_y;node number for y-direction
-1     :mpi_z;node number for z-direction
+8     :mpi_x;node number for x-direction
+4     :mpi_y;node number for y-direction
+13     :mpi_z;node number for z-direction
 1     :flag_mpi_split;flag for splitting domain (Activated ONLY WHEN A=mpi_x*mpi_y*mpi_z=0 or A ne total_prc)
 ==For debug==;
 0     :flag_debug; flag for debug (Currently not used)
@@ -83,7 +83,7 @@ KH:flag_ini; flag for initial setting
 0     :flag_damp; flag for damping
 1000000.0   :damp_time; timescale for damping
 ==Radiative losses==;
-3     :flag_rad; radiative losses
+0     :flag_rad; radiative losses
 1.0e2:rad_ts; Time scale for radiative losses
 1.0d0:radrhoref; Reference density for losses
 ==Normalisation parameters==

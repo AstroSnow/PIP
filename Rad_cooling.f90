@@ -6,7 +6,7 @@ module rad_cooling
 !           rad_ts      - reference time scale for cooling
 
 use parameters,only:pi
-use globalvar,only:ix,jx,kx,nvar_h,nvar_m,ndim,flag_pip,flag_rad,edref,radrhoref,rad_ts,radlossfun,T0
+use globalvar,only:ix,jx,kx,nvar_h,nvar_m,ndim,flag_pip,flag_rad,edref,radrhoref,rad_ts,radlossfun,T0,my_rank
 use scheme_rot,only:get_Te_HD,get_Te_MHD
 
 contains
@@ -78,9 +78,10 @@ subroutine source_rad_cooling(S_h,S_m,U_h,U_m)
 		do k=1,kx
 			Tdim=dlog10(Te_m(i,j,k)*T0)
 			
-			Tdimindl=floor((Tdim-3.d0)/deltatrad+1) !NEED TO INCLUDE THE DELTA
-			Tdimindc=(Tdim-3.d0)
-			Tdimindu=ceiling((Tdim-3.d0)/deltatrad+1)
+!Tdim=min(max(dlog10(Te_m(i,j,k)*T0),2.d0),6.d0)
+			Tdimindl=min(floor((Tdim-3.d0)/deltatrad+1),101) !NEED TO INCLUDE THE DELTA
+			Tdimindc=max((Tdim-3.d0),0.d0)
+			Tdimindu=min(ceiling((Tdim-3.d0)/deltatrad+1),101)
 
 !			print*,deltatrad,(Tdim-3.d0),Te_m(i,j,k)*T0,(Tdim-3.d0)/deltatrad
 !			print*,dlog10(Te_m(i,j,k)*T0),radlossfun(floor((Tdim-3.d0)/deltatrad+1.0),1),radlossfun(ceiling((Tdim-3.d0)/deltatrad+1.0),1)
@@ -124,7 +125,8 @@ USE HDF5
     INTEGER(HID_T) :: dtype_id       ! Dataspace identifier
     INTEGER(HSIZE_T), DIMENSION(2) :: data_dims
     INTEGER(HSIZE_T), DIMENSION(2) :: max_dims
-	Character(len=65),parameter::filename='lossfunc.h5'
+!	Character(len=65),parameter::filename='lossfunc.h5'
+Character(len=65),parameter::filename='lossfunc_scott_mod.h5'
 	CHARACTER(LEN=65), PARAMETER :: dset1name = "temperature"  ! Dataset name
 	CHARACTER(LEN=65), PARAMETER :: dset2name = "rad_loss"     ! Dataset name
 	INTEGER::nelements,i
@@ -134,7 +136,7 @@ USE HDF5
 	endif
 	
 	if (flag_rad .eq. 3) then
-	print*,'Reading file'
+	if (my_rank == 0) print*,'Reading file'
 		CALL h5open_f(ErrorFlag)
 		CALL h5fopen_f (filename, H5F_ACC_RDONLY_F, file_id, ErrorFlag)
 		CALL h5dopen_f(file_id, dset1name, dset_id, ErrorFlag)
@@ -158,8 +160,13 @@ USE HDF5
 		
 		CALL h5close_f(ErrorFlag)
 
+                if (maxval(radlossfun(:,1)) .GE. 100.0) then
+                        if (my_rank == 0) print*,'Converting rad table to log T'
+                        radlossfun(:,1)=dlog10(radlossfun(:,1))
+                endif
+
 		radlossfun(:,2)=radlossfun(:,2)/maxval(radlossfun(:,2))
-		print*,'file read'
+if (my_rank ==0) print*,'file read'
 !		do i=1,nelements
 !			print*,radlossfun(i,1),radlossfun(i,2)!/maxval(radlossfun(:,2))
 !		enddo

@@ -52,7 +52,7 @@ subroutine KH
   !!set lower and upper coordinate
   start(1)=-1.0d0 ;end(1)=1.0d0
   start(2)=-1.5d0 ;end(2)=0.50
-  start(3)=-17.0d0 ;end(3)=17.0d0
+  start(3)=-50.0d0 ;end(3)=50.0d0
   call set_coordinate(start,end)
   !---------------------------------------
 
