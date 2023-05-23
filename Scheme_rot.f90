@@ -315,12 +315,43 @@ contains
    subroutine cfl_rad_cool(U_m,U_h)
     double precision,intent(inout)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)  
     double precision::pr(ix,jx,kx)
+    double precision::ro_mean(ix,jx,kx)
+    ro_mean(1:ix-1,1:jx-1,1:kx-1)=U_m(0:ix-2,0:jx-2,0:kx-2,1)+ &
+                                    U_m(0:ix-2,1:jx-1,0:kx-2,1)+ &
+                                    U_m(0:ix-2,2:jx-0,0:kx-2,1)+ &
+                                    U_m(0:ix-2,0:jx-2,1:kx-1,1)+ &
+                                    U_m(0:ix-2,1:jx-1,1:kx-1,1)+ &
+                                    U_m(0:ix-2,2:jx-0,1:kx-1,1)+ &
+                                    U_m(0:ix-2,0:jx-2,2:kx-0,1)+ &
+                                    U_m(0:ix-2,1:jx-1,2:kx-0,1)+ &
+                                    U_m(0:ix-2,2:jx-0,2:kx-0,1)+ &
+                                    U_m(1:ix-1,0:jx-2,0:kx-2,1)+ &
+                                    U_m(1:ix-1,1:jx-1,0:kx-2,1)+ &
+                                    U_m(1:ix-1,2:jx-0,0:kx-2,1)+ &
+                                    U_m(1:ix-1,0:jx-2,1:kx-1,1)+ &
+                                    U_m(1:ix-1,1:jx-1,1:kx-1,1)+ &
+                                    U_m(1:ix-1,2:jx-0,1:kx-1,1)+ &
+                                    U_m(1:ix-1,0:jx-2,2:kx-0,1)+ &
+                                    U_m(1:ix-1,1:jx-1,2:kx-0,1)+ &
+                                    U_m(1:ix-1,2:jx-0,2:kx-0,1)+ &
+                                    U_m(2:ix-0,0:jx-2,0:kx-2,1)+ &
+                                    U_m(2:ix-0,1:jx-1,0:kx-2,1)+ &
+                                    U_m(2:ix-0,2:jx-0,0:kx-2,1)+ &
+                                    U_m(2:ix-0,0:jx-2,1:kx-1,1)+ &
+                                    U_m(2:ix-0,1:jx-1,1:kx-1,1)+ &
+                                    U_m(2:ix-0,2:jx-0,1:kx-1,1)+ &
+                                    U_m(2:ix-0,0:jx-2,2:kx-0,1)+ &
+                                    U_m(2:ix-0,1:jx-1,2:kx-0,1)+ &
+                                    U_m(2:ix-0,2:jx-0,2:kx-0,1)
+    ro_mean(1:ix,1:jx,1:kx)=ro_mean(1:ix,1:jx,1:kx)/27.d0   
     call get_Pr_MHD(U_m,pr)
-if (minval(pr) .LT. 0.d0) then
-	print*,'Negative pressure'
- stop
-endif
-    dt=min(dt,0.1d0/max(maxval(100.0d0*edref(:,:,:,1)*U_m(:,:,:,1)*U_m(:,:,:,1)/(pr/(gm-1.d0))),1.0d-5))
+    if (minval(pr) .LT. 0.d0) then
+	    print*,'Negative pressure'
+        stop
+    endif
+    dt=min(dt,0.1d0/max(maxval(edref(:,:,:,1)*U_m(:,:,:,1)*U_m(:,:,:,1)/(pr/(gm-1.d0))),1.0d-5))
+    dt=min(dt,0.1d0/max(maxval(edref(1:ix,1:jx,1:kx,1)*ro_mean(1:ix,1:jx,1:kx)*ro_mean(1:ix,1:jx,1:kx)&
+            /(pr(1:ix,1:jx,1:kx)/(gm-1.d0))),1.0d-5))
 	!dt=min(dt,0.1d0/max(maxval(0.01d0*U_m(:,:,:,1)*U_m(:,:,:,1)/(pr/(gm-1.d0))),1.0d-5)) 
 !print*,olddttest,dt,safety/maxval(edref(:,:,:,1)/U_m(:,:,:,5))
 !     dt=min(dt,safety/maxval(edref(:,:,:,1))) 
