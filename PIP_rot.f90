@@ -250,6 +250,8 @@ contains
 !        allocate(expinttab(4,10000)) !table for the exponential integral table
 !        call expintread
  !print*,Te_p*T0/tfac
+  print*,'electron Temperature = ',Te_p(1,1,1)*T0/tfac
+ print*,'electron number density = ',U_m(1,1,1,1)*n0/n0fac
 !	    allocate(Colrat(ix,jx,kx,6,6)) !Allocate the rate array
         call get_col_ion_coeff(Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion,Gm_rec)
 !        call get_col_ion_coeff(Te_p*T0/tfac,spread(spread(spread(n0,1,ix),2,jx),3,kx),Gm_ion,Gm_rec)
@@ -540,7 +542,9 @@ contains
                 do jj=ii+1,5
 
                     yhat=Enn(ii,jj)/kboltz/Telec(i,j,k) !Equation 37
-
+!print*,'T_e = ', Telec(i,j,k)
+!print*,'Enn = ', Enn(ii,jj)
+!print*,'yhat = ', yhat
                     zhat=rnn(ii,jj)+Enn(ii,jj)/kboltz/Telec(i,j,k)   !Equation 38
 
                     !Exponential fits from a table
@@ -1164,7 +1168,7 @@ subroutine get_radrat_fixed_slow(Trad,Telec,nelec,Gm_ion_rad,Gm_rec_rad)
 		xindex=floor((zhat-xmin)/xrange*size(expinttab(colloc,:)))
 
 		if (xindex .le. 0) xindex=1
-		if (xindex .ge. size(expinttab(colloc,:))) xindex=size(expinttab(colloc,:))-1
+		if (xindex .ge. size(expinttab(colloc,:))) xindex=size(expinttab(colloc,:))-2
 
 		xindex0=xindex
 		xindex1=xindex+1
