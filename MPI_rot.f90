@@ -505,8 +505,15 @@ contains
 
   subroutine my_mpi_barrier
     !if (my_rank .eq. 0) 
-    print*,'Setting MPI barrier'
-    call MPI_barrier(MPI_COMM_WORLD)
+!    print*,'Setting MPI barrier'
+    call MPI_barrier(MPI_COMM_WORLD,ierr)
   end subroutine my_mpi_barrier  
+
+  subroutine send_Gm_rec_ref(Gm_rec_ref)
+    double precision, intent(in):: Gm_rec_ref
+    !Send the normalised value to all the processors
+    call MPI_Bcast(Gm_rec_ref,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+!    call MPI_Bcast(ierr,1,MPI_INT,0,MPI_COMM_WORLD,ierr)
+  end subroutine send_Gm_rec_ref
 
 end module mpi_rot

@@ -6,6 +6,7 @@ module PIP_rot
   use scheme_rot,only:get_Te_HD,get_Te_MHD,cq2pv_HD,cq2pv_MHD,get_vel_diff,derivative
   use parameters,only:T_r_p,deg1,deg2,pi
   use Boundary_rot,only:bnd_energy
+  use MPI_rot,only:send_Gm_rec_ref
   implicit none
   integer,save::col_type,IR_type,xin_type,is_IR,IR_T_dependence
   double precision factor,factor2,mu_p,mu_n,T_ionization,factor3
@@ -126,7 +127,9 @@ contains
     double precision,intent(inout)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
     double precision Te_n(ix,jx,kx),Te_p(ix,jx,kx),Te_e(ix,jx,kx)
     double precision xi_n_tmp(ix,jx,kx)
+    double precision :: gm_ion_temp(ix,jx,kx),gm_rec_temp(ix,jx,kx)
     double precision Te_0
+    integer:: ierr
     select case(IR_type)
     case(1)
 	!Formulation from Jeffery paper
@@ -252,11 +255,21 @@ contains
  !print*,Te_p*T0/tfac
 !	    allocate(Colrat(ix,jx,kx,6,6)) !Allocate the rate array
         call get_col_ion_coeff(Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion,Gm_rec)
+	call get_col_ion_coeff(spread(spread(spread(T0,1,ix),2,jx),3,kx),&
+		spread(spread(spread(n0,1,ix),2,jx),3,kx),Gm_ion_temp,Gm_rec_temp)
 !        call get_col_ion_coeff(Te_p*T0/tfac,spread(spread(spread(n0,1,ix),2,jx),3,kx),Gm_ion,Gm_rec)
 !        call get_col_ion_coeff_aprox(Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion,Gm_rec)
-        Gm_rec_ref=Gm_rec(1,1,1)/U_m(1,1,1,1)  !Get the normalisation recombination rates
-        !allocate(Nexcite(ix,jx,kx,6)) !Allocate the fractional array (allocated in IC)
+!        Gm_rec_ref=Gm_rec(1,1,1)/U_m(1,1,1,1)  !Get the normalisation recombination rates
+	Gm_rec_ref=Gm_rec_temp(1,1,1)  !Get the normalisation recombination rates
 
+	!Broadcast Gm_rec_ref to other proccessors
+	if (my_rank .eq. 0) then
+		print*,'Rank zero broadcasting Gm_rec_ref=',gm_rec_ref
+	endif
+	call send_gm_rec_ref(Gm_rec_ref)
+
+        !allocate(Nexcite(ix,jx,kx,6)) !Allocate the fractional array (allocated in IC)
+print*,Gm_rec_ref,my_RANK,T0,n0
         !get the arbitraty heating
         allocate(arb_heat(ix,jx,kx))
 		allocate(ion_pot(ix,jx,kx))
@@ -642,13 +655,14 @@ contains
                     (An0*(E1y/yn-E1z/zn)+&
                     (Bn0-An0*dlog(2.d0*dble(ii)**2))*(ziyn-zizn))
 if (colex(ii,6) .LT. 0.d0) then
+!colex(ii,6) = 1.0e-16
 print*,'Nexcite'
 print*,Nexcite(i,j,k,:)
 print*,ii
 print*,ziyn,yn,E0y,E1y,E2y
 print*,zizn,zn,E0z,E1z,E2z
-!print*,'colrat'
-!print*,colrat(i,j,k,:,:)
+print*,'colrat'
+print*,colrat(i,j,k,:,:)
 	stop
 endif
             enddo

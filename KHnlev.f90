@@ -58,7 +58,7 @@ n0down=n0up*30.d0
 
 if(flag_IR .ne. 4) then
 	print*,'set flag_IR=4 for this routine'
-	stop
+	!stop
 endif
   
 if (my_rank.eq.0) print*,'Calculating LTE excitation state'
@@ -117,7 +117,7 @@ f_p_pdown=ppdown/n0up!(pnup+ppup)
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
   start(1)=-0.5d0 ;end(1)=0.5d0
-  start(2)=-1.0d0 ;end(2)=1.0d0
+  start(2)=-0.75d0 ;end(2)=0.75d0
   start(3)=-8.0d0 ;end(3)=8.0d0
   call set_coordinate(start,end)
   !---------------------------------------
@@ -239,6 +239,16 @@ P_h=P_h/5.0*3.0/ppup
 ro_m=ro_m/n0up!*T0up
 ro_h=ro_h/n0up!*T0up
 Nexcite=Nexcite/n0up
+
+if ((flag_MHD .eq. 1) .and. (flag_PIP .ne. 1)) then
+    print*,'MHD model'
+    ro_m=ro_m!+ro_h
+    print*,'Density range = ',maxval(ro_m),minval(ro_m)
+    P_m=P_m!+P_h
+    print*,'Pressure range = ',maxval(P_m),minval(P_m)
+    flag_IR=0
+    flag_rad=0
+endif
 
 !print*,nnup+(nndown-nnup)*(tanh(y(1)/w_lay)+1.0)*0.5d0
 !print*,sum(Nexcite(1,1,1,1:5)),ro_h(1,1,1)
