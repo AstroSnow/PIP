@@ -306,12 +306,12 @@ contains
     double precision,intent(inout)::te(ix,jx,kx),source(ix,jx,kx)
     double precision residual(ix,jx,kx)
     integer i,j,k,n
-    double precision total_resi,total_source,tmp
+    double precision total_resi(1),total_source(1),tmp
     double precision alpha,alphas(2),g_alphas(2)
     double precision beta,betas(2),g_betas(2)
     double precision omega,omegas(2),g_omegas(2)
     double precision pk(ix,jx,kx),r0(ix,jx,kx),Apk(ix,jx,kx),tkp(ix,jx,kx)
-    double precision atk,g_total_resi,g_total_source
+    double precision atk,g_total_resi(1),g_total_source(1)
     integer,parameter::g_margin=1
     !    residual(is:ie,js:je,ks:ke)=source(is:ie,js:je,ks:ke)
     residual=source
@@ -341,7 +341,7 @@ contains
     apk=0
     select case(hc_split)
     case(1)
-       do while(sqrt(g_total_resi/g_total_source).gt.error.and.count.le.hc_max)
+       do while(sqrt(g_total_resi(1)/g_total_source(1)).gt.error.and.count.le.hc_max)
           alphas(:)=0.0d0
           do k=ks,ke; do j=js,je; do i=is,ie
              apk(i,j,k)=matrix(i,j,k,1)*pk(i,j,k) &
@@ -398,7 +398,7 @@ contains
        enddo
        
     case(2)
-       do while(sqrt(g_total_resi/g_total_source).gt.error.and.count.le.hc_max)
+       do while(sqrt(g_total_resi(1)/g_total_source(1)).gt.error.and.count.le.hc_max)
           alphas(:)=0.0d0
           do k=ks,ke; do j=js,je; do i=is,ie
              apk(i,j,k)=matrix(i,j,k,1)*pk(i,j,k) &

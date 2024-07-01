@@ -504,7 +504,7 @@ contains
   end subroutine end_mpi
 
   subroutine my_mpi_barrier
-    call MPI_barrier(MPI_COMM_WORLD)
+    call MPI_barrier(MPI_COMM_WORLD,ierr)
   end subroutine my_mpi_barrier  
 
 end module mpi_rot
