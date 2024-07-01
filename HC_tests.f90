@@ -49,8 +49,8 @@ if(debug_direction .eq. 1) then
 	!---------------------------------------
 
 	!!default boundary condition----------------------
-	if (flag_bnd(1) .eq.-1) flag_bnd(1)=10
-	if (flag_bnd(2) .eq.-1) flag_bnd(2)=10
+	if (flag_bnd(1) .eq.-1) flag_bnd(1)=99
+	if (flag_bnd(2) .eq.-1) flag_bnd(2)=99
 	if (flag_bnd(3) .eq.-1) flag_bnd(3)=1
 	if (flag_bnd(4) .eq.-1) flag_bnd(4)=1
 	if (flag_bnd(5) .eq.-1) flag_bnd(5)=1
