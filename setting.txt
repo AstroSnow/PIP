@@ -2,8 +2,8 @@ Data/:outdir; output directory (This should written at the first line in this fi
 Data/:indir; input directory
 MHD:flag_eqs;flag_for equation (HD,MHD, PIP) 
 -1:flag_restart; restart count (-1:no restart, 0: restart. nout at the end of config.txt will be read, >0: restart from No."flag_restart" data)
-1:ndim; dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
-100:ix; grid number for x-direction
+2:ndim; dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
+50:ix; grid number for x-direction
 50:jx; grid number for y-direction
 2:kx; grid number for z-direction
 0.25 :dtout;  output period 100 
@@ -15,7 +15,7 @@ MHD:flag_eqs;flag_for equation (HD,MHD, PIP)
 3.0    :gm_n;
 0.8  :safety;  safety factor
 HC_tests:flag_ini; flag for initial setting   
-0:flag_sch;  flag for numerical scheme (0:HLL-branch, 1:SLW)
+1:flag_sch;  flag for numerical scheme (0:HLL-branch, 1:SLW)
 2:flag_hll; flag for HLL branch (0:HLL,1:Rusanov,2:HLLD)
 1:s_order;order of space for HLL branch (1, 2)
 0:flag_time; flag for time integration method (0:RK, 1: SSPRK)
@@ -63,7 +63,7 @@ HC_tests:flag_ini; flag for initial setting
 0.3:safety_cnd; safety factor for heat conduction (not used in implicit method)
 30:nsub_max; Max subcycle number for super timestepping and Subcycling. Solutions go wrong with nsub > 40
 2 :hc_sch; iterative method for heat conduction equation (1:SOR, 2:BICG)
-8.2:kapper; heat condution coefficient (Note: One should be careful about your normalization unit)
+1.0:kapper; heat condution coefficient (Note: One should be careful about your normalization unit)
 500:hc_max; maximum iteration count for heat conduction
 1.0:sor_omega; SOR-omega parameter (for iterative method)
 ==For MPI====;
@@ -76,7 +76,7 @@ HC_tests:flag_ini; flag for initial setting
 0     :flag_debug; flag for debug (Currently not used)
 3     :debug_option;option for debug
 === NOTE: if you try debug_direction of >1, then you need to set ndim to 2 or 3. ===;
-1:debug_direction;direction for debug (1:x, 2:y, 3:z, ...) 
+2:debug_direction;direction for debug (1:x, 2:y, 3:z, ...) 
 0.494:debug_parameter;debug parameter
 0:no_advection;neglect advection term of induction equation 
 ==For damping==

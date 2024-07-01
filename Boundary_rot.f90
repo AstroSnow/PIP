@@ -7,7 +7,7 @@ module boundary_rot
 ! Second version - 2013/06/27 (New labelling for boundaries)
 !====================================================================
   use globalvar,only:ix,jx,kx,ndim,flag_pip,flag_mhd,nvar_h,nvar_m,&
-       flag_mpi,flag_bnd,margin,neighbor,flag_divb,time,x,gm,dt,nt,t_order, beta, n_fraction,&
+       flag_mpi,flag_bnd,margin,neighbor,flag_divb,time,x,y,gm,dt,nt,t_order, beta, n_fraction,&
         debug_direction
   use mpi_rot,only:mpi_bnd,mpi_bnd_onevar
   use parameters,only:pi !for the periodic drivers
@@ -782,8 +782,8 @@ integer,intent(in)::dir,ix,jx,kx,nvar,istep
 double precision,intent(inout)::U(ix,jx,kx,nvar) 
 double precision :: ro_u,ro_l,pr_u,pr_l,vx_l,vx_u,vy_l,vy_u,vz_l,vz_u
 double precision :: bx_l,bx_u,by_l,by_u,bz_l,bz_u
-double precision :: pr,T
-integer :: ni
+double precision :: pr,T,r,theta
+integer :: ni,nj
 
 if(debug_direction.eq.1) then
 !boundary conditions for 1D thermal conduction test
@@ -815,7 +815,7 @@ if(debug_direction.eq.1) then
             u(ni,:,:,6)=bx_l
             u(ni,:,:,7)=by_l
             u(ni,:,:,8)=bz_l
-            print*,ni,x(ni),u(ni,1,1,5)
+            !print*,ni,x(ni),u(ni,1,1,5)
          enddo
     endif
 
@@ -831,8 +831,63 @@ if(debug_direction.eq.1) then
             u(ix-ni+1,:,:,6)=bx_u
             u(ix-ni+1,:,:,7)=by_u
             u(ix-ni+1,:,:,8)=bz_u
-            print*,ni,x(ix-ni+1),u(ix-ni+1,:,:,5)!,u(size(u(:,1,1,1))-n+1,1,1,5)
+            !print*,ni,x(ix-ni+1),u(ix-ni+1,:,:,5)!,u(size(u(:,1,1,1))-n+1,1,1,5)
          enddo    
+    endif
+
+elseif(debug_direction.eq.2) then
+!boundary conditions for 1D thermal conduction test
+    ro_u=1.0
+    ro_l=1.0
+
+    vx_l=0.0
+    vx_u=0.0
+    vy_l=0.0
+    vy_u=0.0
+    vz_l=0.0
+    vz_u=0.0
+
+    bz_l=0.0
+    bz_u=0.0
+
+    if(dir.eq.0) then 
+         do ni=1,margin(1);do nj=1,margin(2)
+            T=10.d0
+            r=dsqrt(x(ni)**2+y(nj)**2)
+            theta=abs(datan2(y(nj),x(ni)))
+            bx_l=1.0*dcos(theta+pi/2.d0)/r
+            by_l=1.0*dsin(theta+pi/2.d0)/r
+            pr_l=ro_l*T/gm
+            u(ni,nj,:,1)=ro_l
+            u(ni,nj,:,2)=vx_l*ro_l
+            u(ni,nj,:,3)=vy_l*ro_l
+            u(ni,nj,:,4)=vz_l*ro_l
+            u(ni,nj,:,5)=pr_l/(gm-1.0d0)+0.5d0*(bx_l**2+by_l**2)
+            u(ni,nj,:,6)=bx_l
+            u(ni,nj,:,7)=by_l
+            u(ni,nj,:,8)=bz_l
+            !print*,ni,x(ni),u(ni,1,1,5)
+         enddo;enddo
+    endif
+
+    if (dir .eq. 1) then 
+         do ni=1,margin(1);do nj=1,margin(2)
+            T=10.d0
+            r=dsqrt(x(ix-ni+1)**2+y(ix-nj+1)**2)
+            theta=abs(datan2(y(ix-nj+1),x(ix-ni+1)))
+            pr_u=ro_u*T/gm
+            bx_u=1.0*dcos(theta+pi/2.d0)/r
+            by_u=1.0*dsin(theta+pi/2.d0)/r
+            u(ix-ni+1,ix-nj+1,:,1)=ro_u
+            u(ix-ni+1,ix-nj+1,:,2)=vx_u*ro_u
+            u(ix-ni+1,ix-nj+1,:,3)=vy_u*ro_u
+            u(ix-ni+1,ix-nj+1,:,4)=vz_u*ro_u
+            u(ix-ni+1,ix-nj+1,:,5)=pr_u/(gm-1.0d0)+0.5d0*(bx_u**2+by_u**2)
+            u(ix-ni+1,ix-nj+1,:,6)=bx_u
+            u(ix-ni+1,ix-nj+1,:,7)=by_u
+            u(ix-ni+1,ix-nj+1,:,8)=bz_u
+            !print*,ni,x(ix-ni+1),u(ix-ni+1,:,:,5)!,u(size(u(:,1,1,1))-n+1,1,1,5)
+         enddo;enddo
     endif
 
 endif

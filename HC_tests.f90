@@ -17,7 +17,7 @@ subroutine HC_tests
   double precision :: B_y (1:ix,1:jx,1:kx)
   double precision :: B_z (1:ix,1:jx,1:kx)
   double precision f_n,f_p,f_p_n,f_p_p,start(3),end(3)
-  double precision T0(1:ix)
+  double precision T0(1:ix,1:jx,1:kx),r,theta
   double precision, allocatable:: p_tot(:),ro_tot(:),temp(:),b0(:)
   integer i,j,k
   integer, allocatable:: new(:), old(:)
@@ -58,12 +58,12 @@ if(debug_direction .eq. 1) then
 	!-------------------------------------------------
 
 	!Initial temperature profile, see EQN 12 in https://iopscience.iop.org/article/10.3847/1538-4357/834/1/10/pdf
-	T0(1:ix)=0.1+0.9*x**5
+	T0(1:ix,1,1)=0.1+0.9*x**5
 	
 	!Set MHD properties
 	ro_m=1.0
 	do j=1,jx; do k=1,kx
-		P_m(1:ix,j,k)=ro_m(1:ix,j,k)*T0/gm
+		P_m(1:ix,j,k)=ro_m(1:ix,j,k)*T0(:,1,1)/gm
 	enddo;enddo
 	vx_m=0.0
 	vy_m=0.0
@@ -80,6 +80,50 @@ if(debug_direction .eq. 1) then
 	vy_h=0.0
 	vz_h=0.0
 
+else if(debug_direction .eq. 2) then
+	print*,'2D test of thermal conduction from Navaro+2022'
+	!Set coordinate (uniform grid)--------------------------
+	!!set lower and upper coordinate
+	start(1)=-1.0d0 ;end(1)=1.0d0
+	start(2)=-1.0d0 ;end(2)=1.0d0
+	start(3)=0.0d0 ;end(3)=1.0d0
+	call set_coordinate(start,end)
+	!---------------------------------------
+
+	!!default boundary condition----------------------
+	if (flag_bnd(1) .eq.-1) flag_bnd(1)=99
+	if (flag_bnd(2) .eq.-1) flag_bnd(2)=99
+	if (flag_bnd(3) .eq.-1) flag_bnd(3)=99
+	if (flag_bnd(4) .eq.-1) flag_bnd(4)=99
+	if (flag_bnd(5) .eq.-1) flag_bnd(5)=1
+	if (flag_bnd(6) .eq.-1) flag_bnd(6)=1
+	!-------------------------------------------------
+
+    ro_m=1.d0
+    T0=10.d0
+
+    do i=1,ix;do j=1,jx
+        r=dsqrt(x(i)**2+y(j)**2)
+        theta=(datan2(y(j),x(i)))
+        B_x(i,j,:)=1.0*dcos(theta+pi/2.d0)/r
+        B_y(i,j,:)=1.0*dsin(theta+pi/2.d0)/r
+        B_z(i,j,:)=0.d0
+
+        if((abs(theta) .ge. 11.d0/12.d0*pi).and.(abs(theta) .le. 13.d0/12.d0*pi)&
+            .and.(r .ge. 0.5).and.(r .le. 0.7)) then
+            T0(i,j,:)=12.d0
+        endif
+        P_m(i,j,:)=ro_m(i,j,:)*T0(i,j,:)/gm
+
+    enddo;enddo
+
+	vx_m=0.d0
+	vy_m=0.d0
+	vz_m=0.d0
+
+else
+    print*,'Choose a valid test case!'
+    stop
 endif
 
   !!!========================================================
