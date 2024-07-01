@@ -66,6 +66,8 @@ contains
           call PNcoupling
        case('HCtest')
           call HCtest
+       case('HC_tests')
+          call HC_tests
        case('HCtest_Tonly')
           call HCtest_Tonly
        case('Flare')
