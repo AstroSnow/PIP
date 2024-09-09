@@ -13,7 +13,7 @@ subroutine kink_wave
   double precision :: P_h (1:ix,1:jx,1:kx),P_m (1:ix,1:jx,1:kx)
   double precision :: B_x (1:ix,1:jx,1:kx)
   double precision :: B_y (1:ix,1:jx,1:kx)
-  double precision :: B_z (1:ix,1:jx,1:kx)
+  double precision :: B_z (1:ix,1:jx,1:kx)    !,  Te (1:ix,1:jx,1:kx)
   double precision f_n,f_p,f_p_n,f_p_p,start(3),end(3),r
   integer i,j,k
 
@@ -33,9 +33,9 @@ subroutine kink_wave
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=-1.0d0 ;end(1)=1.0d0
-  start(2)=0.0d0 ;end(2)=1.0d0
-  start(3)=0.0d0 ;end(3)=10.0d0
+  start(1)=-1.6d0 ;end(1)=1.6d0
+  start(2)=0.0d0 ;end(2)=1.6d0
+  start(3)=0.0d0 ;end(3)=30.0d0
   call set_coordinate(start,end)
   !---------------------------------------
   
@@ -44,7 +44,7 @@ subroutine kink_wave
   if (flag_bnd(2) .eq.-1) flag_bnd(2)=1
   if (flag_bnd(3) .eq.-1) flag_bnd(3)=2
   if (flag_bnd(4) .eq.-1) flag_bnd(4)=2
-  if (flag_bnd(5) .eq.-1) flag_bnd(5)=4
+  if (flag_bnd(5) .eq.-1) flag_bnd(5)=7
   if (flag_bnd(6) .eq.-1) flag_bnd(6)=6
   !-------------------------------------------------
 
@@ -53,22 +53,22 @@ subroutine kink_wave
   
   do k=1,kx;do j=1,jx;do i=1,ix     
      r=sqrt(x(i)**2+y(j)**2)
-       ro_m(i,j,k)=(1.d0+2.d0*(0.5d0*(1.d0-tanh((r/0.1d0-1.d0)*16.d0))))*f_p
-       ro_h(i,j,k)=(1.d0+2.d0*(0.5d0*(1.d0-tanh((r/0.1d0-1.d0)*16.d0))))*f_n
-       vx_m(i,j,k)=0.15d0*sin(pi*z(k)/20.d0)*(0.5d0*(1.d0-tanh((r/0.1d0-1.d0)*16.d0)))
-       vx_h(i,j,k)=0.15d0*sin(pi*z(k)/20.d0)*(0.5d0*(1.d0-tanh((r/0.1d0-1.d0)*16.d0)))
+       ro_m(i,j,k)=(1.d0+2.d0*(0.5d0*(1.d0-dtanh((r/0.5d0-1.d0)*(16.d0*4.d0)))))*f_p
+       ro_h(i,j,k)=(1.d0+2.d0*(0.5d0*(1.d0-dtanh((r/0.5d0-1.d0)*(16.d0*4.d0)))))*f_n
+       vx_m(i,j,k)=0.15d0*dsin(pi*z(k)/60.d0)*(0.5d0*(1.d0-dtanh((r/0.5d0-1.d0)*(16.d0*4.d0))))
+       vx_h(i,j,k)=0.15d0*dsin(pi*z(k)/60.d0)*(0.5d0*(1.d0-dtanh((r/0.5d0-1.d0)*(16.d0*4.d0))))
+!       Te(i,j,k) = (1.d0-0.5d0*(0.5d0*(1.d0-dtanh((r/0.5d0-1.d0)*(16.d0*4.d0)))))
+       P_h(i,j,k)=1.0/gm*(1.d0+0.5d0*(0.5d0*(1.d0-dtanh((r/0.5d0-1.d0)*(16.d0*4.d0)))))*f_p_n
+       P_m(i,j,k)=1.0/gm*(1.d0+0.5d0*(0.5d0*(1.d0-dtanh((r/0.5d0-1.d0)*(16.d0*4.d0)))))*f_p_p
   enddo;enddo;enddo
 
-     P_h(:,:,:)=1.0/gm*f_p_n
-     P_m(:,:,:)=1.0/gm*f_p_p
 
-     B_z=sqrt(2.0d0/(gm*beta))
+     B_z=dsqrt(2.0d0)*dsqrt(1/(gm*beta)+1/gm-P_m(:,:,:))
      B_x=0.0d0
      B_y=0.0d0
 
      vy_h=0.0d0;vz_h=0.0d0
      vy_m=0.0d0;vz_m=0.0d0
-
 
   !!!========================================================
 

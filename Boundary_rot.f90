@@ -67,6 +67,8 @@ end subroutine PIPbnd
           type=2
        else if(flag_bnd(i).eq.6) then
           type=2
+       else if(flag_bnd(i).eq.7) then
+          type=2
        else if(flag_bnd(i).eq.11) then
           type=2
 !       else if(flag_bnd(i).eq.20) then
@@ -103,6 +105,8 @@ end subroutine PIPbnd
           type=2
        else if(flag_bnd(i).eq.6) then
           type=2          
+       else if(flag_bnd(i).eq.7) then
+          type=2          
        else if(flag_bnd(i).eq.11) then
           type=2
        else
@@ -134,6 +138,8 @@ end subroutine PIPbnd
        else if(flag_bnd(i).eq.5) then
           type=2
        else if(flag_bnd(i).eq.6) then
+          type=2
+       else if(flag_bnd(i).eq.7) then
           type=2
        else if(flag_bnd(i).eq.11) then
           type=2
@@ -171,6 +177,8 @@ end subroutine PIPbnd
        else if(flag_bnd(i).eq.5) then
           type=2
        else if(flag_bnd(i).eq.6) then
+          type=2          
+       else if(flag_bnd(i).eq.7) then
           type=2          
        else if(flag_bnd(i).eq.11) then
           type=2
@@ -254,6 +262,11 @@ end subroutine PIPbnd
           sym_mhd(1+dir,i)=-1            !! vn
           sym_mhd(6+mod(dir,3),i)=-1     !! bt1
           sym_mhd(6+mod(dir+1,3),i)=-1   !! bt2       
+       else if(flag_bnd(i).eq.7) then
+          sym_mhd(2,i)=-1            !! vx
+          sym_mhd(3,i)=-1            !! vy
+          sym_mhd(4,i)=-1            !! vz
+!          sym_mhd(6+mod(dir+1,3),i)=-1          
        endif
     enddo
 
@@ -271,6 +284,8 @@ end subroutine PIPbnd
           else if(flag_bnd(i).eq.5) then
              sym_mhd(9,i) = 1 ! Bn is odd, so psi is even
           else if(flag_bnd(i).eq.6) then
+             sym_mhd(9,i) = -1 ! Bn is even, so psi is odd
+          else if(flag_bnd(i).eq.7) then
              sym_mhd(9,i) = -1 ! Bn is even, so psi is odd
           endif
        enddo
