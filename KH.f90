@@ -50,8 +50,8 @@ subroutine KH
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=-1.0d0 ;end(1)=1.0d0
-  start(2)=-1.5d0 ;end(2)=0.50
+  start(1)=-3.0d0 ;end(1)=3.0d0
+  start(2)=-2.0d0 ;end(2)=1.d0
   start(3)=-50.0d0 ;end(3)=50.0d0
   call set_coordinate(start,end)
   !---------------------------------------
@@ -69,11 +69,11 @@ subroutine KH
   !density of lower fluid is unity
   ro_l=1.0d0
   ro_u=100.0d0
-  vx_l=ro_u/(ro_u+ro_l)*dsqrt(4.d0/100.d0)
+  vx_l=0.0d0!ro_u/(ro_u+ro_l)*dsqrt(4.d0/100.d0)
 !  if(flag_mhd.eq.1) then
 !  vx_l=vx_l*sqrt(1.d0+2.d0/(gm*beta))
 !  endif
-  vx_u=-vx_l*ro_l/ro_u
+  vx_u=0.1d0!-vx_l*ro_l/ro_u
   w_lay=0.003d0
 
   scl_height=0.50
