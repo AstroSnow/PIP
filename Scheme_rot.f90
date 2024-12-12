@@ -17,7 +17,7 @@ module scheme_rot
        flag_bnd,xi_n,flag_pip_imp,nt,eta_0,gra,scl_height,s_order,flag_sch,&
        x,y,z,col,n_fraction,flag_ir,gm_rec,gm_ion,t_ir,mpi_pos,my_rank,&
        debug_parameter,ro_lim,pr_lim,tiny,cmax,dsc,b_cr,damp_time,flag_damp,&
-       oldke_damp,flag_rad,edref
+       oldke_damp,flag_rad,edref,T0
   use MPI_rot,only:mpi_double_interface
   use Boundary_rot,only:bnd_divb
   implicit none
@@ -102,13 +102,14 @@ contains
   subroutine get_Te_MHD(U,Te)
     double precision,intent(inout)::U(ix,jx,kx,nvar_m)
     double precision,intent(inout)::Te(ix,jx,kx)
-    double precision pr(ix,jx,kx)
+    double precision pr(ix,jx,kx)!,Ttempfix(ix,jx,kx)
     call get_Pr_MHD(U,pr)
     Te=0.5d0*gm*(pr/U(:,:,:,1))    
   end subroutine get_Te_MHD
   subroutine get_Pr_MHD(U,pr)
     double precision,intent(inout)::U(ix,jx,kx,nvar_m)
     double precision,intent(inout)::Pr(ix,jx,kx)
+!    double precision:: Ttemp(ix,jx,kx)
     pr=(gm-1.0d0)*(u(:,:,:,5)&
          -0.5d0*((U(:,:,:,2)*U(:,:,:,2)&
          +U(:,:,:,3)*U(:,:,:,3)&
@@ -116,7 +117,9 @@ contains
          +U(:,:,:,6)*U(:,:,:,6)&
          +U(:,:,:,7)*U(:,:,:,7)&
          +U(:,:,:,8)*U(:,:,:,8)))
-   if(minval(pr).le.pr_lim) pr=max(pr,pr_lim)  
+!    Ttemp=pr/U(:,:,:,1)*5.d0/3.d0*T0
+    !if(minval(Ttemp).le.1.0e3) pr=max(pr,1.0e3/T0*3.0/5.0*U(:,:,:,1))   
+if(minval(pr).le.pr_lim) pr=max(pr,pr_lim)  
     u(:,:,:,5)=pr/(gm-1.0d0)+0.5d0*((U(:,:,:,2)*U(:,:,:,2)&
          +U(:,:,:,3)*U(:,:,:,3)&
          +U(:,:,:,4)*U(:,:,:,4))/U(:,:,:,1)&
@@ -139,6 +142,8 @@ contains
 !!!!!!FIXES FOR HD DENSITY, PRESSURE AND ENERGY !!!!!!!  
     if(minval(pr).le.pr_lim) pr=max(pr,pr_lim)
     if(minval(de).le.ro_lim) de=max(de,ro_lim)
+!    T=pr/de*5.d0/3.d0*T0
+!    if(minval(T).le.1.0e3) pr=max(pr,1.0e3/T0*3.0/5.0*de)
     u_h(:,:,:,1)=de
     u_h(:,:,:,2)=vx*de
     u_h(:,:,:,3)=vy*de
@@ -155,6 +160,7 @@ contains
     double precision,intent(inout)::bx(ix,jx,kx)
     double precision,intent(inout):: by(ix,jx,kx),bz(ix,jx,kx)
     double precision,intent(inout)::U_m(ix,jx,kx,nvar_m)
+    double precision::Ttemp(ix,jx,kx)
 
    
     de=u_m(:,:,:,1)
@@ -168,6 +174,15 @@ contains
          -0.5d0*(bx**2+by**2+bz**2))
     if(minval(pr).le.pr_lim) pr=max(pr,pr_lim)
     if(minval(de).le.ro_lim) de=max(de,ro_lim)
+    Ttemp=pr/de*5.d0/3.d0*1.0e6
+    if(minval(Ttemp).le.1.0e3) then
+!        print*,'Uncorrected', minval(Ttemp),maxval(Ttemp),minval(pr),maxval(pr)
+        pr=max(pr,1.0e3*de*3.d0/5.d0*1.0e-6)
+!        Ttemp=pr/de*5.d0/3.d0*1.0e6
+!        print*,'Corrected', minval(Ttemp),maxval(Ttemp),minval(pr),maxval(pr)
+    endif
+!    Ttemp=pr/de*5.d0/3.d0*T0
+!    if(minval(Ttemp).le.1.0e3) pr=max(pr,1.0e3/T0*3.d0/5.d0*de)
     u_m(:,:,:,1)=de
     u_m(:,:,:,2)=vx*de
     u_m(:,:,:,3)=vy*de
@@ -316,42 +331,50 @@ contains
     double precision,intent(inout)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)  
     double precision::pr(ix,jx,kx)
     double precision::ro_mean(ix,jx,kx)
-    ro_mean(1:ix-1,1:jx-1,1:kx-1)=U_m(0:ix-2,0:jx-2,0:kx-2,1)+ &
-                                    U_m(0:ix-2,1:jx-1,0:kx-2,1)+ &
-                                    U_m(0:ix-2,2:jx-0,0:kx-2,1)+ &
-                                    U_m(0:ix-2,0:jx-2,1:kx-1,1)+ &
-                                    U_m(0:ix-2,1:jx-1,1:kx-1,1)+ &
-                                    U_m(0:ix-2,2:jx-0,1:kx-1,1)+ &
-                                    U_m(0:ix-2,0:jx-2,2:kx-0,1)+ &
-                                    U_m(0:ix-2,1:jx-1,2:kx-0,1)+ &
-                                    U_m(0:ix-2,2:jx-0,2:kx-0,1)+ &
-                                    U_m(1:ix-1,0:jx-2,0:kx-2,1)+ &
-                                    U_m(1:ix-1,1:jx-1,0:kx-2,1)+ &
-                                    U_m(1:ix-1,2:jx-0,0:kx-2,1)+ &
-                                    U_m(1:ix-1,0:jx-2,1:kx-1,1)+ &
-                                    U_m(1:ix-1,1:jx-1,1:kx-1,1)+ &
-                                    U_m(1:ix-1,2:jx-0,1:kx-1,1)+ &
-                                    U_m(1:ix-1,0:jx-2,2:kx-0,1)+ &
-                                    U_m(1:ix-1,1:jx-1,2:kx-0,1)+ &
-                                    U_m(1:ix-1,2:jx-0,2:kx-0,1)+ &
-                                    U_m(2:ix-0,0:jx-2,0:kx-2,1)+ &
-                                    U_m(2:ix-0,1:jx-1,0:kx-2,1)+ &
-                                    U_m(2:ix-0,2:jx-0,0:kx-2,1)+ &
-                                    U_m(2:ix-0,0:jx-2,1:kx-1,1)+ &
-                                    U_m(2:ix-0,1:jx-1,1:kx-1,1)+ &
-                                    U_m(2:ix-0,2:jx-0,1:kx-1,1)+ &
-                                    U_m(2:ix-0,0:jx-2,2:kx-0,1)+ &
-                                    U_m(2:ix-0,1:jx-1,2:kx-0,1)+ &
-                                    U_m(2:ix-0,2:jx-0,2:kx-0,1)
-    ro_mean(1:ix,1:jx,1:kx)=ro_mean(1:ix,1:jx,1:kx)/27.d0   
+    ro_mean=0.d0
+!    do i=1,5;do j=1,5;do k=1,5
+!        ro_mean(3:ix-2,3:jx-2,3:kx-2)=ro_mean(3:ix-2,3:jx-2,3:kx-2)+U_m(i:ix-5+i,j:jx-5+j,k:kx-5+k,1)/125.d0
+!        ro_mean(3:ix-2,3:jx-2,3:kx-2)=max(ro_mean(3:ix-2,3:jx-2,3:kx-2),&
+!        dsqrt(edref(i:ix-5+i,j:jx-5+j,k:kx-5+k,1))*U_m(i:ix-5+i,j:jx-5+j,k:kx-5+k,1))
+!    enddo;enddo;enddo
+!    ro_mean(2:ix-1,2:jx-1,2:kx-1)=U_m(1:ix-2,1:jx-2,1:kx-2,1)+ &
+!                                    U_m(1:ix-2,2:jx-1,1:kx-2,1)+ &
+!                                    U_m(1:ix-2,3:jx-0,1:kx-2,1)+ &
+!                                    U_m(1:ix-2,1:jx-2,2:kx-1,1)+ &
+!                                    U_m(1:ix-2,2:jx-1,2:kx-1,1)+ &
+!                                    U_m(1:ix-2,3:jx-0,2:kx-1,1)+ &
+!                                    U_m(1:ix-2,1:jx-2,3:kx-0,1)+ &
+!                                    U_m(1:ix-2,2:jx-1,3:kx-0,1)+ &
+!                                    U_m(1:ix-2,3:jx-0,3:kx-0,1)+ &
+!                                    U_m(2:ix-1,1:jx-2,1:kx-2,1)+ &
+!                                    U_m(2:ix-1,2:jx-1,1:kx-2,1)+ &
+!                                    U_m(2:ix-1,3:jx-0,1:kx-2,1)+ &
+!                                    U_m(2:ix-1,1:jx-2,2:kx-1,1)+ &
+!                                    U_m(2:ix-1,2:jx-1,2:kx-1,1)+ &
+!                                    U_m(2:ix-1,3:jx-0,2:kx-1,1)+ &
+!                                    U_m(2:ix-1,1:jx-2,3:kx-0,1)+ &
+!                                    U_m(2:ix-1,2:jx-1,3:kx-0,1)+ &
+!                                    U_m(2:ix-1,3:jx-0,3:kx-0,1)+ &
+!                                    U_m(3:ix-0,1:jx-2,1:kx-2,1)+ &
+!                                    U_m(3:ix-0,2:jx-1,1:kx-2,1)+ &
+!                                    U_m(3:ix-0,3:jx-0,1:kx-2,1)+ &
+!                                    U_m(3:ix-0,1:jx-2,2:kx-1,1)+ &
+!                                    U_m(3:ix-0,2:jx-1,2:kx-1,1)+ &
+!                                    U_m(3:ix-0,3:jx-0,2:kx-1,1)+ &
+!                                    U_m(3:ix-0,1:jx-2,3:kx-0,1)+ &
+!                                    U_m(3:ix-0,2:jx-1,3:kx-0,1)+ &
+!                                    U_m(3:ix-0,3:jx-0,3:kx-0,1)
+!    ro_mean(2:ix-1,2:jx-1,2:kx-1)=ro_mean(2:ix-1,2:jx-1,2:kx-1)/27.d0   
     call get_Pr_MHD(U_m,pr)
     if (minval(pr) .LT. 0.d0) then
 	    print*,'Negative pressure'
         stop
     endif
     dt=min(dt,0.1d0/max(maxval(edref(:,:,:,1)*U_m(:,:,:,1)*U_m(:,:,:,1)/(pr/(gm-1.d0))),1.0d-5))
-    dt=min(dt,0.1d0/max(maxval(edref(1:ix,1:jx,1:kx,1)*ro_mean(1:ix,1:jx,1:kx)*ro_mean(1:ix,1:jx,1:kx)&
-            /(pr(1:ix,1:jx,1:kx)/(gm-1.d0))),1.0d-5))
+!    dt=min(dt,0.1d0/max(maxval(edref(3:ix-2,3:jx-2,3:kx-2,1)*ro_mean(3:ix-2,3:jx-2,3:kx-2)*ro_mean(3:ix-2,3:jx-2,3:kx-2)&
+!            /(pr(3:ix-2,3:jx-2,3:kx-2)/(gm-1.d0))),1.0d-5))
+!    dt=min(dt,0.1d0/max(maxval(ro_mean(2:ix-1,2:jx-1,2:kx-1)*ro_mean(2:ix-1,2:jx-1,2:kx-1)&
+!            /(pr(2:ix-1,2:jx-1,2:kx-1)/(gm-1.d0))),1.0d-5))
 	!dt=min(dt,0.1d0/max(maxval(0.01d0*U_m(:,:,:,1)*U_m(:,:,:,1)/(pr/(gm-1.d0))),1.0d-5)) 
 !print*,olddttest,dt,safety/maxval(edref(:,:,:,1)/U_m(:,:,:,5))
 !     dt=min(dt,safety/maxval(edref(:,:,:,1))) 
