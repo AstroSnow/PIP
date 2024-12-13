@@ -1,7 +1,7 @@
 Data/:outdir; output directory (This should written at the first line in this file!!)
 Data/:indir; input directory
 MHD:flag_eqs;flag_for equation (HD,MHD, PIP) 
--1:flag_restart; restart count (-1:no restart, 0: restart. nout at the end of config.txt will be read, >0: restart from No."flag_restart" data)
+5:flag_restart; restart count (-1:no restart, 0: restart. nout at the end of config.txt will be read, >0: restart from No."flag_restart" data)
 2:ndim; dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
 800:ix; grid number for x-direction
 400:jx; grid number for y-direction
