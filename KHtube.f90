@@ -27,7 +27,7 @@ subroutine KHtube
   real harvest(ix*jx*kx)
   double precision:: T0down,T0up,n0up,n0down
   double precision:: nnup,nndown,pnup,pndown,ppup,ppdown
-  double precision:: f_nup,f_pup,f_ndown,f_pdown
+  double precision:: f_nup,f_pup,f_ndown,f_pdown, radius
   double precision:: f_p_nup,f_p_pup,f_p_ndown,f_p_pdown
   double precision::Nexciteup(6),Nexcitedown(6),Eion(6)
   double precision,parameter::kbhat=1.38064852,mehat=9.10938356,hhat=6.62607004
@@ -116,8 +116,8 @@ f_p_pdown=ppdown/n0up!(pnup+ppup)
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=-0.5d0 ;end(1)=0.5d0
-  start(2)=-0.75d0 ;end(2)=0.75d0
+  start(1)=-1.0d0 ;end(1)=1.0d0
+  start(2)=0.0d0 ;end(2)=1.0d0
   start(3)=-8.0d0 ;end(3)=8.0d0
   call set_coordinate(start,end)
   !---------------------------------------
@@ -221,6 +221,9 @@ f_p_pdown=ppdown/n0up!(pnup+ppup)
   do k=1,kx
      do j=1,jx
         do i=1,ix
+        
+        radius=dsqrt(y(j)**2+x(i)**2)
+        
         vy_h(i,j,k)=0.01d0*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
 !*dcos(x(i)*2.d0*pi)*exp(-2.d0*pi*abs(y(j))) &
 !                 *(-0.5d0*dtanh((dabs(y(j))-1.5d0)/0.15d0)+0.5d0 )
