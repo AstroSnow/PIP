@@ -195,7 +195,7 @@ print*,b0up,b0down
 !  print *, 'done', my_rank
 
   r0=0.5
-  v0=0.1
+  v0=0.01
   do k=1,kx
      do j=1,jx
         do i=1,ix
