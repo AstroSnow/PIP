@@ -224,6 +224,8 @@ f_p_pdown=ppdown/n0up!(pnup+ppup)
         
         radius=dsqrt(y(j)**2+x(i)**2)
         
+        ro_m(i,j,k)=n0up+(n0down-n0up)*(tanh(y/w_lay)+1.0)*0.5d0
+        
         vy_h(i,j,k)=0.01d0*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
 !*dcos(x(i)*2.d0*pi)*exp(-2.d0*pi*abs(y(j))) &
 !                 *(-0.5d0*dtanh((dabs(y(j))-1.5d0)/0.15d0)+0.5d0 )
