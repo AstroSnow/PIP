@@ -26,8 +26,8 @@ subroutine KHtube
   integer size, seed(2), gseed(2), hiseed(2), zseed(2)
   real harvest(ix*jx*kx)
   double precision:: T0down,T0up,n0up,n0down
-  double precision:: nnup,nndown,pnup,pndown,ppup,ppdown
-  double precision:: f_nup,f_pup,f_ndown,f_pdown, radius
+  double precision:: nnup,nndown,pnup,pndown,ppup,ppdown,b0up,b0down,ptot
+  double precision:: f_nup,f_pup,f_ndown,f_pdown, radius, r0
   double precision:: f_p_nup,f_p_pup,f_p_ndown,f_p_pdown
   double precision::Nexciteup(6),Nexcitedown(6),Eion(6)
   double precision,parameter::kbhat=1.38064852,mehat=9.10938356,hhat=6.62607004
@@ -45,16 +45,21 @@ subroutine KHtube
    call random_number(HARVEST=harvest)
 
 !Set the reference values
+!Test values
+T0down=7319.689479843136d0
+T0up=5500.d0
+n0up=1.0
+n0down=n0up*10.d0
 !small jump
 !T0down=6555.84250200805d0
 !T0up=5500.d0
 !n0up=7.5e16
 !n0down=n0up*10.d0
 !bigger jump
-T0down=7319.689479843136d0
-T0up=5500.d0
-n0up=7.0e16
-n0down=n0up*30.d0
+!T0down=7319.689479843136d0
+!T0up=5500.d0
+!n0up=7.0e16
+!n0down=n0up*30.d0
 
 if(flag_IR .ne. 4) then
 	print*,'set flag_IR=4 for this routine'
@@ -142,70 +147,41 @@ f_p_pdown=ppdown/n0up!(pnup+ppup)
 !  endif
   vx_u=-vx_l*ro_l/ro_u
   w_lay=0.003d0
+  w_lay=0.01d0
 
 !Put the up and down fractions as densities
   Nexciteup(1:5)=Nexciteup(1:5)*(nnup+n0up)
   Nexcitedown(1:5)=Nexcitedown(1:5)*(nndown+n0down)
   Nexciteup(6)=Nexciteup(6)*(nnup+n0up)
   Nexcitedown(6)=Nexcitedown(6)*(nndown+n0down)
-  
-!print*,sum(Nexciteup(1:5)),nnup,sum(Nexcitedown(1:5)),nndown
-!print*,Nexciteup(6),n0up,Nexcitedown(6),n0down
-
-  scl_height=0.50
-  if(scl_height.eq.0.0) scl_height=1.0
-
-!  ro_h=f_n*spread(spread(ro_l+(ro_u-ro_l)*(tanh(y/w_lay)+1.0) &
-!       *0.5d0,1,ix),3,kx)
-!  ro_m=f_p*spread(spread(ro_l+(ro_u-ro_l)*(tanh(y/w_lay)+1.0) &
-!       *0.5d0,1,ix),3,kx)
-!  vx_h=spread(spread(vx_l+(vx_u-vx_l)*(tanh(y/w_lay)+1.0)* &
-!       0.5d0,1,ix),3,kx)
-
-!  ro_h=f_n*spread(spread(ro_l+(ro_u-ro_l)*(tanh(y/w_lay)+1.0) &
-!       *0.5d0,1,ix),3,kx)
-!  ro_m=f_p*ro_h/f_n
-!  ro_h=spread(spread(f_nup+(f_ndown-f_nup)*(tanh(y/w_lay)+1.0) &
-!       *0.5d0,1,ix),3,kx)
-!  ro_m=spread(spread(f_pup+(f_pdown-f_pup)*(tanh(y/w_lay)+1.0) &
-!       *0.5d0,1,ix),3,kx)
-!  P_m=spread(spread(f_p_pup+(f_p_pdown-f_p_pup)*(tanh(y/w_lay)+1.0) &
-!       *0.5d0,1,ix),3,kx)
-!  P_h=spread(spread(f_p_nup+(f_p_ndown-f_p_nup)*(tanh(y/w_lay)+1.0) &
-!       *0.5d0,1,ix),3,kx)
-  ro_h=spread(spread(nnup+(nndown-nnup)*(tanh(y/w_lay)+1.0) &
-       *0.5d0,1,ix),3,kx)
-  ro_m=spread(spread(n0up+(n0down-n0up)*(tanh(y/w_lay)+1.0) &
-       *0.5d0,1,ix),3,kx)
-  P_m=spread(spread(ppup+(ppdown-ppup)*(tanh(y/w_lay)+1.0) &
-       *0.5d0,1,ix),3,kx)
-  P_h=spread(spread(pnup+(pndown-pnup)*(tanh(y/w_lay)+1.0) &
-       *0.5d0,1,ix),3,kx)
+ 
   do i=1,5
   	Nexcite(:,:,:,i)=spread(spread(Nexciteup(i)+(Nexcitedown(i)-Nexciteup(i))*(tanh(y/w_lay)+1.0) &
   	     *0.5d0,1,ix),3,kx)
   enddo
  Nexcite(:,:,:,6)=spread(spread(Nexciteup(6)+(Nexcitedown(6)-Nexciteup(6))*(tanh(y/w_lay)+1.0) &
              *0.5d0,1,ix),3,kx)
-!  ro_m=f_p*ro_h/f_n
-  vx_h=abs((nnup+n0up)*vx_l)*spread(spread(tanh(y/w_lay),1,ix),3,kx)/(nnup+n0up)
-  vx_m=vx_h
-
-!print*,nnup+(nndown-nnup)*(tanh(y(1)/w_lay)+1.0)*0.5d0
-!print*,y(1)
-!print*,sum(Nexcite(1,1,1,1:5)),ro_h(1,1,1),nnup,nndown
-!print*,Nexcite(1,1,1,6),ro_m(1,1,1),n0up,n0down
-
-!stop
 
   theta=2.d0*pi*0.d0/360.d0
-  if(flag_mhd.eq.1) then
-     b0=sqrt(2.0d0/(gm*beta))
-     B_z=B0*cos(theta)
-     B_x=B0*sin(theta)
-     B_y=0.0d0
+  
+  if (flag_pip.eq.0) then
+     ptot=ppdown
+  else
+     print*,'total pressure for two fluid case not defined'
   endif
+  if(flag_mhd.eq.1) then
+     !b0=sqrt(2.0d0/(gm*beta))
+     b0=sqrt(2.0d0/(ptot/ppup/5.0*3.0*beta))
+     !B_z=B0*cos(theta)
+     !B_x=B0*sin(theta)
+     !B_y=0.0d0
+  endif
+  b0down=b0
+  !b0up=dsqrt(2.0*(0.5*b0down**2+ppdown/5.0*3.0/ppup - 3.0/5.0))! dsqrt(ppdown/ppup)
 
+print*,ppup,ppdown
+print*,b0up,b0down
+!stop
 
 !  P_h(:,:,:)=1.0/gm*f_p_n
 !  P_m(:,:,:)=1.0/gm*f_p_p
@@ -218,13 +194,29 @@ f_p_pdown=ppdown/n0up!(pnup+ppup)
 
 !  print *, 'done', my_rank
 
+  r0=0.5
   do k=1,kx
      do j=1,jx
         do i=1,ix
         
         radius=dsqrt(y(j)**2+x(i)**2)
         
-        ro_m(i,j,k)=n0up+(n0down-n0up)*(tanh(y/w_lay)+1.0)*0.5d0
+        b_x(i,j,k)=0.d0
+        b_y(i,j,k)=0.d0
+        vy_m(i,j,k)=0.d0
+        vz_m(i,j,k)=0.d0
+        vy_h(i,j,k)=0.d0
+        vz_h(i,j,k)=0.d0
+        if (radius .GT. 1.1*r0) then
+          ro_m(i,j,k)=n0down
+          P_m(i,j,k)=ppdown
+          b_z(i,j,k)=b0down
+        else
+          ro_m(i,j,k)=n0up+(n0down-n0up)*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
+          P_m(i,j,k) =ppup+(ppdown-ppup)*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
+          !b_z(i,j,k) =b0up+(b0down-b0up)*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
+          b_z(i,j,k)=dsqrt(2.0*(0.5*b0down**2+ppdown/5.0*3.0/ppup - 3.0/5.0*P_m(i,j,k)/ppup))
+        endif
         
         vy_h(i,j,k)=0.01d0*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
 !*dcos(x(i)*2.d0*pi)*exp(-2.d0*pi*abs(y(j))) &
