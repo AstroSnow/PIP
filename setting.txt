@@ -1,10 +1,10 @@
-KHI2Dnlev_ac_10_col_fix/:outdir; output directory (This should written at the first line in this file!!)
-KHI2Dnlev_ac_10_col_fix/:indir; input directory
+Data/:outdir; output directory (This should written at the first line in this file!!)
+Data/:indir; input directory
 PIP:flag_eqs;flag_for equation (HD,MHD, PIP) 
 -1:flag_restart; restart count (-1:no restart, 0: restart. nout at the end of config.txt will be read, >0: restart from No."flag_restart" data)
 2:ndim; dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
 1024:ix; grid number for x-direction
-1024:jx; grid number for y-direction
+512:jx; grid number for y-direction
 2:kx; grid number for z-direction
 0.5 :dtout;  output period 100 
 40.0:tend;tend time for simulation (if lt 0 then default value is set) 20000
@@ -14,7 +14,7 @@ PIP:flag_eqs;flag_for equation (HD,MHD, PIP)
 5.0    :gm_d; 
 3.0    :gm_n;
 0.8  :safety;  safety factor
-KHnlev:flag_ini; flag for initial setting   
+KHtube:flag_ini; flag for initial setting   
 1:flag_sch;  flag for numerical scheme (0:HLL-branch, 1:SLW)
 2:flag_hll; flag for HLL branch (0:HLL,1:Rusanov,2:HLLD)
 1:s_order;order of space for HLL branch (1, 2)
