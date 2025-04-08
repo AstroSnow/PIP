@@ -1,13 +1,13 @@
 Data/:outdir; output directory (This should written at the first line in this file!!)
 Data/:indir; input directory
-PIP:flag_eqs;flag_for equation (HD,MHD, PIP) 
+MHD:flag_eqs;flag_for equation (HD,MHD, PIP) 
 -1:flag_restart; restart count (-1:no restart, 0: restart. nout at the end of config.txt will be read, >0: restart from No."flag_restart" data)
 2:ndim; dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
-1024:ix; grid number for x-direction
-512:jx; grid number for y-direction
+256:ix; grid number for x-direction
+128:jx; grid number for y-direction
 2:kx; grid number for z-direction
-0.5 :dtout;  output period 100 
-40.0:tend;tend time for simulation (if lt 0 then default value is set) 20000
+1.0 :dtout;  output period 100 
+100.0:tend;tend time for simulation (if lt 0 then default value is set) 20000
 0:esav; flag for save after given physical time
 0001.d0:emsavtime; Physical time to save for esav
 0 :flag_cyl; set to 1 when you use Cylindrical coordinates (x=>r,y=>z,z=>phi) NB: Only ndim=2 is allowed (rz-plane)
@@ -71,8 +71,8 @@ KHtube:flag_ini; flag for initial setting
 1.0:sor_omega; SOR-omega parameter (for iterative method)
 ==For MPI====;
 1     :flag_mpi;flag for mpi
-16     :mpi_x;node number for x-direction
-16     :mpi_y;node number for y-direction
+4     :mpi_x;node number for x-direction
+2     :mpi_y;node number for y-direction
 1     :mpi_z;node number for z-direction
 1     :flag_mpi_split;flag for splitting domain (Activated ONLY WHEN A=mpi_x*mpi_y*mpi_z=0 or A ne total_prc)
 ==For debug==;
