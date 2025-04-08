@@ -58,6 +58,8 @@ contains
           call KH
        case('KHnlev')          
           call KHnlev
+       case('KHtube')          
+          call KHtube
        case('Orszag_Tang')
           call Orszag_Tang
        case('FieldLoop')          
