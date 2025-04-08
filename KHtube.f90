@@ -27,7 +27,7 @@ subroutine KHtube
   real harvest(ix*jx*kx)
   double precision:: T0down,T0up,n0up,n0down
   double precision:: nnup,nndown,pnup,pndown,ppup,ppdown,b0up,b0down,ptot
-  double precision:: f_nup,f_pup,f_ndown,f_pdown, radius, r0
+  double precision:: f_nup,f_pup,f_ndown,f_pdown, radius, r0,v0
   double precision:: f_p_nup,f_p_pup,f_p_ndown,f_p_pdown
   double precision::Nexciteup(6),Nexcitedown(6),Eion(6)
   double precision,parameter::kbhat=1.38064852,mehat=9.10938356,hhat=6.62607004
@@ -195,6 +195,7 @@ print*,b0up,b0down
 !  print *, 'done', my_rank
 
   r0=0.5
+  v0=0.1
   do k=1,kx
      do j=1,jx
         do i=1,ix
@@ -211,11 +212,15 @@ print*,b0up,b0down
           ro_m(i,j,k)=n0down
           P_m(i,j,k)=ppdown
           b_z(i,j,k)=b0down
+          vx_m(i,j,k)=v0
+          vx_h(i,j,k)=v0
         else
           ro_m(i,j,k)=n0up+(n0down-n0up)*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
           P_m(i,j,k) =ppup+(ppdown-ppup)*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
           !b_z(i,j,k) =b0up+(b0down-b0up)*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
           b_z(i,j,k)=dsqrt(2.0*(0.5*b0down**2+ppdown/5.0*3.0/ppup - 3.0/5.0*P_m(i,j,k)/ppup))
+          vx_m(i,j,k)=v0*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
+          vx_h(i,j,k)=v0*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
         endif
         
         vy_h(i,j,k)=0.01d0*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
