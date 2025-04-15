@@ -21,7 +21,7 @@ subroutine KHtube
   double precision f_n,f_p,f_p_n,f_p_p,start(3),end(3)
   double precision Atwood,ro_l,ro_u,vx_l,vx_u,w_lay,b0,theta
   double precision A(jx,3),b(jx),P_y(jx)
-  integer i,j,k
+  integer i,j,k,ii
   integer, allocatable:: new(:), old(:)
   integer size, seed(2), gseed(2), hiseed(2), zseed(2)
   real harvest(ix*jx*kx)
@@ -46,10 +46,10 @@ subroutine KHtube
 
 !Set the reference values
 !Test values
-T0down=7319.689479843136d0
-T0up=5500.d0
-n0up=1.0
-n0down=n0up*10.d0
+!T0down=7319.689479843136d0
+!T0up=5500.d0
+!n0up=7.5e16
+!n0down=n0up*10.d0
 !small jump
 !T0down=6555.84250200805d0
 !T0up=5500.d0
@@ -60,6 +60,11 @@ n0down=n0up*10.d0
 !T0up=5500.d0
 !n0up=7.0e16
 !n0down=n0up*30.d0
+!Tube values
+T0down=10000.d0
+T0up=5500.d0
+n0up=7.5e16
+n0down=n0up*100.d0
 
 if(flag_IR .ne. 4) then
 	print*,'set flag_IR=4 for this routine'
@@ -154,28 +159,24 @@ f_p_pdown=ppdown/n0up!(pnup+ppup)
   Nexcitedown(1:5)=Nexcitedown(1:5)*(nndown+n0down)
   Nexciteup(6)=Nexciteup(6)*(nnup+n0up)
   Nexcitedown(6)=Nexcitedown(6)*(nndown+n0down)
- 
-  do i=1,5
-  	Nexcite(:,:,:,i)=spread(spread(Nexciteup(i)+(Nexcitedown(i)-Nexciteup(i))*(tanh(y/w_lay)+1.0) &
-  	     *0.5d0,1,ix),3,kx)
-  enddo
- Nexcite(:,:,:,6)=spread(spread(Nexciteup(6)+(Nexcitedown(6)-Nexciteup(6))*(tanh(y/w_lay)+1.0) &
-             *0.5d0,1,ix),3,kx)
 
   theta=2.d0*pi*0.d0/360.d0
   
   if (flag_pip.eq.0) then
      ptot=ppdown
-  else
-     print*,'total pressure for two fluid case not defined'
-  endif
-  if(flag_mhd.eq.1) then
-     !b0=sqrt(2.0d0/(gm*beta))
      b0=sqrt(2.0d0/(ptot/ppup/5.0*3.0*beta))
-     !B_z=B0*cos(theta)
-     !B_x=B0*sin(theta)
-     !B_y=0.0d0
+  else
+     ptot=ppdown+pndown
+     b0=sqrt(2.0d0/(ptot/ppup/5.0*3.0*beta))
+     print*,'check total pressure for two fluid case'
   endif
+!  if(flag_mhd.eq.1) then
+!     !b0=sqrt(2.0d0/(gm*beta))
+!     b0=sqrt(2.0d0/(ptot/ppup/5.0*3.0*beta))
+!     !B_z=B0*cos(theta)
+!     !B_x=B0*sin(theta)
+!     !B_y=0.0d0
+!  endif
   b0down=b0
   !b0up=dsqrt(2.0*(0.5*b0down**2+ppdown/5.0*3.0/ppup - 3.0/5.0))! dsqrt(ppdown/ppup)
 
@@ -210,17 +211,30 @@ print*,b0up,b0down
         vz_h(i,j,k)=0.d0
         if (radius .GT. 1.1*r0) then
           ro_m(i,j,k)=n0down
+          ro_h(i,j,k)=nndown
           P_m(i,j,k)=ppdown
+          P_h(i,j,k)=pndown
           b_z(i,j,k)=b0down
           vx_m(i,j,k)=v0
           vx_h(i,j,k)=v0
         else
           ro_m(i,j,k)=n0up+(n0down-n0up)*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
+          ro_h(i,j,k)=nnup+(nndown-nnup)*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
           P_m(i,j,k) =ppup+(ppdown-ppup)*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
+          P_h(i,j,k) =pnup+(pndown-pnup)*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
+          !print*,ro_h(i,j,k),ro_m(i,j,k),P_h(i,j,k),P_m(i,j,k)
           !b_z(i,j,k) =b0up+(b0down-b0up)*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
-          b_z(i,j,k)=dsqrt(2.0*(0.5*b0down**2+ppdown/5.0*3.0/ppup - 3.0/5.0*P_m(i,j,k)/ppup))
+          if (flag_pip .eq. 0) then
+              b_z(i,j,k)=dsqrt(2.0*(0.5*b0down**2+ppdown/5.0*3.0/ppup - 3.0/5.0*P_m(i,j,k)/ppup))
+          else
+              b_z(i,j,k)=dsqrt(2.0*(0.5*b0down**2+(ppdown+pndown)/5.0*3.0/ppup - 3.0/5.0*(P_m(i,j,k)+P_h(i,j,k))/ppup))
+          endif
           vx_m(i,j,k)=v0*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
           vx_h(i,j,k)=v0*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
+          do ii=1,5
+  	          Nexcite(i,j,k,ii)=Nexciteup(ii)+(Nexcitedown(ii)-Nexciteup(ii))*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
+          enddo
+          Nexcite(i,j,k,6)=Nexciteup(6)+(Nexcitedown(6)-Nexciteup(6))*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
         endif
         
         vy_h(i,j,k)=0.01d0*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
