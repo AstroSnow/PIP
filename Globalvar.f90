@@ -30,7 +30,7 @@ use HDF5
 
 !6 level collisional rates
   double precision,allocatable,save::Colrat(:,:,:,:,:),Nexcite(:,:,:,:)
-  double precision,save::n_levels
+  integer,save::n_levels
 
 !Table for the exponential integral
   double precision,allocatable,save::expinttab(:,:) !columns for input and i=0,1,2
