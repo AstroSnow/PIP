@@ -145,6 +145,7 @@ subroutine get_parameters
         read(tmp(1:ind_e-1),*)flag_IR_type
      else if(key.eq.'nlevels') then
         read(tmp(1:ind_e-1),*)n_levels
+        print*,'n_levels=',n_levels
      else if(key.eq.'t_IR') then
         read(tmp(1:ind_e-1),*)t_ir
      else if(key.eq.'pip_imp_factor') then
