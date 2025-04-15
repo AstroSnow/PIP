@@ -2,7 +2,8 @@ module PIP_rot
   use globalvar,only:ix,jx,kx,ac,xi_n,gm_rec,gm_ion,nvar_h,nvar_m,&
        flag_pip_imp,gm,n_fraction,t_ir,col,x,y,z,beta,T0, n0,my_rank,flag_IR_type,flag_col,arb_heat,nout,flag_restart,Colrat,&
         Nexcite,n0,f_p_ini,f_p_p_ini,n0fac,Gm_rec_ref,expinttab,&
-        rad_temp,flag_rad,gm_ion_rad,gm_rec_rad,radrat,ion_pot,radexpinttab,flag_sch,s_order,ndim
+        rad_temp,flag_rad,gm_ion_rad,gm_rec_rad,radrat,ion_pot,radexpinttab,flag_sch,&
+        s_order,ndim,n_levels
   use scheme_rot,only:get_Te_HD,get_Te_MHD,cq2pv_HD,cq2pv_MHD,get_vel_diff,derivative
   use parameters,only:T_r_p,deg1,deg2,pi
   use Boundary_rot,only:bnd_energy
@@ -668,9 +669,9 @@ endif
             enddo
 
             !Rates
-            do ii=1,5
+            do ii=1,n_levels
                 !Excitation rates
-                do jj=1,5
+                do jj=1,n_levels
                     if (ii .eq. jj) then 
                         colrat(i,j,k,ii,jj)=0.d0
                     else if (jj .gt. ii) then 
@@ -688,7 +689,7 @@ endif
 				colrat(i,j,k,ii,6)=Colex(ii,6)*exp(-(Eion(6)-Eion(ii))/kboltz/Telec(i,j,k))
             enddo
 
-            do ii=1,5
+            do ii=1,n_levels
                 colrat(i,j,k,6,ii)=nelec(i,j,k)*colrat(i,j,k,ii,6)*gweight(ii)/gweight(6)&
                     /2.0d0*(2.0d0*pi*mehat*kbhat*Telec(i,j,k)/hhat/hhat*1.0e14)**(-3.0d0/2.0d0)*&
                     exp(Eion(ii)/kboltz/Telec(i,j,k))
@@ -709,7 +710,8 @@ endif
 
             Gm_ion(i,j,k)=0.d0
             Gm_rec(i,j,k)=0.d0
-            do ii=1,5
+            do ii=1,n_levels
+            !print*,ii,n_levels,Gm_ion(i,j,k),Gm_rec(i,j,k)
                 Gm_ion(i,j,k)=Gm_ion(i,j,k)+max(Nexcite(i,j,k,ii)*colrat(i,j,k,ii,6),0.d0)
                 Gm_rec(i,j,k)=Gm_rec(i,j,k)+max(Nexcite(i,j,k,6)*colrat(i,j,k,6,ii),0.d0)
             enddo
@@ -798,7 +800,7 @@ endif
 
     radrat(:,:,:,:,:)=0.d0
     !Excitation states
-        do ii=1,5 
+        do ii=1,n_levels
         	Tradarr(:,:,:)=Trad
         	if ((flag_rad .eq. 3) .and. (ii.eq. 1)) Tradarr(:,:,:)=Tneut !Some appoximation of optically thick Lyman
             do jj=ii+1,5
@@ -807,7 +809,7 @@ endif
             enddo
         enddo
     !DeExcitation rates (eq 3.3 in Sollum)
-        do jj=2,5
+        do jj=2,n_levels
             do ii=jj-1,1,-1
                 Tradarr(:,:,:)=Trad
         	    if ((flag_rad .eq. 3) .and. (ii.eq. 1)) Tradarr(:,:,:)=Tneut !Some appoximation of optically thick Lyman
@@ -815,7 +817,7 @@ endif
             enddo
         enddo
 
-    do ii=1,5
+    do ii=1,n_levels
     
     	if (flag_rad .eq. 2) then
     	!Optically thin for all transitions
@@ -964,7 +966,7 @@ endif
 !print*,radrat(1,1,1,:,:)
     Gm_ion_rad(:,:,:)=0.d0
     Gm_rec_rad(:,:,:)=0.d0
-    do ii=1,5
+    do ii=1,n_levels
         Gm_ion_rad(:,:,:)=Gm_ion_rad(:,:,:)+max(Nexcite(:,:,:,ii)*radrat(:,:,:,ii,6),0.d0)
         Gm_rec_rad(:,:,:)=Gm_rec_rad(:,:,:)+max(Nexcite(:,:,:,6)*radrat(:,:,:,6,ii),0.d0)
     enddo
@@ -1303,8 +1305,8 @@ END subroutine
             ! Calculate the change in each neutral species
             dntotv(:,:,:)=0.d0
             dneutv(:,:,:,:)=0.d0
-            do ii=1,6
-                do jj=1,6 
+            do ii=1,n_levels+1
+                do jj=1,n_levels+1
                     dneutv(:,:,:,ii)=dneutv(:,:,:,ii)+Nexcite(:,:,:,jj)*colrat(:,:,:,jj,ii)/Gm_rec_ref*t_ir - &
                     			Nexcite(:,:,:,ii)*colrat(:,:,:,ii,jj)/Gm_rec_ref*t_ir
                     if (flag_rad .ge. 2) then
@@ -1375,7 +1377,7 @@ END subroutine
 !			Nexcite(:,:,:,4)=Nexcite(:,:,:,4)/dntotv(:,:,:)*roh
 !			Nexcite(:,:,:,5)=Nexcite(:,:,:,5)/dntotv(:,:,:)*roh
 !print*,Nexcite(1,1,1,:),sum(Nexcite(1,1,1,1:5))
-            dntotv(:,:,:)=sum(Nexcite(:,:,:,1:5),DIM=4)-roh
+            dntotv(:,:,:)=sum(Nexcite(:,:,:,1:n_levels),DIM=4)-roh
             Nexcite(:,:,:,1)=Nexcite(:,:,:,1)-dntotv
 !print*,dntotv(1,1,1),dt
 !            Nexcite(:,:,:,1)=roh(:,:,:)*Nexcite(:,:,:,1)/dntotv(:,:,:)
@@ -1385,7 +1387,7 @@ END subroutine
 !            Nexcite(:,:,:,5)=roh(:,:,:)*Nexcite(:,:,:,5)/dntotv(:,:,:)
 		Nexcite(:,:,:,6)=rom(:,:,:)!*Nexcite(:,:,:,6)/dntotv(:,:,:)
 	!Boundary exchange for neutral level population
-	do ii=1,5
+	do ii=1,n_levels
 		call bnd_energy(Nexcite(:,:,:,ii))
 	enddo
 !stop

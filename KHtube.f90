@@ -4,7 +4,7 @@ subroutine KHtube
        flag_mhd,flag_mpi,my_rank,flag_pip,gm,beta,tend,&
        x,y,z,dx,dy,dz,n_fraction,gra,flag_grav,scl_height,margin,T0,n0,Nexcite,&
        f_p_ini,f_p_p_ini,n0fac,Gm_rec_ref,colrat,gm_ion,gm_rec,expinttab,&
-       flag_rad,radrat,rad_temp,gm_rec_rad,gm_ion_rad,flag_IR
+       flag_rad,radrat,rad_temp,gm_rec_rad,gm_ion_rad,flag_IR,n_levels
   use scheme_rot,only:pv2cq_mhd,pv2cq_hd
   use model_rot, only:set_coordinate,setcq
   use matrix_rot,only:inverse_tridiagonal
@@ -102,7 +102,7 @@ Nexcitedown(1:5)=n0down/Nexcitedown(1:5)
 Nexcitedown=Nexcitedown/n0down
 Nexcitedown=Nexcitedown/sum(Nexcitedown(:))
 
-f_nup=sum(Nexciteup(1:5))/sum(Nexciteup(1:6))
+f_nup=sum(Nexciteup(1:n_levels))/(sum(Nexciteup(1:n_levels))+Nexciteup(6))
 f_pup=1.d0-f_nup!Nexcite(1,1,1,6)
 nnup=n0up/f_pup-n0up
 pnup=nnup*T0up*3.d0/5.d0!f_nup/(f_nup+2.0d0*f_pup)
@@ -114,7 +114,7 @@ f_p_ini=n0up!f_pup
 f_p_p_ini=ppup!f_p_pup
 n0fac=1.d0!f_pup
 
-f_ndown=sum(Nexcitedown(1:5))/sum(Nexcitedown(1:6))
+f_ndown=sum(Nexcitedown(1:n_levels))/(sum(Nexcitedown(1:n_levels))+Nexcitedown(6))
 f_pdown=1.d0-f_ndown!Nexcite(1,1,1,6)
 nndown=n0down/f_pdown-n0down
 pndown=nndown*T0down*3.d0/5.d0!f_nup/(f_nup+2.0d0*f_pup)
@@ -217,10 +217,11 @@ print*,b0up,b0down
           b_z(i,j,k)=b0down
           vx_m(i,j,k)=v0
           vx_h(i,j,k)=v0
-          do ii=1,5
-  	          Nexcite(i,j,k,ii)=Nexcitedown(ii)
+          do ii=1,n_levels
+                  Nexcite(i,j,k,ii)=Nexcitedown(ii)
           enddo
           Nexcite(i,j,k,6)=Nexcitedown(6)
+
         else
           ro_m(i,j,k)=n0up+(n0down-n0up)*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
           ro_h(i,j,k)=nnup+(nndown-nnup)*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
@@ -233,7 +234,11 @@ print*,b0up,b0down
           else
               b_z(i,j,k)=dsqrt(2.0*(0.5*b0down**2+(ppdown+pndown)/5.0*3.0/ppup - 3.0/5.0*(P_m(i,j,k)+P_h(i,j,k))/ppup))
           endif
-          do ii=1,5
+
+          vx_m(i,j,k)=v0*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
+          vx_h(i,j,k)=v0*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
+
+          do ii=1,n_levels
   	          Nexcite(i,j,k,ii)=Nexciteup(ii)+(Nexcitedown(ii)-Nexciteup(ii))*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
           enddo
           Nexcite(i,j,k,6)=Nexciteup(6)+(Nexcitedown(6)-Nexciteup(6))*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
