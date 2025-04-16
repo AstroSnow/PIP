@@ -331,7 +331,7 @@ contains
      double precision,intent(inout)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
      double precision::dneut(ix,jx,kx,5)
      call hydrogen_excitation_timestep(U_m,U_h,dneut)
-     dttemp=min(dttemp,min(safety,0.3d0)/max(maxval(dneut),1.0d-5))
+     dttemp=min(dttemp,min(safety,0.01d0)/max(maxval(dneut),1.0d-5))
    end subroutine cfl_pip_ir_nexcite
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
