@@ -122,9 +122,9 @@ f_p_pdown=ppdown/n0up!(pnup+ppup)
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=-1.0d0 ;end(1)=1.0d0
-  start(2)=0.0d0 ;end(2)=1.0d0
-  start(3)=-8.0d0 ;end(3)=8.0d0
+  start(1)=-2.0d0 ;end(1)=2.0d0
+  start(2)=0.0d0 ;end(2)=2.0d0
+  start(3)=-10.0d0 ;end(3)=10.0d0
   call set_coordinate(start,end)
   !---------------------------------------
 
@@ -148,7 +148,7 @@ f_p_pdown=ppdown/n0up!(pnup+ppup)
 !  endif
   vx_u=-vx_l*ro_l/ro_u
   w_lay=0.003d0
-  w_lay=0.01d0
+  w_lay=0.1d0
 
 !Put the up and down fractions as densities
   Nexciteup(1:n_levels)=Nexciteup(1:n_levels)*(nnup+n0up)
@@ -205,7 +205,7 @@ print*,b0up,b0down
         vz_m(i,j,k)=0.d0
         vy_h(i,j,k)=0.d0
         vz_h(i,j,k)=0.d0
-        if (radius .GT. 1.1*r0) then
+        if (radius .GT. 2.0*r0) then
           ro_m(i,j,k)=n0down
           ro_h(i,j,k)=nndown
           P_m(i,j,k)=ppdown
@@ -230,18 +230,21 @@ print*,b0up,b0down
           else
               b_z(i,j,k)=dsqrt(2.0*(0.5*b0down**2+(ppdown+pndown)/5.0*3.0/ppup - 3.0/5.0*(P_m(i,j,k)+P_h(i,j,k))/ppup))
           endif
+
           !vx_m(i,j,k)=v0*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
           !vx_h(i,j,k)=v0*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
+
           do ii=1,n_levels
   	          Nexcite(i,j,k,ii)=Nexciteup(ii)+(Nexcitedown(ii)-Nexciteup(ii))*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
           enddo
           Nexcite(i,j,k,n_levels+1)=Nexciteup(n_levels+1)+(Nexcitedown(n_levels+1)&
           -Nexciteup(n_levels+1))*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
         endif
+
         vx_m(i,j,k)=0.5d0*(dsin(3.14d0*(z(k))/10.d0))*v0*(1.0-tanh((radius-r0)/w_lay))
         vx_h(i,j,k)=0.5d0*(dsin(3.14d0*(z(k))/10.d0))*v0*(1.0-tanh((radius-r0)/w_lay))
-
-        !vy_h(i,j,k)=0.01d0*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
+        
+!vy_h(i,j,k)=0.01d0*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
 !*dcos(x(i)*2.d0*pi)*exp(-2.d0*pi*abs(y(j))) &
 !                 *(-0.5d0*dtanh((dabs(y(j))-1.5d0)/0.15d0)+0.5d0 )
 !*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
@@ -259,6 +262,15 @@ P_h=P_h/5.0*3.0/ppup
 ro_m=ro_m/n0up!*T0up
 ro_h=ro_h/n0up!*T0up
 Nexcite=Nexcite/n0up
+
+
+!Make sure that the level populations are properly defined
+if (flag_IR .eq. 4) then
+Nexcite(:,:,:,6)=ro_m
+do i=1,5
+    Nexcite(:,:,:,i)=Nexcite(:,:,:,i)*ro_h/sum(Nexcite(:,:,:,1:5),dim=4)
+enddo
+endif
 
 if ((flag_MHD .eq. 1) .and. (flag_PIP .ne. 1)) then
     print*,'MHD model'
