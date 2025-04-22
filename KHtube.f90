@@ -56,15 +56,15 @@ subroutine KHtube
 !n0up=7.5e16
 !n0down=n0up*10.d0
 !bigger jump
-!T0down=7319.689479843136d0
-!T0up=5500.d0
-!n0up=7.0e16
-!n0down=n0up*30.d0
-!Tube values
-T0down=10000.d0
+T0down=7319.689479843136d0
 T0up=5500.d0
+n0up=7.0e16
+n0down=n0up*30.d0
+!Tube values
+T0down=100000.d0
+T0up=6000.d0
 n0up=7.5e16
-n0down=n0up*100.d0
+n0down=n0up*1.d0
 
 if(flag_IR .ne. 4) then
 	print*,'set flag_IR=4 for this routine'
@@ -234,19 +234,21 @@ print*,b0up,b0down
           else
               b_z(i,j,k)=dsqrt(2.0*(0.5*b0down**2+(ppdown+pndown)/5.0*3.0/ppup - 3.0/5.0*(P_m(i,j,k)+P_h(i,j,k))/ppup))
           endif
-          vx_m(i,j,k)=v0*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
-          vx_h(i,j,k)=v0*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
+          !vx_m(i,j,k)=v0*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
+          !vx_h(i,j,k)=v0*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
           do ii=1,n_levels
   	          Nexcite(i,j,k,ii)=Nexciteup(ii)+(Nexcitedown(ii)-Nexciteup(ii))*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
           enddo
           Nexcite(i,j,k,6)=Nexciteup(6)+(Nexcitedown(6)-Nexciteup(6))*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
         endif
-        
-        vy_h(i,j,k)=0.01d0*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
+        vx_m(i,j,k)=0.5d0*(dsin(3.14d0*(z(k))/10.d0))*v0*(1.0-tanh((radius-r0)/w_lay))
+        vx_h(i,j,k)=0.5d0*(dsin(3.14d0*(z(k))/10.d0))*v0*(1.0-tanh((radius-r0)/w_lay))
+
+        !vy_h(i,j,k)=0.01d0*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
 !*dcos(x(i)*2.d0*pi)*exp(-2.d0*pi*abs(y(j))) &
 !                 *(-0.5d0*dtanh((dabs(y(j))-1.5d0)/0.15d0)+0.5d0 )
 !*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
-        vy_m(i,j,k)=0.01d0*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
+        !vy_m(i,j,k)=0.01d0*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
 !dcos(x(i)*2.d0*pi)*exp(-2.d0*pi*abs(y(j))) &
 !(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
 !*(harvest((k-1)*jx*ix+(j-1)*ix+i)-0.5d0)
