@@ -320,27 +320,6 @@ print*,Gm_rec_ref,my_RANK,T0,n0
 	double precision::radsol2,radsol3,radsol4,radsol5
     integer::i,Tradtempint,nsampstempint
 
-!old read routine using the IDL data
-!    open (unit=17, file='exptab2_i0.txt', status='old', action='read')
-!    open (unit=18, file='exptab2_i1.txt', status='old', action='read')
-!    open (unit=19, file='exptab2_i2.txt', status='old', action='read')
-!    open (unit=17, file='exptab2_i0_e5.txt', status='old', action='read')
-!    open (unit=18, file='exptab2_i1_e5.txt', status='old', action='read')
-!    open (unit=19, file='exptab2_i2_e5.txt', status='old', action='read')
-!    do i=1,10000
-!        read(17,*) ytemp, i0temp
-!        read(18,*) ytemp, i1temp
-!        read(19,*) ytemp, i2temp
-!        expinttab(1,i)=ytemp
-!        expinttab(2,i)=i0temp
-!        expinttab(3,i)=i1temp
-!        expinttab(4,i)=i2temp
-!        !print*,expinttab(:,i)
-!    enddo
-!	close (unit=17)
-!	close (unit=18)
-!	close (unit=19)
-
 	open (unit=17, file='expintcalc/colexp.dat', status='old', action='read')
 	read(17,*) nsampstemp,ymin,ymax
 	nsampstempint=int(nsampstemp)
