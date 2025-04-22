@@ -29,7 +29,7 @@ subroutine KHtube
   double precision:: nnup,nndown,pnup,pndown,ppup,ppdown,b0up,b0down,ptot
   double precision:: f_nup,f_pup,f_ndown,f_pdown, radius, r0,v0
   double precision:: f_p_nup,f_p_pup,f_p_ndown,f_p_pdown
-  double precision::Nexciteup(6),Nexcitedown(6),Eion(6)
+  double precision::Nexciteup(n_levels+1),Nexcitedown(n_levels+1),Eion(6)
   double precision,parameter::kbhat=1.38064852,mehat=9.10938356,hhat=6.62607004
   double precision,parameter::kboltz=1.38064852e-23 !Boltzmann Constant [m^2 kg s^-2 K^-1]
     data seed /123456789, 987654321/
@@ -74,35 +74,31 @@ endif
 if (my_rank.eq.0) print*,'Calculating LTE excitation state'
 
 !Allocate arrays
-allocate(Nexcite(ix,jx,kx,6)) !Allocate the fractional array
-allocate(Colrat(ix,jx,kx,6,6))
+allocate(Nexcite(ix,jx,kx,n_levels+1)) !Allocate the fractional array
+allocate(Colrat(ix,jx,kx,n_levels+1,n_levels+1))
 call expintread
-if (flag_rad .ge. 2) allocate(radrat(ix,jx,kx,6,6))
+if (flag_rad .ge. 2) allocate(radrat(ix,jx,kx,n_levels+1,n_levels+1))
 
 Eion=[13.6,3.4,1.51,0.85,0.54,0.0] !in eV
 Eion=Eion/13.6*2.18e-18 !Convert to joules (to be dimensionally correct)
 
-Nexciteup(6)=n0up
-Nexciteup(1)=(2.d0/n0up/2.d0*(2.d0*pi*mehat*kbhat*T0up/hhat/hhat*1.0e14)**(3.d0/2.d0)*exp(-Eion(1)/kboltz/T0up))
-Nexciteup(2)=(2.d0/n0up/8.d0*(2.d0*pi*mehat*kbhat*T0up/hhat/hhat*1.0e14)**(3.d0/2.d0)*exp(-Eion(2)/kboltz/T0up))
-Nexciteup(3)=(2.d0/n0up/18.d0*(2.d0*pi*mehat*kbhat*T0up/hhat/hhat*1.0e14)**(3.d0/2.d0)*exp(-Eion(3)/kboltz/T0up))
-Nexciteup(4)=(2.d0/n0up/32.d0*(2.d0*pi*mehat*kbhat*T0up/hhat/hhat*1.0e14)**(3.d0/2.d0)*exp(-Eion(4)/kboltz/T0up))
-Nexciteup(5)=(2.d0/n0up/50.d0*(2.d0*pi*mehat*kbhat*T0up/hhat/hhat*1.0e14)**(3.d0/2.d0)*exp(-Eion(5)/kboltz/T0up))
-Nexciteup(1:5)=n0up/Nexciteup(1:5)
+Nexciteup(n_levels+1)=n0up
+do i=1,n_levels
+Nexciteup(i)=(2.d0/n0up/2.d0*(2.d0*pi*mehat*kbhat*T0up/hhat/hhat*1.0e14)**(3.d0/2.d0)*exp(-Eion(i)/kboltz/T0up))
+enddo
+Nexciteup(1:n_levels)=n0up/Nexciteup(1:n_levels)
 Nexciteup=Nexciteup/n0up
 Nexciteup=Nexciteup/sum(Nexciteup(:))
 
-Nexcitedown(6)=n0down
-Nexcitedown(1)=(2.d0/n0down/2.d0*(2.d0*pi*mehat*kbhat*T0down/hhat/hhat*1.0e14)**(3.d0/2.d0)*exp(-Eion(1)/kboltz/T0down))
-Nexcitedown(2)=(2.d0/n0down/8.d0*(2.d0*pi*mehat*kbhat*T0down/hhat/hhat*1.0e14)**(3.d0/2.d0)*exp(-Eion(2)/kboltz/T0down))
-Nexcitedown(3)=(2.d0/n0down/18.d0*(2.d0*pi*mehat*kbhat*T0down/hhat/hhat*1.0e14)**(3.d0/2.d0)*exp(-Eion(3)/kboltz/T0down))
-Nexcitedown(4)=(2.d0/n0down/32.d0*(2.d0*pi*mehat*kbhat*T0down/hhat/hhat*1.0e14)**(3.d0/2.d0)*exp(-Eion(4)/kboltz/T0down))
-Nexcitedown(5)=(2.d0/n0down/50.d0*(2.d0*pi*mehat*kbhat*T0down/hhat/hhat*1.0e14)**(3.d0/2.d0)*exp(-Eion(5)/kboltz/T0down))
-Nexcitedown(1:5)=n0down/Nexcitedown(1:5)
+Nexcitedown(n_levels+1)=n0down
+do i=1,n_levels
+    Nexcitedown(i)=(2.d0/n0down/2.d0*(2.d0*pi*mehat*kbhat*T0down/hhat/hhat*1.0e14)**(3.d0/2.d0)*exp(-Eion(i)/kboltz/T0down))
+enddo
+Nexcitedown(1:n_levels)=n0down/Nexcitedown(1:n_levels)
 Nexcitedown=Nexcitedown/n0down
 Nexcitedown=Nexcitedown/sum(Nexcitedown(:))
 
-f_nup=sum(Nexciteup(1:n_levels))/(sum(Nexciteup(1:n_levels))+Nexciteup(6))
+f_nup=sum(Nexciteup(1:n_levels))/(sum(Nexciteup(1:n_levels))+Nexciteup(n_levels+1))
 f_pup=1.d0-f_nup!Nexcite(1,1,1,6)
 nnup=n0up/f_pup-n0up
 pnup=nnup*T0up*3.d0/5.d0!f_nup/(f_nup+2.0d0*f_pup)
@@ -114,7 +110,7 @@ f_p_ini=n0up!f_pup
 f_p_p_ini=ppup!f_p_pup
 n0fac=1.d0!f_pup
 
-f_ndown=sum(Nexcitedown(1:n_levels))/(sum(Nexcitedown(1:n_levels))+Nexcitedown(6))
+f_ndown=sum(Nexcitedown(1:n_levels))/(sum(Nexcitedown(1:n_levels))+Nexcitedown(n_levels+1))
 f_pdown=1.d0-f_ndown!Nexcite(1,1,1,6)
 nndown=n0down/f_pdown-n0down
 pndown=nndown*T0down*3.d0/5.d0!f_nup/(f_nup+2.0d0*f_pup)
@@ -155,10 +151,10 @@ f_p_pdown=ppdown/n0up!(pnup+ppup)
   w_lay=0.01d0
 
 !Put the up and down fractions as densities
-  Nexciteup(1:5)=Nexciteup(1:5)*(nnup+n0up)
-  Nexcitedown(1:5)=Nexcitedown(1:5)*(nndown+n0down)
-  Nexciteup(6)=Nexciteup(6)*(nnup+n0up)
-  Nexcitedown(6)=Nexcitedown(6)*(nndown+n0down)
+  Nexciteup(1:n_levels)=Nexciteup(1:n_levels)*(nnup+n0up)
+  Nexcitedown(1:n_levels)=Nexcitedown(1:n_levels)*(nndown+n0down)
+  Nexciteup(n_levels+1)=Nexciteup(n_levels+1)*(nnup+n0up)
+  Nexcitedown(n_levels+1)=Nexcitedown(n_levels+1)*(nndown+n0down)
 
   theta=2.d0*pi*0.d0/360.d0
   
@@ -220,7 +216,7 @@ print*,b0up,b0down
           do ii=1,n_levels
                   Nexcite(i,j,k,ii)=Nexcitedown(ii)
           enddo
-          Nexcite(i,j,k,6)=Nexcitedown(6)
+          Nexcite(i,j,k,n_levels+1)=Nexcitedown(n_levels+1)
 
         else
           ro_m(i,j,k)=n0up+(n0down-n0up)*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
@@ -239,7 +235,8 @@ print*,b0up,b0down
           do ii=1,n_levels
   	          Nexcite(i,j,k,ii)=Nexciteup(ii)+(Nexcitedown(ii)-Nexciteup(ii))*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
           enddo
-          Nexcite(i,j,k,6)=Nexciteup(6)+(Nexcitedown(6)-Nexciteup(6))*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
+          Nexcite(i,j,k,n_levels+1)=Nexciteup(n_levels+1)+(Nexcitedown(n_levels+1)&
+          -Nexciteup(n_levels+1))*(tanh((radius-r0)/w_lay)+1.0)*0.5d0
         endif
         vx_m(i,j,k)=0.5d0*(dsin(3.14d0*(z(k))/10.d0))*v0*(1.0-tanh((radius-r0)/w_lay))
         vx_h(i,j,k)=0.5d0*(dsin(3.14d0*(z(k))/10.d0))*v0*(1.0-tanh((radius-r0)/w_lay))
