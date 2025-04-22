@@ -1305,8 +1305,31 @@ END subroutine
             ! Calculate the change in each neutral species
             dntotv(:,:,:)=0.d0
             dneutv(:,:,:,:)=0.d0
-            do ii=1,n_levels+1
-                do jj=1,n_levels+1
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!do the plasma
+ii=6
+        do jj=1,n_levels
+            dneutv(:,:,:,ii)=dneutv(:,:,:,ii)+Nexcite(:,:,:,jj)*colrat(:,:,:,jj,ii)/Gm_rec_ref*t_ir - &
+            			Nexcite(:,:,:,ii)*colrat(:,:,:,ii,jj)/Gm_rec_ref*t_ir
+            if (flag_rad .ge. 2) then
+                dneutv(:,:,:,ii)=dneutv(:,:,:,ii)+Nexcite(:,:,:,jj)*radrat(:,:,:,jj,ii)/Gm_rec_ref*t_ir - &
+                			Nexcite(:,:,:,ii)*radrat(:,:,:,ii,jj)/Gm_rec_ref*t_ir
+            endif
+        enddo            
+
+jj=6
+do ii=1,n_levels
+    dneutv(:,:,:,ii)=dneutv(:,:,:,ii)+Nexcite(:,:,:,jj)*colrat(:,:,:,jj,ii)/Gm_rec_ref*t_ir - &
+			    Nexcite(:,:,:,ii)*colrat(:,:,:,ii,jj)/Gm_rec_ref*t_ir
+    if (flag_rad .ge. 2) then
+        dneutv(:,:,:,ii)=dneutv(:,:,:,ii)+Nexcite(:,:,:,jj)*radrat(:,:,:,jj,ii)/Gm_rec_ref*t_ir - &
+        			Nexcite(:,:,:,ii)*radrat(:,:,:,ii,jj)/Gm_rec_ref*t_ir
+    endif
+enddo
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!Do the neutrals            
+            do ii=1,n_levels
+                do jj=1,n_levels
                     dneutv(:,:,:,ii)=dneutv(:,:,:,ii)+Nexcite(:,:,:,jj)*colrat(:,:,:,jj,ii)/Gm_rec_ref*t_ir - &
                     			Nexcite(:,:,:,ii)*colrat(:,:,:,ii,jj)/Gm_rec_ref*t_ir
                     if (flag_rad .ge. 2) then
