@@ -372,20 +372,15 @@ print*,Gm_rec_ref,my_RANK,T0,n0
     double precision::gweight(6) !Statistical weighting of excitation states
     double precision::Eion(6) !Energy to ionise
     double precision::garr(3)
-    double precision::Colex(6,6),dneut(6)
+    double precision::Colex(n_levels+1,n_levels+1),dneut(n_levels+1)
     integer::k,j,i,ii,jj
-    double precision::rn(6),bn(6),xrat(5,5),Enn(5,5),yhat,rnn(5,5),zhat,gauntfac(5,5),fnn(5,5)
-    double precision::Ann(5,5),Bnn(5,5),E0y,E1y,E2y,E0z,E1z,E2z
+    double precision::rn(6),bn(6),xrat(n_levels,n_levels),Enn(n_levels,n_levels),&
+    yhat,rnn(n_levels,n_levels),zhat,gauntfac(n_levels,n_levels),fnn(n_levels,n_levels)
+    double precision::Ann(n_levels,n_levels),Bnn(n_levels,n_levels),E0y,E1y,E2y,E0z,E1z,E2z
     double precision::yn,zn,ziyn,zizn,An0,Bn0
     double precision::dntot
     integer::nmaxloc
     !This is all consant so can be moved somewhere else?
-!    gweight(1)=2.0*1.0**2 !ground state
-!    gweight(2)=2.0*2.0**2 !1st level excitation
-!    gweight(3)=2.0*3.0**2 !2nd level excitation
-!    gweight(4)=2.0*4.0**2 !3rd level excitation
-!    gweight(5)=2.0*5.0**2 !4th level excitation
-!    gweight(6)=1.0 !Ionised hydrogen
     gweight(1)=2.d0 !ground state
     gweight(2)=8.d0 !1st level excitation
     gweight(3)=18.d0 !2nd level excitation
@@ -415,7 +410,7 @@ print*,Gm_rec_ref,my_RANK,T0,n0
     bn(6)=(1.0d0/6.d0)*(4.0d0-18.63d0/6.d0+36.24d0/(6.d0**2)-&
                     28.09d0/(6.d0**3)) !Equation 26
 
-    do ii=1,5; do jj=ii+1,5
+    do ii=1,n_levels; do jj=ii+1,n_levels
         xrat(ii,jj)=1.0d0-(dble(ii)/dble(jj))**2 !ratio of transition energy to ionisation energy of lower level
         Enn(ii,jj)=Eion(ii)-Eion(jj) !Difference in ionisation energies
         rnn(ii,jj)=rn(ii)*xrat(ii,jj) !Equation 30
@@ -444,9 +439,9 @@ print*,Gm_rec_ref,my_RANK,T0,n0
     !Loop over the grid
     do k=1,kx;do j=1,jx; do i=1,ix
         !loop over the Excitation states
-            do ii=1,5
+            do ii=1,n_levels
 
-                do jj=ii+1,5
+                do jj=ii+1,n_levels
 
                     yhat=Enn(ii,jj)/kboltz/Telec(i,j,k) !Equation 37
 
@@ -546,11 +541,11 @@ print*,Gm_rec_ref,my_RANK,T0,n0
                 Bn0=2.0d0/3.0d0*dble(ii)**2*(5.0d0+bn(ii)) !Equation 24
 
                 !Ionisation coefficients Equation 35 using electron mass
-                Colex(ii,6)=nelec(i,j,k)*dsqrt(8.d0*kboltz*Telec(i,j,k)/pi/melec)&
+                Colex(ii,n_levels+1)=nelec(i,j,k)*dsqrt(8.d0*kboltz*Telec(i,j,k)/pi/melec)&
                     *2.0d0*dble(ii)**2*pi*a0bohr**2*yn**2*&
                     (An0*(E1y/yn-E1z/zn)+&
                     (Bn0-An0*dlog(2.d0*dble(ii)**2))*(ziyn-zizn))
-if (colex(ii,6) .LT. 0.d0) then
+if (colex(ii,n_levels+1) .LT. 0.d0) then
 !colex(ii,6) = 1.0e-16
 print*,'Nexcite'
 print*,Nexcite(i,j,k,:)
@@ -581,11 +576,11 @@ endif
                 enddo
                 !Ionisation rates
 !                colrat(i,j,k,ii,6)=Colex(ii,6)*dsqrt(Telec(i,j,k))*exp(-(Eion(6)-Eion(ii))/kboltz/Telec(i,j,k))
-				colrat(i,j,k,ii,6)=Colex(ii,6)*exp(-(Eion(6)-Eion(ii))/kboltz/Telec(i,j,k))
+				colrat(i,j,k,ii,n_levels+1)=Colex(ii,n_levels+1)*exp(-(Eion(6)-Eion(ii))/kboltz/Telec(i,j,k))
             enddo
 
             do ii=1,n_levels
-                colrat(i,j,k,6,ii)=nelec(i,j,k)*colrat(i,j,k,ii,6)*gweight(ii)/gweight(6)&
+                colrat(i,j,k,n_levels+1,ii)=nelec(i,j,k)*colrat(i,j,k,ii,n_levels+1)*gweight(ii)/gweight(6)&
                     /2.0d0*(2.0d0*pi*mehat*kbhat*Telec(i,j,k)/hhat/hhat*1.0e14)**(-3.0d0/2.0d0)*&
                     exp(Eion(ii)/kboltz/Telec(i,j,k))
             enddo
@@ -607,8 +602,8 @@ endif
             Gm_rec(i,j,k)=0.d0
             do ii=1,n_levels
             !print*,ii,n_levels,Gm_ion(i,j,k),Gm_rec(i,j,k)
-                Gm_ion(i,j,k)=Gm_ion(i,j,k)+max(Nexcite(i,j,k,ii)*colrat(i,j,k,ii,6),0.d0)
-                Gm_rec(i,j,k)=Gm_rec(i,j,k)+max(Nexcite(i,j,k,6)*colrat(i,j,k,6,ii),0.d0)
+                Gm_ion(i,j,k)=Gm_ion(i,j,k)+max(Nexcite(i,j,k,ii)*colrat(i,j,k,ii,n_levels+1),0.d0)
+                Gm_rec(i,j,k)=Gm_rec(i,j,k)+max(Nexcite(i,j,k,n_levels+1)*colrat(i,j,k,n_levels+1,ii),0.d0)
             enddo
 !print*,gm_ion(1,1,1),gm_rec(1,1,1)
 !stop
