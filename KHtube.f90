@@ -266,9 +266,9 @@ Nexcite=Nexcite/n0up
 
 !Make sure that the level populations are properly defined
 if (flag_IR .eq. 4) then
-Nexcite(:,:,:,6)=ro_m
-do i=1,5
-    Nexcite(:,:,:,i)=Nexcite(:,:,:,i)*ro_h/sum(Nexcite(:,:,:,1:5),dim=4)
+Nexcite(:,:,:,n_levels+1)=ro_m
+do i=1,n_levels
+    Nexcite(:,:,:,i)=Nexcite(:,:,:,i)*ro_h/sum(Nexcite(:,:,:,1:n_levels),dim=4)
 enddo
 endif
 
