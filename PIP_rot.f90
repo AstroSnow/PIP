@@ -1193,40 +1193,16 @@ iegain=iegain+nexcite(:,:,:,2)*(colrat(:,:,:,2,1)*(Eev(1)-Eev(2)))+&
 				colrat(:,:,:,4,3)*(Eev(3)-Eev(4)))+&
 			nexcite(:,:,:,5)*(colrat(:,:,:,5,1)*(Eev(1)-Eev(5))+colrat(:,:,:,5,2)*(Eev(2)-Eev(5))+&
 				colrat(:,:,:,5,3)*(Eev(3)-Eev(5))+colrat(:,:,:,5,4)*(Eev(4)-Eev(5)))
-!iegain=iegain+nexcite(:,:,:,1)*(colrat(:,:,:,2,1)*(Eev(1)-Eev(2))+colrat(:,:,:,3,1)*(Eev(1)-Eev(3))+&
-!                    colrat(:,:,:,4,1)*(Eev(1)-Eev(4))+colrat(:,:,:,5,1)*(Eev(1)-Eev(5)))+&
-!              nexcite(:,:,:,2)*(colrat(:,:,:,3,2)*(Eev(2)-Eev(3))+colrat(:,:,:,4,2)*(Eev(2)-Eev(4))+&
-!                    colrat(:,:,:,5,2)*(Eev(2)-Eev(5)))+&
-!              nexcite(:,:,:,3)*(colrat(:,:,:,4,3)*(Eev(3)-Eev(4))+colrat(:,:,:,5,3)*(Eev(3)-Eev(5)))+&
-!              nexcite(:,:,:,4)*(colrat(:,:,:,5,4)*(Eev(4)-Eev(5)))
-!print*,minval(ieloss),minval(colrat),minval(nexcite)
+
     if(mod(flag_col,2) .eq. 1) then
-!	    enloss=nde/gm/T0/8.6173e-5*(&
-!                (13.6d0*max(Nexcite(:,:,:,1)*colrat(:,:,:,1,6),0.d0))+& !ground state
-!                ( 3.4d0*max(Nexcite(:,:,:,2)*colrat(:,:,:,2,6),0.d0))+& !1st excited state
-!                (1.51d0*max(Nexcite(:,:,:,3)*colrat(:,:,:,3,6),0.d0))+& !2nd excited  state
-!                (0.85d0*max(Nexcite(:,:,:,4)*colrat(:,:,:,4,6),0.d0))+& !3rd excited  state
-!                (0.54d0*max(Nexcite(:,:,:,5)*colrat(:,:,:,5,6),0.d0)))/& !4th excited  state
-!                (Nexcite(:,:,:,1)+Nexcite(:,:,:,2)+Nexcite(:,:,:,3)+Nexcite(:,:,:,4)+Nexcite(:,:,:,5)) 
-!	    enloss=nde/gm/T0/8.6173e-5*ieloss/&
-!                (Nexcite(:,:,:,1)+Nexcite(:,:,:,2)+Nexcite(:,:,:,3)+Nexcite(:,:,:,4)+Nexcite(:,:,:,5)) 
     	    enloss=(ieloss-iegain)/gm/T0/8.6173e-5
     elseif(mod(flag_col,2) .eq. 0) then
-!	    enloss=nde*(beta/T0/2.d0/8.6173e-5)*(&
-!                (13.6d0*max(Nexcite(:,:,:,1)*colrat(:,:,:,1,6),0.d0))+& !ground state
-!                ( 3.4d0*max(Nexcite(:,:,:,2)*colrat(:,:,:,2,6),0.d0))+& !1st excited state
-!                (1.51d0*max(Nexcite(:,:,:,3)*colrat(:,:,:,3,6),0.d0))+& !2nd excited  state
-!                (0.85d0*max(Nexcite(:,:,:,4)*colrat(:,:,:,4,6),0.d0))+& !3rd excited  state
-!                (0.54d0*max(Nexcite(:,:,:,5)*colrat(:,:,:,5,6),0.d0)))/& !4th excited  state
-!                (Nexcite(:,:,:,1)+Nexcite(:,:,:,2)+Nexcite(:,:,:,3)+Nexcite(:,:,:,4)+Nexcite(:,:,:,5))
-!	    enloss=nde*(beta/T0/2.d0/8.6173e-5)*ieloss/& 
-!                (Nexcite(:,:,:,1)+Nexcite(:,:,:,2)+Nexcite(:,:,:,3)+Nexcite(:,:,:,4)+Nexcite(:,:,:,5))  
 	    enloss=(ieloss-iegain)/(beta/T0/2.d0/8.6173e-5)
     else
 	    print*,'option not included!'
 	    stop
     endif
-!print*,'EXCITATION NEEDS TO BE ADDED'
+
     !Normalise based on parameters    
     enloss=enloss/Gm_rec_ref*t_ir
 
