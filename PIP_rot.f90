@@ -857,7 +857,7 @@ endif
     Gm_ion_rad(:,:,:)=0.d0
     Gm_rec_rad(:,:,:)=0.d0
     do ii=1,n_levels
-        Gm_ion_rad(:,:,:)=Gm_ion_rad(:,:,:)+max(Nexcite(:,:,:,ii)*radrat(:,:,:,ii,6),0.d0)
+        Gm_ion_rad(:,:,:)=Gm_ion_rad(:,:,:)+max(Nexcite(:,:,:,ii)*radrat(:,:,:,ii,n_levels+1),0.d0)
         Gm_rec_rad(:,:,:)=Gm_rec_rad(:,:,:)+max(Nexcite(:,:,:,n_levels+1)*radrat(:,:,:,n_levels+1,ii),0.d0)
     enddo
 !print*,gm_ion_rad(1,1,1),gm_rec_rad(1,1,1)
