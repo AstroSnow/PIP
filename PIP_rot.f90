@@ -819,7 +819,7 @@ endif
 				sahasol=(2.d0/nelec(i,j,k)*gfac(6)/gfac(ii)*(2.d0*pi*melec*kboltz*Telec(i,j,k)/h/h)**(3.d0/2.d0)*&
 				        dexp(-E(ii)/kboltz/Telec(i,j,k)))
 				alp0=2.815e29/dble(ii)**5/nuarr(ii,6)**3*gfac(ii) !NOT SURE ABOUT THIS, NEED TO CHECK
-				radrat(i,j,k,6,ii)=8.d0*pi*alp0*(1.d0*nuarr(ii,6))**3/cli/cli*sol/sahasol
+				radrat(i,j,k,n_levels+1,ii)=8.d0*pi*alp0*(1.d0*nuarr(ii,6))**3/cli/cli*sol/sahasol
 				
 			 enddo;enddo;enddo
 		endif
@@ -858,7 +858,7 @@ endif
     Gm_rec_rad(:,:,:)=0.d0
     do ii=1,n_levels
         Gm_ion_rad(:,:,:)=Gm_ion_rad(:,:,:)+max(Nexcite(:,:,:,ii)*radrat(:,:,:,ii,6),0.d0)
-        Gm_rec_rad(:,:,:)=Gm_rec_rad(:,:,:)+max(Nexcite(:,:,:,6)*radrat(:,:,:,6,ii),0.d0)
+        Gm_rec_rad(:,:,:)=Gm_rec_rad(:,:,:)+max(Nexcite(:,:,:,n_levels+1)*radrat(:,:,:,n_levels+1,ii),0.d0)
     enddo
 !print*,gm_ion_rad(1,1,1),gm_rec_rad(1,1,1)
 !stop
