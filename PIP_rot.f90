@@ -1115,9 +1115,12 @@ enddo
 	    !Include the convective derivative
 !print*,conv(3,:,1,2)
 !print*,'dneut'
-!print*,dneutv(3,:,1,2)
+!print*,conv(1,1,1,1:n_levels+1)
+!print*,n_levels
+!print*,shape(dneutv(:,:,:,1:n_levels+1))
+!print*,shape(conv(:,:,:,1:n_levels+1))
 !stop
-	    dneutv(:,:,:,1:n_levels+1)=dneutv(:,:,:,1:1:n_levels+1)-conv(:,:,:,1:1:n_levels+1)
+	    dneutv(:,:,:,1:n_levels+1)=dneutv(:,:,:,1:n_levels+1)-conv(:,:,:,1:n_levels+1)
 !print*,dneut
 !print*,colrat(i,j,k,:,:)
 !print*,Nexcite(1,1,1,:)
