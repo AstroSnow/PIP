@@ -1161,38 +1161,61 @@ enddo
   double precision,intent(in)::nde(ix,jx,kx)
   double precision,intent(out)::enloss(ix,jx,kx)
   double precision::ieloss(ix,jx,kx),iegain(ix,jx,kx),Eev(6)
+  integer:: i,j
 
 Eev=[13.6,3.4,1.51,0.85,0.54,0.0]
 
+ieloss(:,:,:)=0.d0
+iegain(:,:,:)=0.d0
+
+do i=1,n_levels
+    !Ionisation potential energy
+    ieloss(:,:,:)=ieloss(:,:,:)+colrat(:,:,:,i,n_levels+1)*Eev(i)*nexcite(:,:,:,i)
+    !Recombination gain
+    iegain(:,:,:)=iegain(:,:,:)+colrat(:,:,:,n_levels+1,i)*Eev(i)*nexcite(:,:,:,n_levels+1)
+    !Check if excitation exists
+    if (n_levels .ge. 2) then
+    do j=2,n_levels
+        !Excitation energy loss
+        ieloss=ieloss+nexcite(:,:,:,i)*colrat(:,:,:,i,j)*(Eev(i)-Eev(j))
+        !De-excitation energy gain
+        iegain=iegain+nexcite(:,:,:,j)*(colrat(:,:,:,j,i)*(Eev(i)-Eev(j)))
+    enddo    
+    endif
+enddo
+
 !Ionisation potential energy
-ieloss(:,:,:)=colrat(:,:,:,1,6)*13.6*nexcite(:,:,:,1)+&
-        colrat(:,:,:,2,6)*3.4*nexcite(:,:,:,2)+&
-        colrat(:,:,:,3,6)*1.51*nexcite(:,:,:,3)+&
-        colrat(:,:,:,4,6)*0.85*nexcite(:,:,:,4)+&
-        colrat(:,:,:,5,6)*0.54*nexcite(:,:,:,5)
+!ieloss(:,:,:)=colrat(:,:,:,1,6)*13.6*nexcite(:,:,:,1)+&
+!        colrat(:,:,:,2,6)*3.4*nexcite(:,:,:,2)+&
+!        colrat(:,:,:,3,6)*1.51*nexcite(:,:,:,3)+&
+!        colrat(:,:,:,4,6)*0.85*nexcite(:,:,:,4)+&
+!        colrat(:,:,:,5,6)*0.54*nexcite(:,:,:,5)
 
 !Excitation energy loss
-ieloss=ieloss+nexcite(:,:,:,1)*(colrat(:,:,:,1,2)*(Eev(1)-Eev(2))+colrat(:,:,:,1,3)*(Eev(1)-Eev(3))+&
-                    colrat(:,:,:,1,4)*(Eev(1)-Eev(4))+colrat(:,:,:,1,5)*(Eev(1)-Eev(5)))+&
-              nexcite(:,:,:,2)*(colrat(:,:,:,2,3)*(Eev(2)-Eev(3))+colrat(:,:,:,2,4)*(Eev(2)-Eev(4))+&
-                    colrat(:,:,:,2,5)*(Eev(2)-Eev(5)))+&
-              nexcite(:,:,:,3)*(colrat(:,:,:,3,4)*(Eev(3)-Eev(4))+colrat(:,:,:,3,5)*(Eev(3)-Eev(5)))+&
-              nexcite(:,:,:,4)*(colrat(:,:,:,4,5)*(Eev(4)-Eev(5)))
+!do i=1,n_levels; do j=2,n_levels
+!ieloss=ieloss+nexcite(:,:,:,i)*colrat(:,:,:,i,j)*(Eev(i)-Eev(j))
+!enddo; enddo
+!ieloss=ieloss+nexcite(:,:,:,1)*(colrat(:,:,:,1,2)*(Eev(1)-Eev(2))+colrat(:,:,:,1,3)*(Eev(1)-Eev(3))+&
+!                    colrat(:,:,:,1,4)*(Eev(1)-Eev(4))+colrat(:,:,:,1,5)*(Eev(1)-Eev(5)))+&
+!              nexcite(:,:,:,2)*(colrat(:,:,:,2,3)*(Eev(2)-Eev(3))+colrat(:,:,:,2,4)*(Eev(2)-Eev(4))+&
+!                    colrat(:,:,:,2,5)*(Eev(2)-Eev(5)))+&
+!              nexcite(:,:,:,3)*(colrat(:,:,:,3,4)*(Eev(3)-Eev(4))+colrat(:,:,:,3,5)*(Eev(3)-Eev(5)))+&
+!              nexcite(:,:,:,4)*(colrat(:,:,:,4,5)*(Eev(4)-Eev(5)))
 
 !Recombination gain
-iegain(:,:,:)=colrat(:,:,:,6,1)*13.6*nexcite(:,:,:,6)+&
-        colrat(:,:,:,6,2)*3.4*nexcite(:,:,:,6)+&
-        colrat(:,:,:,6,3)*1.51*nexcite(:,:,:,6)+&
-        colrat(:,:,:,6,4)*0.85*nexcite(:,:,:,6)+&
-        colrat(:,:,:,6,5)*0.54*nexcite(:,:,:,6)
+!iegain(:,:,:)=colrat(:,:,:,6,1)*13.6*nexcite(:,:,:,6)+&
+!        colrat(:,:,:,6,2)*3.4*nexcite(:,:,:,6)+&
+!        colrat(:,:,:,6,3)*1.51*nexcite(:,:,:,6)+&
+!        colrat(:,:,:,6,4)*0.85*nexcite(:,:,:,6)+&
+!        colrat(:,:,:,6,5)*0.54*nexcite(:,:,:,6)
         
 !deexcitation gain              
-iegain=iegain+nexcite(:,:,:,2)*(colrat(:,:,:,2,1)*(Eev(1)-Eev(2)))+&
-			nexcite(:,:,:,3)*(colrat(:,:,:,3,1)*(Eev(1)-Eev(3))+colrat(:,:,:,3,2)*(Eev(3)-Eev(2)))+&
-			nexcite(:,:,:,4)*(colrat(:,:,:,4,1)*(Eev(1)-Eev(4))+colrat(:,:,:,4,2)*(Eev(2)-Eev(4))+&
-				colrat(:,:,:,4,3)*(Eev(3)-Eev(4)))+&
-			nexcite(:,:,:,5)*(colrat(:,:,:,5,1)*(Eev(1)-Eev(5))+colrat(:,:,:,5,2)*(Eev(2)-Eev(5))+&
-				colrat(:,:,:,5,3)*(Eev(3)-Eev(5))+colrat(:,:,:,5,4)*(Eev(4)-Eev(5)))
+!iegain=iegain+nexcite(:,:,:,2)*(colrat(:,:,:,2,1)*(Eev(1)-Eev(2)))+&
+!			nexcite(:,:,:,3)*(colrat(:,:,:,3,1)*(Eev(1)-Eev(3))+colrat(:,:,:,3,2)*(Eev(3)-Eev(2)))+&
+!			nexcite(:,:,:,4)*(colrat(:,:,:,4,1)*(Eev(1)-Eev(4))+colrat(:,:,:,4,2)*(Eev(2)-Eev(4))+&
+!				colrat(:,:,:,4,3)*(Eev(3)-Eev(4)))+&
+!			nexcite(:,:,:,5)*(colrat(:,:,:,5,1)*(Eev(1)-Eev(5))+colrat(:,:,:,5,2)*(Eev(2)-Eev(5))+&
+!				colrat(:,:,:,5,3)*(Eev(3)-Eev(5))+colrat(:,:,:,5,4)*(Eev(4)-Eev(5)))
 
     if(mod(flag_col,2) .eq. 1) then
     	    enloss=(ieloss-iegain)/gm/T0/8.6173e-5
