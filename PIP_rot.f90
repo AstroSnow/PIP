@@ -1027,10 +1027,10 @@ END subroutine
 ! update the hydrogen excitation states
 !This routine is copied in scheme rot so double changes needed. Should fix at some point
   double precision,intent(in)::dt,U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
-  double precision::dneut(6),rom(ix,jx,kx),roh(ix,jx,kx)
+  double precision::rom(ix,jx,kx),roh(ix,jx,kx)
   double precision::dntot
-  double precision::dneutv(ix,jx,kx,6)
-  double precision::conv(ix,jx,kx,6),conv_temp(ix,jx,kx)
+  double precision::dneutv(ix,jx,kx,n_levels+1)
+  double precision::conv(ix,jx,kx,n_levels+1),conv_temp(ix,jx,kx)
   double precision::dntotv(ix,jx,kx)
   integer::i,j,k,ii,jj,nmaxloc
   rom(:,:,:)=U_m(:,:,:,1)
@@ -1044,7 +1044,7 @@ END subroutine
             dneutv(:,:,:,:)=0.d0
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !do the plasma
-ii=6
+ii=n_levels+1
         do jj=1,n_levels
             dneutv(:,:,:,ii)=dneutv(:,:,:,ii)+Nexcite(:,:,:,jj)*colrat(:,:,:,jj,ii)/Gm_rec_ref*t_ir - &
             			Nexcite(:,:,:,ii)*colrat(:,:,:,ii,jj)/Gm_rec_ref*t_ir
@@ -1054,7 +1054,7 @@ ii=6
             endif
         enddo            
 
-jj=6
+jj=n_levels+1
 do ii=1,n_levels
     dneutv(:,:,:,ii)=dneutv(:,:,:,ii)+Nexcite(:,:,:,jj)*colrat(:,:,:,jj,ii)/Gm_rec_ref*t_ir - &
 			    Nexcite(:,:,:,ii)*colrat(:,:,:,ii,jj)/Gm_rec_ref*t_ir
