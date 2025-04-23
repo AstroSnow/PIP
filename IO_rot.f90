@@ -18,7 +18,8 @@ module io_rot
        ac_sav, xi_sav, ion_sav, rec_sav, col_sav, gr_sav, vs_sav, heat_sav, et_sav, ps_sav,&
        Nexcite,gm_ion_rad,gm_rec_rad, &
        file_id, plist_id, hdf5_error, filespace_id, memspace_id,&
-       dimsFile, dimsMem, start_stop, hdf5_offset, neighbor, ig, ion_pot,colrat,radrat
+       dimsFile, dimsMem, start_stop, hdf5_offset, neighbor, ig, ion_pot,colrat,radrat,&
+       n_levels
   use mpi_rot,only:end_mpi
   use IOT_rot,only:initialize_IOT,get_next_output
   use Util_rot,only:get_word,get_value_integer
@@ -298,10 +299,10 @@ contains
         if(rec_sav.eq.0) call write_3D_array("rec", Gm_rec)
       endif
       if(flag_ir.eq.4) then
-        do i=1,6
+        do i=1,n_levels+1
           write(Nexc_name, '(a, i0)') 'nexcite', i
           call write_3D_array(Nexc_name, Nexcite(:,:,:,i))
-		  do j=1,6
+		  do j=1,n_levels+1
 		     	write(Nexc_name, '(a, i0,i0)') 'colrat', i,j
 		      	call write_3D_array(Nexc_name, colrat(:,:,:,i,j))
 		  enddo
@@ -310,8 +311,8 @@ contains
 	    if(flag_rad .ge. 2) then
 	      if(ion_sav.eq.0) call write_3D_array("ion_rad",Gm_ion_rad)
 	      if(rec_sav.eq.0) call write_3D_array("rec_rad",Gm_rec_rad)
-          	do i=1,6
-			  do j=1,6
+          	do i=1,n_levels+1
+			  do j=1,n_levels+1
 				 	write(Nexc_name, '(a, i0,i0)') 'radrat', i,j
 				  	call write_3D_array(Nexc_name, radrat(:,:,:,i,j))
 			  enddo
