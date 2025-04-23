@@ -394,7 +394,6 @@ contains
     write(99,*)margin, " # used margin grid numbers"
     write(99,*)gm," #Abiabatic constant"
     write(99,*)flag_bnd
-    write(99,*)n_levels
 !    write(99,*)flag_damp,damp_time, "velocity damping"
     if(flag_mpi.eq.1) then
        write(99,*)mpi_siz," #mpi domain size"
