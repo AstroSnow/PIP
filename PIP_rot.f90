@@ -760,7 +760,7 @@ endif
 				sahasol=(2.d0/nelec(i,j,k)*gfac(6)/gfac(ii)*(2.d0*pi*melec*kboltz*Telec(i,j,k)/h/h)**(3.d0/2.d0)*&
 					    dexp(-E(ii)/kboltz/Telec(i,j,k)))
 				alp0=2.815e29/dble(ii)**5/nuarr(ii,6)**3*gfac(ii) !NOT SURE ABOUT THIS, NEED TO CHECK
-				radrat(i,j,k,6,ii)=8.d0*pi*alp0*(1.d0*nuarr(ii,6))**3/cli/cli*sol/sahasol
+				radrat(i,j,k,n_levels+1,ii)=8.d0*pi*alp0*(1.d0*nuarr(ii,6))**3/cli/cli*sol/sahasol
 			enddo;enddo;enddo
     	endif
     	
@@ -789,7 +789,7 @@ endif
 				call ionexpfitinterp2(1,h*nuarr(ii,6)/kboltz/Tradtemp,0,sol,1)
 
 				alp0=2.815e29*1.0d0**4/dble(ii)**5/nuarr(ii,6)**3*gfac(ii) !NOT SURE ABOUT THIS, NEED TO CHECK
-				radrat(i,j,k,ii,6)=8.d0*pi*alp0*(1.d0*nuarr(ii,6))**3/cli/cli*sol
+				radrat(i,j,k,ii,n_levels+1)=8.d0*pi*alp0*(1.d0*nuarr(ii,6))**3/cli/cli*sol
 				
 				!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!		
 				!Recombination rates    
