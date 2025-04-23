@@ -17,7 +17,8 @@ module scheme_rot
        flag_bnd,xi_n,flag_pip_imp,nt,eta_0,gra,scl_height,s_order,flag_sch,&
        x,y,z,col,n_fraction,flag_ir,gm_rec,gm_ion,gm_rec_rad,gm_ion_rad,t_ir,mpi_pos,my_rank,&
        debug_parameter,ro_lim,pr_lim,tiny,cmax,dsc,b_cr,damp_time,flag_damp,&
-       oldke_damp,flag_rad,ion_pot,flag_IR_type,nexcite,colrat,radrat,gm_rec_ref
+       oldke_damp,flag_rad,ion_pot,flag_IR_type,nexcite,colrat,radrat,gm_rec_ref,&
+       n_levels
   use MPI_rot,only:mpi_double_interface
   use Boundary_rot,only:bnd_divb
   !use PIP_rot,only:hydrogen_excitation_timestep
@@ -1001,11 +1002,11 @@ endif
   subroutine hydrogen_excitation_timestep(U_m,U_h,dnexcite)
 ! calculate the hydrogen excite timestep
   double precision,intent(in)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
-  double precision,intent(out)::dnexcite(ix,jx,kx,5)
+  double precision,intent(out)::dnexcite(ix,jx,kx,n_levels)
   double precision::dneut(6),rom(ix,jx,kx),roh(ix,jx,kx)
   double precision::dntot
-  double precision::dneutv(ix,jx,kx,6)
-  double precision::conv(ix,jx,kx,6),conv_temp(ix,jx,kx)
+  double precision::dneutv(ix,jx,kx,n_levels+1)
+  double precision::conv(ix,jx,kx,n_levels+1),conv_temp(ix,jx,kx)
   double precision::dntotv(ix,jx,kx)
   integer::i,j,k,ii,jj,nmaxloc
   rom(:,:,:)=U_m(:,:,:,1)
@@ -1015,8 +1016,8 @@ endif
             ! Calculate the change in each neutral species
             dntotv(:,:,:)=0.d0
             dneutv(:,:,:,:)=0.d0
-            do ii=1,6
-                do jj=1,6 
+            do ii=1,n_levels+1
+                do jj=1,n_levels+1
                     dneutv(:,:,:,ii)=dneutv(:,:,:,ii)+Nexcite(:,:,:,jj)*colrat(:,:,:,jj,ii)/Gm_rec_ref*t_ir - &
                     			Nexcite(:,:,:,ii)*colrat(:,:,:,ii,jj)/Gm_rec_ref*t_ir
                     if (flag_rad .ge. 2) then
@@ -1030,7 +1031,7 @@ endif
 !                	print*,'Convective term only works in 4th order at the moment'
 !                	stop
 !            	endif
-                if (ii .le. 5) then
+                if (ii .le. n_levels) then
 		            call derivative(conv_temp,Nexcite(:,:,:,ii),1)
 		            conv(:,:,:,ii)=conv_temp*U_h(:,:,:,2)/U_h(:,:,:,1)
 		            if (ndim .gt. 1) then
@@ -1044,7 +1045,7 @@ endif
        			endif
             enddo
 
-	    dnexcite(:,:,:,1:5)=dneutv(:,:,:,1:5)-conv(:,:,:,1:5)
+	    dnexcite(:,:,:,1:n_levels)=dneutv(:,:,:,1:n_levels)-conv(:,:,:,1:n_levels)
   end subroutine hydrogen_excitation_timestep
   
 end module scheme_rot
