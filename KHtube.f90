@@ -61,10 +61,10 @@ T0up=5500.d0
 n0up=7.0e16
 n0down=n0up*30.d0
 !Tube values
-T0down=100000.d0
-T0up=6000.d0
-n0up=7.5e16
-n0down=n0up*1.d0
+!T0down=100000.d0
+!T0up=6000.d0
+!n0up=7.5e16
+!n0down=n0up*1.d0
 
 if(flag_IR .ne. 4) then
 	print*,'set flag_IR=4 for this routine'
