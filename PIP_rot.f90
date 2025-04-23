@@ -1085,7 +1085,7 @@ enddo
 !                	print*,'Convective term only works in 1st and 4th order at the moment'
 !                	stop
 !            	endif
-                if (ii .le. 5) then
+                if (ii .le. n_levels) then
 		            call derivative(conv_temp,Nexcite(:,:,:,ii),1)
 		            conv(:,:,:,ii)=conv_temp*U_h(:,:,:,2)/U_h(:,:,:,1)
 		            if (ndim .gt. 1) then
@@ -1117,13 +1117,13 @@ enddo
 !print*,'dneut'
 !print*,dneutv(3,:,1,2)
 !stop
-	    dneutv(:,:,:,1:6)=dneutv(:,:,:,1:6)-conv(:,:,:,1:6)
+	    dneutv(:,:,:,1:n_levels+1)=dneutv(:,:,:,1:1:n_levels+1)-conv(:,:,:,1:1:n_levels+1)
 !print*,dneut
 !print*,colrat(i,j,k,:,:)
 !print*,Nexcite(1,1,1,:)
 !print*,colrat(1,1,1,6,:)
 !print*,dneutv(1,1,1,:)*dt
-            Nexcite(:,:,:,1:6)=Nexcite(:,:,:,1:6)+dt*dneutv(:,:,:,1:6)!/n0
+            Nexcite(:,:,:,1:1:n_levels+1)=Nexcite(:,:,:,1:1:n_levels+1)+dt*dneutv(:,:,:,1:1:n_levels+1)!/n0
             where (Nexcite>1.e-16)
                 Nexcite = Nexcite
             elsewhere
@@ -1145,9 +1145,9 @@ enddo
 !            Nexcite(:,:,:,3)=roh(:,:,:)*Nexcite(:,:,:,3)/dntotv(:,:,:)
 !            Nexcite(:,:,:,4)=roh(:,:,:)*Nexcite(:,:,:,4)/dntotv(:,:,:)
 !            Nexcite(:,:,:,5)=roh(:,:,:)*Nexcite(:,:,:,5)/dntotv(:,:,:)
-		Nexcite(:,:,:,6)=rom(:,:,:)!*Nexcite(:,:,:,6)/dntotv(:,:,:)
+		Nexcite(:,:,:,n_levels+1)=rom(:,:,:)!*Nexcite(:,:,:,6)/dntotv(:,:,:)
 	!Boundary exchange for neutral level population
-	do ii=1,n_levels
+	do ii=1,n_levels+1
 		call bnd_energy(Nexcite(:,:,:,ii))
 	enddo
 !stop
