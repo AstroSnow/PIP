@@ -693,7 +693,7 @@ endif
         do ii=1,n_levels
         	Tradarr(:,:,:)=Trad
         	if ((flag_rad .eq. 3) .and. (ii.eq. 1)) Tradarr(:,:,:)=Tneut !Some appoximation of optically thick Lyman
-            do jj=ii+1,5
+            do jj=ii+1,n_levels
                 radrat(:,:,:,ii,jj)=(4.d0*pi/h/nuarr(ii,jj))*(pi*ech**2/melec/cli)*fosc(ii,jj)&
                     *(2.d0*h*nuarr(ii,jj)**3/cli/cli)/(dexp(h*nuarr(ii,jj)/kboltz/Tradarr(:,:,:))-1.d0)
             enddo
