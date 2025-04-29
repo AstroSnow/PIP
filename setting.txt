@@ -48,13 +48,17 @@ HC_tests:flag_ini; flag for initial setting
 100.0:vd_cri; critical drift velocity (for vd-dependent anomalous res)
 ===For Two fluid=====;
 0.9:n_fraction; for uniform ionization degree 
-1.0:col;for collisional coefficient
+10.0:col;for collisional coefficient
 0     :flag_pip_imp;for implicit scheme in source term
 10.0   :pip_imp_factor;cfl condition factor for pip_implicit scheme
 3    :flag_col;flag for collisional coefficient
-0:flag_IR;flag for ionization and recombination (0:none, 1:Single level, 2:Empirical)
+4:flag_IR;flag for ionization and recombination (0:none, 1:Single level, 2:Empirical)
+2:nlevels; number of neutral levels to include (max of 5 for 6-level model)
 0:flag_IR_type; (0:new, 1:Khomenko, 2:Singh)
-1.0:t_IR;time scale of ionization and recombination relative to collisional time
+1.0e-5:t_IR;time scale of ionization and recombination relative to collisional time
+==Radiative losses==;
+3:flag_rad; (0:no radiative IR, 2:Black-body radiative)
+6000.d0:rad_temp; Black-body radiation temperature
 ==For heat condution===;
 0 :flag_heat;heat conduction flag (0:switch-off, 1:switch-on)
 1 :hc_type; type of heat conduction (0:constant-type, 1:Spitzer-type)
@@ -63,7 +67,7 @@ HC_tests:flag_ini; flag for initial setting
 0.3:safety_cnd; safety factor for heat conduction (not used in implicit method)
 30:nsub_max; Max subcycle number for super timestepping and Subcycling. Solutions go wrong with nsub > 40
 2 :hc_sch; iterative method for heat conduction equation (1:SOR, 2:BICG)
-1.0:kapper; heat condution coefficient (Note: One should be careful about your normalization unit)
+8.2:kapper; heat condution coefficient (Note: One should be careful about your normalization unit)
 500:hc_max; maximum iteration count for heat conduction
 1.0:sor_omega; SOR-omega parameter (for iterative method)
 ==For MPI====;
@@ -76,17 +80,15 @@ HC_tests:flag_ini; flag for initial setting
 0     :flag_debug; flag for debug (Currently not used)
 3     :debug_option;option for debug
 === NOTE: if you try debug_direction of >1, then you need to set ndim to 2 or 3. ===;
-2:debug_direction;direction for debug (1:x, 2:y, 3:z, ...) 
+1:debug_direction;direction for debug (1:x, 2:y, 3:z, ...) 
 0.494:debug_parameter;debug parameter
 0:no_advection;neglect advection term of induction equation 
 ==For damping==
 0     :flag_damp; flag for damping
 100000.0   :damp_time; timescale for damping
-==Radiative losses==;
-0     :flag_rad; radiative losses
 ==Normalisation parameters==
-10000.0d0 :T_norm; Temperature in K (13.6 eV = 157814.4 K)
-1.0d15  :n_norm; number density
+5500.0d0 :T_norm; Temperature in K (13.6 eV = 157814.4 K)
+7.5e16  :n_norm; number density
 3.d5    :L_norm; Length scale
 ==Optional save flags (0 on, -1 off) TOGGLE AT YOUR PERIL! MAY PREVENT RESTARTS==;
 0:ac_sav;collisional coefficient

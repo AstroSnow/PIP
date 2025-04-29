@@ -114,10 +114,10 @@ contains
 !    if(flag_visc.ge.1) then
 !       call initialize_visc()       
 !    endif
-    if(flag_rad.ge.1) then
-	print*,'RADIATIVE LOSSES ARE NOT YET FINISHED'
-	stop    
-    endif
+    !if(flag_rad.ge.1) then
+	!print*,'RADIATIVE LOSSES ARE NOT YET FINISHED'
+	!stop    
+    !endif
   end subroutine set_coefficients
 
   !  subroutine set_flux(F_h,F_m,U_h,U_m,dt_sub,dt_coll_i)
@@ -216,7 +216,7 @@ contains
        endif
 
     if (flag_IR .eq. 4) then
-        call hydrogen_excitation_update(dt_sub,U_m(:,:,:,1),U_h(:,:,:,1))
+        call hydrogen_excitation_update(dt_sub,U_m(:,:,:,:),U_h(:,:,:,:))
     endif
 
     case(1) !! optimal Strong Stability Preserving RK (SSPRK) Ref:Gottlieb+2009

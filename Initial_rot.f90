@@ -56,6 +56,10 @@ contains
           call RT
        case('KH')
           call KH
+       case('KHnlev')          
+          call KHnlev
+       case('KHtube')          
+          call KHtube
        case('Orszag_Tang')
           call Orszag_Tang
        case('FieldLoop')
@@ -144,8 +148,8 @@ contains
     dsc(1:jx,2)=dyc
     dsc(1:kx,3)=dzc
     call my_mpi_barrier
-    !set dt
-    call cfl(U_h,U_m)
+    !set dt    
+    call cfl(U_h,U_m,dt)    
     if(flag_restart.lt.0) then
        nout=0
        !first output

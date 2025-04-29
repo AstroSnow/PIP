@@ -16,6 +16,9 @@ use HDF5
 !Conserved variables
   double precision,allocatable,save ::U_m(:,:,:,:),U_h(:,:,:,:)
 
+!Back up variables for if dt changes too much across a time step  
+	double precision,allocatable,save ::U_m_backup(:,:,:,:),U_h_backup(:,:,:,:)
+
 !Magnetic field at cell-face
 
 !other variables
@@ -23,13 +26,15 @@ use HDF5
   double precision,allocatable,save::ac(:,:,:),xi_n(:,:,:),GM_rec(:,:,:),Gm_ion(:,:,:)
   double precision,allocatable,save::gra(:,:,:,:),visc(:,:,:,:)
 
-  double precision,allocatable,save::arb_heat(:,:,:)
+  double precision,allocatable,save::arb_heat(:,:,:),ion_pot(:,:,:)
 
 !6 level collisional rates
   double precision,allocatable,save::Colrat(:,:,:,:,:),Nexcite(:,:,:,:)
+  integer,save::n_levels
 
 !Table for the exponential integral
   double precision,allocatable,save::expinttab(:,:) !columns for input and i=0,1,2
+  double precision,allocatable,save::radexpinttab(:,:)
 
 !These are the variables for heat condution, viscosity, resistivity and gravity
 
@@ -55,8 +60,11 @@ use HDF5
   double precision,save::debug_parameter
 ! alpha is the collision parameter and flag_sch is the flag for the scheme you are using
   double precision,save :: cmax
+
 ! Radiative losses
   integer,save :: flag_rad
+  double precision,save :: rad_temp
+  double precision,allocatable,save::GM_rec_rad(:,:,:),Gm_ion_rad(:,:,:),radrat(:,:,:,:,:)
 
 !for coordinate system
   integer,save::ix,jx,kx,nvar_h,nvar_m,margin(3),ndim,ig(3)

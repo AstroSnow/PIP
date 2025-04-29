@@ -15,11 +15,13 @@ module scheme_rot
        pip_imp_factor,dt,db_clean,flag_b_stg,dx,dy,dz,theta,ndim,flag_divb,&
        flag_amb,flag_mhd,flag_pip,flag_amb,flag_mpi,flag_resi,margin,gm,&
        flag_bnd,xi_n,flag_pip_imp,nt,eta_0,gra,scl_height,s_order,flag_sch,&
-       x,y,z,col,n_fraction,flag_ir,gm_rec,gm_ion,t_ir,mpi_pos,my_rank,&
+       x,y,z,col,n_fraction,flag_ir,gm_rec,gm_ion,gm_rec_rad,gm_ion_rad,t_ir,mpi_pos,my_rank,&
        debug_parameter,ro_lim,pr_lim,tiny,cmax,dsc,b_cr,damp_time,flag_damp,&
-       oldke_damp,flag_rad
+       oldke_damp,flag_rad,ion_pot,flag_IR_type,nexcite,colrat,radrat,gm_rec_ref,&
+       n_levels
   use MPI_rot,only:mpi_double_interface
   use Boundary_rot,only:bnd_divb
+  !use PIP_rot,only:hydrogen_excitation_timestep
   implicit none
   integer i,j,k,ierr
 
@@ -178,23 +180,25 @@ contains
 
 
   !set time step with CFL condition : return dt
-  subroutine cfl(U_h,U_m)
+  subroutine cfl(U_h,U_m,dttemp)
     double precision,intent(inout)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
+    double precision,intent(out)::dttemp
     if(flag_pip.eq.1) then
-       call cfl_mhd(U_m)
-       call cfl_hd(U_h)
-       call cfl_pn_col(U_m,U_h)
-       if(flag_ir.ge.1) call cfl_pip_ir(U_m,U_h)
+       call cfl_mhd(U_m,dttemp)
+       call cfl_hd(U_h,dttemp)
+       call cfl_pn_col(U_m,U_h,dttemp)
+       if(flag_ir.ge.1) call cfl_pip_ir(U_m,U_h,dttemp)
+       if(flag_ir.eq.4) call cfl_pip_ir_nexcite(U_m,U_h,dttemp)
     else
        if(flag_mhd.eq.1) then
-          call cfl_mhd(U_m)
+          call cfl_mhd(U_m,dttemp)
        else
-          call cfl_hd(U_h)
+          call cfl_hd(U_h,dttemp)
        endif
     endif
     if(flag_resi.ge.1) call cfl_resi
     if(flag_mpi.eq.1) then
-       dt=mpi_double_interface(dt,1)
+       dttemp=mpi_double_interface(dttemp,1)
     endif
 
     !! for divB cleaning
@@ -208,7 +212,8 @@ contains
     
   end subroutine cfl
   !set time step for HD with CFL condition 
-  subroutine cfl_hd(U_h)
+  subroutine cfl_hd(U_h,dttemp)
+  double precision,intent(inout)::dttemp
     double precision,intent(inout)::U_h(ix,jx,kx,nvar_h)
     double precision dt_min,cs2,v2,gmin,cs,vabs
     double precision de(ix,jx,kx),pr(ix,jx,kx)
@@ -216,7 +221,7 @@ contains
     call cq2pv_hd(de,vx,vy,vz,pr,U_h)
 
     if (flag_pip.eq.1) then 
-       dt_min=dt
+       dt_min=dttemp
     else
        dt_min=10.0    
     endif
@@ -234,10 +239,11 @@ contains
           enddo
        enddo
     enddo
-    dt=dt_min
+    dttemp=dt_min
   end subroutine cfl_hd
   
-  subroutine cfl_mhd(U_m)
+  subroutine cfl_mhd(U_m,dttemp)
+    double precision,intent(inout)::dttemp
     double precision,intent(inout)::U_m(ix,jx,kx,nvar_m)
     double precision dt_min,gmin
     double precision de(ix,jx,kx),pr(ix,jx,kx)
@@ -272,11 +278,11 @@ contains
     enddo
     
     !! This part needs to be modified for non-uniform grids    
-    dt=dt_min
+    dttemp=dt_min
     if(flag_amb.eq.1.and.flag_pip.ne.1) then 
        etmin=1.0d-8
        maxet=0.0d0
-       dt=min(dt,safety*gmin**2/ &
+       dttemp=min(dttemp,safety*gmin**2/ &
             maxval(xi_n*(bx*bx+by*by+bz*bz)/&
             (ac*de*de*(1.0-xi_n))))
     endif
@@ -296,20 +302,40 @@ contains
   end subroutine cfl_resi
 
 
-  subroutine cfl_pn_col(U_m,U_h)
+  subroutine cfl_pn_col(U_m,U_h,dttemp)
     double precision,intent(inout)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
+      double precision,intent(inout)::dttemp
     if(flag_pip_imp.eq.1) then
-       dt=min(dt,pip_imp_factor/max(maxval(u_m(:,:,:,1)*ac(:,:,:)),maxval(u_h(:,:,:,1)*ac(:,:,:))))
+       dttemp=min(dttemp,pip_imp_factor/max(maxval(u_m(:,:,:,1)*ac(:,:,:)),maxval(u_h(:,:,:,1)*ac(:,:,:))))
     else
-       dt=min(dt,min(safety,0.3d0)/max(maxval(u_m(:,:,:,1)*ac(:,:,:)),maxval(u_h(:,:,:,1)*ac(:,:,:))))
+       dttemp=min(dttemp,min(safety,0.3d0)/max(maxval(u_m(:,:,:,1)*ac(:,:,:)),maxval(u_h(:,:,:,1)*ac(:,:,:))))
     endif
    end subroutine cfl_pn_col
 
-   subroutine cfl_pip_ir(U_m,U_h)
-
-     double precision,intent(in)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
-     dt=min(dt,min(safety,0.3d0)/max(maxval(gm_rec)+maxval(gm_ion),1.0d-5))   !,maxval(gm_rec/U_m(:,:,:,1))+maxval(gm_ion/U_h(:,:,:,1)) 
+   subroutine cfl_pip_ir(U_m,U_h,dttemp)
+  double precision,intent(inout)::dttemp
+     double precision,intent(inout)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
+     double precision::pr(ix,jx,kx)
+     dttemp=min(dttemp,min(safety,0.1d0)/max(maxval(gm_rec),maxval(gm_ion),1.0d-5))   !,maxval(gm_rec/U_m(:,:,:,1))+maxval(gm_ion/U_h(:,:,:,1)) 
+     if (flag_IR_type .eq. 0) then
+         call get_Pr_MHD(U_m,pr)
+     	dttemp=min(dttemp,safety/max(maxval(ion_pot/(pr/(gm-1.d0))),1.0d-5)) 
+     endif
+     if (flag_rad .eq. 3) then 
+     	dttemp=min(dttemp,min(safety,0.1d0)/max(maxval(gm_rec_rad),maxval(gm_ion_rad),1.0d-5)) 
+     endif
    end subroutine cfl_pip_ir
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine cfl_pip_ir_nexcite(U_m,U_h,dttemp)
+     double precision,intent(inout)::dttemp
+     double precision,intent(inout)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
+     double precision::dneut(ix,jx,kx,5)
+     call hydrogen_excitation_timestep(U_m,U_h,dneut)
+     dttemp=min(dttemp,min(safety,0.01d0)/max(maxval(dneut),1.0d-5))
+   end subroutine cfl_pip_ir_nexcite
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
   subroutine hd_fluxes(F_h,U_h)
     double precision,intent(inout):: F_h(ix,jx,kx,nvar_h,3)
@@ -668,22 +694,45 @@ contains
     double precision,intent(in)::var(ix,jx,kx)
     double precision,intent(inout)::der(ix,jx,kx)
     
-    if(direct.eq.1) then 
-       do i=3,ix-2 
-          der(i,:,:)=(-var(i+2,:,:)+8.0d0*var(i+1,:,:) &
-               -8.0d0*var(i-1,:,:)+var(i-2,:,:))/(12.0d0*dx(i))
-       enddo
-    else if(direct.eq.2) then
-       do j=3,jx-2 
-          der(:,j,:)=(-var(:,j+2,:)+8.0d0*var(:,j+1,:) &
-               -8.0d0*var(:,j-1,:)+var(:,j-2,:))/(12.0d0*dy(j))
-       enddo
-    else if(direct.eq.3) then
-       do k=3,kx-2 
-          der(:,:,k)=(-var(:,:,k+2)+8.0d0*var(:,:,k+1) &
-               -8.0d0*var(:,:,k-1)+var(:,:,k-2))/(12.0d0*dz(k))
-       enddo
+    !4th order derivative
+    if (s_order .eq. 4) then
+	    if(direct.eq.1) then 
+	       do i=3,ix-2 
+		  der(i,:,:)=(-var(i+2,:,:)+8.0d0*var(i+1,:,:) &
+		       -8.0d0*var(i-1,:,:)+var(i-2,:,:))/(12.0d0*dx(i))
+	       enddo
+	    else if(direct.eq.2) then
+	       do j=3,jx-2 
+		  der(:,j,:)=(-var(:,j+2,:)+8.0d0*var(:,j+1,:) &
+		       -8.0d0*var(:,j-1,:)+var(:,j-2,:))/(12.0d0*dy(j))
+	       enddo
+	    else if(direct.eq.3) then
+	       do k=3,kx-2 
+		  der(:,:,k)=(-var(:,:,k+2)+8.0d0*var(:,:,k+1) &
+		       -8.0d0*var(:,:,k-1)+var(:,:,k-2))/(12.0d0*dz(k))
+	       enddo
+	    endif
     endif
+    !1st order derivative
+    if (s_order .eq. 1) then
+	    if(direct.eq.1) then 
+	       do i=2,ix-1 
+		  der(i,:,:)=(var(i+1,:,:) &
+		       -var(i-1,:,:))/(2.d0*dx(i))
+	       enddo
+	    else if(direct.eq.2) then
+	       do j=2,jx-1 
+		  der(:,j,:)=(var(:,j+1,:) &
+		       -var(:,j-1,:))/(2.d0*dy(j))
+	       enddo
+	    else if(direct.eq.3) then
+	       do k=2,kx-1 
+		  der(:,:,k)=(var(:,:,k+1) &
+		       -var(:,:,k-1))/(2.d0*dz(k))
+	       enddo
+	    endif
+    endif
+    
   end subroutine derivative
 
 !  subroutine source_divb(S_m,U_m)
@@ -949,35 +998,54 @@ endif
 
   end subroutine get_vel_diff
 
-  subroutine get_rad_loss(rad_loss,U_h,U_m)
-!NONE OF THIS WORKS
-	double precision,intent(inout)::U_h(ix,jx,kx,nvar_h),U_m(ix,jx,kx,nvar_m)
-	double precision,intent(out)::rad_loss(ix,jx,kx,2)  
-	integer :: i
-	double precision :: rad_time,rad_c
-	double precision :: Te_m(ix,jx,kx),Te_h(ix,jx,kx),Te_amb(ix,jx,kx)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine hydrogen_excitation_timestep(U_m,U_h,dnexcite)
+! calculate the hydrogen excite timestep
+  double precision,intent(in)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
+  double precision,intent(out)::dnexcite(ix,jx,kx,n_levels)
+  double precision::dneut(6),rom(ix,jx,kx),roh(ix,jx,kx)
+  double precision::dntot
+  double precision::dneutv(ix,jx,kx,n_levels+1)
+  double precision::conv(ix,jx,kx,n_levels+1),conv_temp(ix,jx,kx)
+  double precision::dntotv(ix,jx,kx)
+  integer::i,j,k,ii,jj,nmaxloc
+  rom(:,:,:)=U_m(:,:,:,1)
+  roh(:,:,:)=U_h(:,:,:,1)
+!Vector form
+!The new number of electrons/protons is:
+            ! Calculate the change in each neutral species
+            dntotv(:,:,:)=0.d0
+            dneutv(:,:,:,:)=0.d0
+            do ii=1,n_levels+1
+                do jj=1,n_levels+1
+                    dneutv(:,:,:,ii)=dneutv(:,:,:,ii)+Nexcite(:,:,:,jj)*colrat(:,:,:,jj,ii)/Gm_rec_ref*t_ir - &
+                    			Nexcite(:,:,:,ii)*colrat(:,:,:,ii,jj)/Gm_rec_ref*t_ir
+                    if (flag_rad .ge. 2) then
+                        dneutv(:,:,:,ii)=dneutv(:,:,:,ii)+Nexcite(:,:,:,jj)*radrat(:,:,:,jj,ii)/Gm_rec_ref*t_ir - &
+                        			Nexcite(:,:,:,ii)*radrat(:,:,:,ii,jj)/Gm_rec_ref*t_ir
+                    endif
+                enddo
+                
+                !Convective term (neutrals)
+!                if (s_order .ne. 4) then
+!                	print*,'Convective term only works in 4th order at the moment'
+!                	stop
+!            	endif
+                if (ii .le. n_levels) then
+		            call derivative(conv_temp,Nexcite(:,:,:,ii),1)
+		            conv(:,:,:,ii)=conv_temp*U_h(:,:,:,2)/U_h(:,:,:,1)
+		            if (ndim .gt. 1) then
+		            	call derivative(conv_temp,Nexcite(:,:,:,ii),2)
+		            	conv(:,:,:,ii)=conv(:,:,:,ii)+conv_temp*U_h(:,:,:,3)/U_h(:,:,:,1)
+		           		if (ndim .gt. 2) then
+		           			call derivative(conv_temp,Nexcite(:,:,:,ii),3)
+		           			conv(:,:,:,ii)=conv(:,:,:,ii)+conv_temp*U_h(:,:,:,4)/U_h(:,:,:,1)
+	           			endif
+           			endif
+       			endif
+            enddo
 
-	!Newton cooling
-	if (flag_rad .eq. 1) then
-		rad_time=1.0d0 !FOR TESTING. SHOULD MOVE TO SETTINGS
-	elseif (flag_rad .eq. 2) then
-		print*, 'NEED TO BUILD SPIEGEL RADIATIVE TIMES'
-		stop
-	endif
-
-	stop
-
-	!get ambient temperature
-	call get_Te_MHD(U_m,Te_m)
-	call get_Te_HD(U_h,Te_h)
-	Te_amb=0.5d0*(Te_m+Te_h) !IS THIS RIGHT?
-
-	!Specific heat at constant volume
-	rad_c=1.0d0 !WHAT IS THIS VALUE?
-
-	rad_loss(:,:,:,1)=-rad_c*(Te_m-Te_amb(:,:,:))/rad_time
-	rad_loss(:,:,:,2)=-rad_c*(Te_h-Te_amb(:,:,:))/rad_time
-	
-  end subroutine get_rad_loss
-
+	    dnexcite(:,:,:,1:n_levels)=dneutv(:,:,:,1:n_levels)-conv(:,:,:,1:n_levels)
+  end subroutine hydrogen_excitation_timestep
+  
 end module scheme_rot
