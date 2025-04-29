@@ -1,12 +1,12 @@
 Data/:outdir; output directory (This should written at the first line in this file!!)
 Data/:indir; input directory
-MHD:flag_eqs;flag_for equation (HD,MHD, PIP) 
+PIP:flag_eqs;flag_for equation (HD,MHD, PIP) 
 -1:flag_restart; restart count (-1:no restart, 0: restart. nout at the end of config.txt will be read, >0: restart from No."flag_restart" data)
-2:ndim; dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
-50:ix; grid number for x-direction
-50:jx; grid number for y-direction
-2:kx; grid number for z-direction
-0.25 :dtout;  output period 100 
+3:ndim; dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
+64:ix; grid number for x-direction
+32:jx; grid number for y-direction
+8:kx; grid number for z-direction
+0.1 :dtout;  output period 100 
 1.0:tend;tend time for simulation (if lt 0 then default value is set) 20000
 0:esav; flag for save after given physical time
 0001.d0:emsavtime; Physical time to save for esav
@@ -14,7 +14,7 @@ MHD:flag_eqs;flag_for equation (HD,MHD, PIP)
 5.0    :gm_d; 
 3.0    :gm_n;
 0.8  :safety;  safety factor
-HC_tests:flag_ini; flag for initial setting   
+KHtube:flag_ini; flag for initial setting   
 1:flag_sch;  flag for numerical scheme (0:HLL-branch, 1:SLW)
 2:flag_hll; flag for HLL branch (0:HLL,1:Rusanov,2:HLLD)
 1:s_order;order of space for HLL branch (1, 2)
@@ -24,7 +24,7 @@ HC_tests:flag_ini; flag for initial setting
 0    :flag_visc;  flag for viscosity
 1.0e-3  :nu_0; Value of viscosity
 -1:flag_artvis;flag for artificial viscosity (default :-1)
-1.8 :theta; parameterfor artificial viscosity (set between 1 and 2 inclusive)
+1.2 :theta; parameterfor artificial viscosity (set between 1 and 2 inclusive)
 ===For limits===;
 0.00000001 :ro_lim; Lower limit for density
 0.00000001 :pr_lim; Lower limit for pressure
@@ -36,7 +36,7 @@ HC_tests:flag_ini; flag for initial setting
 -1    :flag_bnd_z_l; flag for z-boundary (if 0 then default value is set)
 -1    :flag_bnd_z_r; flag for z+boundary (if 0 then default value is set)
 ===For MHD===;
-0.1:beta; initial plasma beta 
+0.01:beta; initial plasma beta 
 0:flag_amb; flag for resistive of not (Ambipolar)
 1:flag_divb; flag for divB cleaning (0: no cleaning, 1:9-wave, 2:iterative 9-wave)
 0.7 :db_clean; paramter for divb cleaning
@@ -87,7 +87,7 @@ HC_tests:flag_ini; flag for initial setting
 0     :flag_damp; flag for damping
 100000.0   :damp_time; timescale for damping
 ==Normalisation parameters==
-5500.0d0 :T_norm; Temperature in K (13.6 eV = 157814.4 K)
+8000.0d0 :T_norm; Temperature in K (13.6 eV = 157814.4 K)
 7.5e16  :n_norm; number density
 3.d5    :L_norm; Length scale
 ==Optional save flags (0 on, -1 off) TOGGLE AT YOUR PERIL! MAY PREVENT RESTARTS==;
