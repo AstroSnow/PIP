@@ -7,7 +7,8 @@ module boundary_rot
 ! Second version - 2013/06/27 (New labelling for boundaries)
 !====================================================================
   use globalvar,only:ix,jx,kx,ndim,flag_pip,flag_mhd,nvar_h,nvar_m,&
-       flag_mpi,flag_bnd,margin,neighbor,flag_divb,time,x,gm,dt,nt,t_order, beta, n_fraction
+       flag_mpi,flag_bnd,margin,neighbor,flag_divb,time,x,y,gm,dt,nt,t_order, beta, n_fraction,&
+        debug_direction
   use mpi_rot,only:mpi_bnd,mpi_bnd_onevar
   use parameters,only:pi !for the periodic drivers
 
@@ -66,6 +67,8 @@ end subroutine PIPbnd
           type=2
        else if(flag_bnd(i).eq.6) then
           type=2
+       else if(flag_bnd(i).eq.7) then
+          type=2
        else if(flag_bnd(i).eq.11) then
           type=2
 !       else if(flag_bnd(i).eq.20) then
@@ -75,12 +78,14 @@ end subroutine PIPbnd
        endif
 
        if(neighbor(i).eq.-1) then
-	if(flag_bnd(i) .EQ. 20) then
-          call boundary_control_custom_mhd(U_m,ix,jx,kx,nvar_m,upper_lower,istep)
-	else
-          call boundary_control(U_m,ix,jx,kx,nvar_m,margin,dir,upper_lower, &
-               sym_mhd(:,i),type)
-	endif
+        if(flag_bnd(i) .EQ. 20) then
+              call boundary_control_custom_mhd(U_m,ix,jx,kx,nvar_m,upper_lower,istep)
+        elseif(flag_bnd(i) .EQ. 99) then
+              call boundary_control_hc_tests(U_m,ix,jx,kx,nvar_m,upper_lower,istep)
+        else
+              call boundary_control(U_m,ix,jx,kx,nvar_m,margin,dir,upper_lower, &
+                   sym_mhd(:,i),type)
+        endif
        endif
     enddo
   end subroutine MHDbnd
@@ -99,6 +104,8 @@ end subroutine PIPbnd
        else if(flag_bnd(i).eq.5) then
           type=2
        else if(flag_bnd(i).eq.6) then
+          type=2          
+       else if(flag_bnd(i).eq.7) then
           type=2          
        else if(flag_bnd(i).eq.11) then
           type=2
@@ -131,6 +138,8 @@ end subroutine PIPbnd
        else if(flag_bnd(i).eq.5) then
           type=2
        else if(flag_bnd(i).eq.6) then
+          type=2
+       else if(flag_bnd(i).eq.7) then
           type=2
        else if(flag_bnd(i).eq.11) then
           type=2
@@ -168,6 +177,8 @@ end subroutine PIPbnd
        else if(flag_bnd(i).eq.5) then
           type=2
        else if(flag_bnd(i).eq.6) then
+          type=2          
+       else if(flag_bnd(i).eq.7) then
           type=2          
        else if(flag_bnd(i).eq.11) then
           type=2
@@ -251,6 +262,11 @@ end subroutine PIPbnd
           sym_mhd(1+dir,i)=-1            !! vn
           sym_mhd(6+mod(dir,3),i)=-1     !! bt1
           sym_mhd(6+mod(dir+1,3),i)=-1   !! bt2       
+       else if(flag_bnd(i).eq.7) then
+          sym_mhd(2,i)=-1            !! vx
+          sym_mhd(3,i)=-1            !! vy
+          sym_mhd(4,i)=-1            !! vz
+!          sym_mhd(6+mod(dir+1,3),i)=-1          
        endif
     enddo
 
@@ -268,6 +284,8 @@ end subroutine PIPbnd
           else if(flag_bnd(i).eq.5) then
              sym_mhd(9,i) = 1 ! Bn is odd, so psi is even
           else if(flag_bnd(i).eq.6) then
+             sym_mhd(9,i) = -1 ! Bn is even, so psi is odd
+          else if(flag_bnd(i).eq.7) then
              sym_mhd(9,i) = -1 ! Bn is even, so psi is odd
           endif
        enddo
@@ -769,6 +787,127 @@ if (dir .eq. 1) then
 !!!!!!!!!!!!!!!!!!!!!!!!!!!
 endif
 end subroutine boundary_control_custom_mhd
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine boundary_control_hc_tests(U,ix,jx,kx,nvar,dir,istep)
+!Boundary conditions for thermal coduction tests
+implicit none
+integer,intent(in)::dir,ix,jx,kx,nvar,istep
+double precision,intent(inout)::U(ix,jx,kx,nvar) 
+double precision :: ro_u,ro_l,pr_u,pr_l,vx_l,vx_u,vy_l,vy_u,vz_l,vz_u
+double precision :: bx_l,bx_u,by_l,by_u,bz_l,bz_u
+double precision :: pr,T,r,theta
+integer :: ni,nj
+
+if(debug_direction.eq.1) then
+!boundary conditions for 1D thermal conduction test
+    ro_u=1.0
+    ro_l=1.0
+
+    vx_l=0.0
+    vx_u=0.0
+    vy_l=0.0
+    vy_u=0.0
+    vz_l=0.0
+    vz_u=0.0
+    bx_l=1.0
+    bx_u=1.0
+    by_l=0.0
+    by_u=0.0
+    bz_l=0.0
+    bz_u=0.0
+
+    if(dir.eq.0) then 
+         do ni=1,margin(1)
+            T=0.1+0.9*x(ni)**5
+            pr_l=ro_l*T/gm
+            u(ni,:,:,1)=ro_l
+            u(ni,:,:,2)=vx_l*ro_l
+            u(ni,:,:,3)=vy_l*ro_l
+            u(ni,:,:,4)=vz_l*ro_l
+            u(ni,:,:,5)=pr_l/(gm-1.0d0)+0.5d0*(bx_l**2)
+            u(ni,:,:,6)=bx_l
+            u(ni,:,:,7)=by_l
+            u(ni,:,:,8)=bz_l
+            !print*,ni,x(ni),u(ni,1,1,5)
+         enddo
+    endif
+
+    if (dir .eq. 1) then 
+         do ni=1,margin(1)
+            T=0.1+0.9*x(ix-ni+1)**5
+            pr_u=ro_u*T/gm
+            u(ix-ni+1,:,:,1)=ro_u
+            u(ix-ni+1,:,:,2)=vx_u*ro_u
+            u(ix-ni+1,:,:,3)=vy_u*ro_u
+            u(ix-ni+1,:,:,4)=vz_u*ro_u
+            u(ix-ni+1,:,:,5)=pr_u/(gm-1.0d0)+0.5d0*(bx_u**2)
+            u(ix-ni+1,:,:,6)=bx_u
+            u(ix-ni+1,:,:,7)=by_u
+            u(ix-ni+1,:,:,8)=bz_u
+            !print*,ni,x(ix-ni+1),u(ix-ni+1,:,:,5)!,u(size(u(:,1,1,1))-n+1,1,1,5)
+         enddo    
+    endif
+
+elseif(debug_direction.eq.2) then
+!boundary conditions for 1D thermal conduction test
+    ro_u=1.0
+    ro_l=1.0
+
+    vx_l=0.0
+    vx_u=0.0
+    vy_l=0.0
+    vy_u=0.0
+    vz_l=0.0
+    vz_u=0.0
+
+    bz_l=0.0
+    bz_u=0.0
+
+    if(dir.eq.0) then 
+         do ni=1,margin(1);do nj=1,margin(2)
+            T=10.d0
+            r=dsqrt(x(ni)**2+y(nj)**2)
+            theta=abs(datan2(y(nj),x(ni)))
+            bx_l=1.0*dcos(theta+pi/2.d0)/r
+            by_l=1.0*dsin(theta+pi/2.d0)/r
+            pr_l=ro_l*T/gm
+            u(ni,nj,:,1)=ro_l
+            u(ni,nj,:,2)=vx_l*ro_l
+            u(ni,nj,:,3)=vy_l*ro_l
+            u(ni,nj,:,4)=vz_l*ro_l
+            u(ni,nj,:,5)=pr_l/(gm-1.0d0)+0.5d0*(bx_l**2+by_l**2)
+            u(ni,nj,:,6)=bx_l
+            u(ni,nj,:,7)=by_l
+            u(ni,nj,:,8)=bz_l
+            !print*,ni,x(ni),u(ni,1,1,5)
+         enddo;enddo
+    endif
+
+    if (dir .eq. 1) then 
+         do ni=1,margin(1);do nj=1,margin(2)
+            T=10.d0
+            r=dsqrt(x(ix-ni+1)**2+y(ix-nj+1)**2)
+            theta=abs(datan2(y(ix-nj+1),x(ix-ni+1)))
+            pr_u=ro_u*T/gm
+            bx_u=1.0*dcos(theta+pi/2.d0)/r
+            by_u=1.0*dsin(theta+pi/2.d0)/r
+            u(ix-ni+1,ix-nj+1,:,1)=ro_u
+            u(ix-ni+1,ix-nj+1,:,2)=vx_u*ro_u
+            u(ix-ni+1,ix-nj+1,:,3)=vy_u*ro_u
+            u(ix-ni+1,ix-nj+1,:,4)=vz_u*ro_u
+            u(ix-ni+1,ix-nj+1,:,5)=pr_u/(gm-1.0d0)+0.5d0*(bx_u**2+by_u**2)
+            u(ix-ni+1,ix-nj+1,:,6)=bx_u
+            u(ix-ni+1,ix-nj+1,:,7)=by_u
+            u(ix-ni+1,ix-nj+1,:,8)=bz_u
+            !print*,ni,x(ix-ni+1),u(ix-ni+1,:,:,5)!,u(size(u(:,1,1,1))-n+1,1,1,5)
+         enddo;enddo
+    endif
+
+endif
+
+end subroutine boundary_control_hc_tests
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
 end module boundary_rot
