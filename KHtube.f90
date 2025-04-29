@@ -62,7 +62,7 @@ subroutine KHtube
 !n0down=n0up*30.d0
 !Tube values
 T0down=10000.d0
-T0up=5500.d0
+T0up=8000.d0
 n0up=7.5d16
 n0down=n0up*1.d0
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
