@@ -29,7 +29,7 @@ use HDF5
   double precision,allocatable,save::arb_heat(:,:,:),ion_pot(:,:,:)
 
 !6 level collisional rates
-  double precision,allocatable,save::Colrat(:,:,:,:,:),Nexcite(:,:,:,:)
+  double precision,allocatable,save::Colrat(:,:,:,:,:),Nexcite(:,:,:,:),nexcite0(:)
   integer,save::n_levels
 
 !Table for the exponential integral

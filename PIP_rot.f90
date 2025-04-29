@@ -3,7 +3,7 @@ module PIP_rot
        flag_pip_imp,gm,n_fraction,t_ir,col,x,y,z,beta,T0, n0,my_rank,flag_IR_type,flag_col,arb_heat,nout,flag_restart,Colrat,&
         Nexcite,n0,f_p_ini,f_p_p_ini,n0fac,Gm_rec_ref,expinttab,&
         rad_temp,flag_rad,gm_ion_rad,gm_rec_rad,radrat,ion_pot,radexpinttab,flag_sch,&
-        s_order,ndim,n_levels
+        s_order,ndim,n_levels,nexcite0
   use scheme_rot,only:get_Te_HD,get_Te_MHD,cq2pv_HD,cq2pv_MHD,get_vel_diff,derivative
   use parameters,only:T_r_p,deg1,deg2,pi
   use Boundary_rot,only:bnd_energy
@@ -255,20 +255,23 @@ contains
 !        call expintread
  !print*,Te_p*T0/tfac
 !	    allocate(Colrat(ix,jx,kx,6,6)) !Allocate the rate array
-        call get_col_ion_coeff(Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion,Gm_rec)
+!        call get_col_ion_coeff(Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion,Gm_rec)
 	call get_col_ion_coeff(spread(spread(spread(T0,1,ix),2,jx),3,kx),&
-		spread(spread(spread(n0,1,ix),2,jx),3,kx),Gm_ion_temp,Gm_rec_temp)
+		spread(spread(spread(n0,1,ix),2,jx),3,kx),Gm_ion_temp,Gm_rec_temp,.True.)
 !        call get_col_ion_coeff(Te_p*T0/tfac,spread(spread(spread(n0,1,ix),2,jx),3,kx),Gm_ion,Gm_rec)
 !        call get_col_ion_coeff_aprox(Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion,Gm_rec)
 !        Gm_rec_ref=Gm_rec(1,1,1)/U_m(1,1,1,1)  !Get the normalisation recombination rates
 	Gm_rec_ref=Gm_rec_temp(1,1,1)  !Get the normalisation recombination rates
 
+print*,'Temperature',minval(Te_p*T0/tfac),maxval(Te_p*T0/tfac),T0
+print*,'n_e',minval(U_m(:,:,:,1)*n0/n0fac),maxval(U_m(:,:,:,1)*n0/n0fac),n0
 	!Broadcast Gm_rec_ref to other proccessors
 	if (my_rank .eq. 0) then
 		print*,'Rank zero broadcasting Gm_rec_ref=',gm_rec_ref
 	endif
 	call send_gm_rec_ref(Gm_rec_ref)
-
+!print*,maxval(Gm_rec_temp),minval(Gm_rec_temp),t_ir,Gm_rec_ref
+!stop
         !allocate(Nexcite(ix,jx,kx,6)) !Allocate the fractional array (allocated in IC)
 print*,Gm_rec_ref,my_RANK,T0,n0
         !get the arbitraty heating
@@ -291,10 +294,13 @@ print*,Gm_rec_ref,my_RANK,T0,n0
 !Use the appoximate rates instead
 !    call get_col_ion_coeff_aprox(Te_p*T0/tfac,U_m(:,:,:,1)*n0/n0fac,Gm_ion,Gm_rec) 
 !Normalise the rates based on intial recombination rate
+!print*,maxval(Gm_rec),minval(Gm_rec),t_ir,Gm_rec_ref
+!stop
+
     Gm_ion=Gm_ion/U_h(:,:,:,1)/Gm_rec_ref*t_ir
     Gm_rec=Gm_rec/U_m(:,:,:,1)/Gm_rec_ref*t_ir
 
-!print*,maxval(Gm_rec),maxval(Gm_ion)
+!print*,maxval(Gm_rec),minval(Gm_rec),t_ir,Gm_rec_ref
 !stop
 !Get the radiative rates
 !print*,Te_p!,T0,tfac
@@ -358,10 +364,11 @@ print*,Gm_rec_ref,my_RANK,T0,n0
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine get_col_ion_coeff(Telec,Nelec,Gm_ion,Gm_rec)
+  subroutine get_col_ion_coeff(Telec,Nelec,Gm_ion,Gm_rec,get_ref_vals)
     !Calculate the excitation and ionisation coefficients from Johnson 1972
     !Assume a 6 level hydrogen atom (1=ground, 2=1st excitation, ...., 6=ionised) 
     double precision,intent(in)::Telec(ix,jx,kx),Nelec(ix,jx,kx)
+    logical,intent(in),optional::get_ref_vals
     double precision,intent(out)::Gm_ion(ix,jx,kx),Gm_rec(ix,jx,kx)
     !Universal constants
     double precision,parameter::melec=9.10938356e-31 !Electron mass [kg]
@@ -602,8 +609,13 @@ endif
             Gm_rec(i,j,k)=0.d0
             do ii=1,n_levels
             !print*,ii,n_levels,Gm_ion(i,j,k),Gm_rec(i,j,k)
-                Gm_ion(i,j,k)=Gm_ion(i,j,k)+max(Nexcite(i,j,k,ii)*colrat(i,j,k,ii,n_levels+1),0.d0)
-                Gm_rec(i,j,k)=Gm_rec(i,j,k)+max(Nexcite(i,j,k,n_levels+1)*colrat(i,j,k,n_levels+1,ii),0.d0)
+                if(present(get_ref_vals)) then
+                    Gm_ion(i,j,k)=Gm_ion(i,j,k)+max(Nexcite0(ii)*colrat(i,j,k,ii,n_levels+1),0.d0)
+                    Gm_rec(i,j,k)=Gm_rec(i,j,k)+max(Nexcite0(n_levels+1)*colrat(i,j,k,n_levels+1,ii),0.d0)
+                else 
+                    Gm_ion(i,j,k)=Gm_ion(i,j,k)+max(Nexcite(i,j,k,ii)*colrat(i,j,k,ii,n_levels+1),0.d0)
+                    Gm_rec(i,j,k)=Gm_rec(i,j,k)+max(Nexcite(i,j,k,n_levels+1)*colrat(i,j,k,n_levels+1,ii),0.d0)
+                endif
             enddo
 !print*,gm_ion(1,1,1),gm_rec(1,1,1)
 !stop

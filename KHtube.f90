@@ -4,7 +4,7 @@ subroutine KHtube
        flag_mhd,flag_mpi,my_rank,flag_pip,gm,beta,tend,&
        x,y,z,dx,dy,dz,n_fraction,gra,flag_grav,scl_height,margin,T0,n0,Nexcite,&
        f_p_ini,f_p_p_ini,n0fac,Gm_rec_ref,colrat,gm_ion,gm_rec,expinttab,&
-       flag_rad,radrat,rad_temp,gm_rec_rad,gm_ion_rad,flag_IR,n_levels
+       flag_rad,radrat,rad_temp,gm_rec_rad,gm_ion_rad,flag_IR,n_levels,n0,T0,nexcite0
   use scheme_rot,only:pv2cq_mhd,pv2cq_hd
   use model_rot, only:set_coordinate,setcq
   use matrix_rot,only:inverse_tridiagonal
@@ -56,16 +56,33 @@ subroutine KHtube
 !n0up=7.5e16
 !n0down=n0up*10.d0
 !bigger jump
-T0down=7319.689479843136d0
-T0up=5500.d0
-n0up=7.0e16
-n0down=n0up*30.d0
+!T0down=7319.689479843136d0
+!T0up=5500.d0
+!n0up=7.0d16
+!n0down=n0up*30.d0
 !Tube values
-!T0down=100000.d0
-!T0up=6000.d0
-!n0up=7.5e16
-!n0down=n0up*1.d0
+T0down=10000.d0
+T0up=5500.d0
+n0up=7.5d16
+n0down=n0up*1.d0
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!Check that the initial conditions are consistent with settings
+if (abs(T0up-T0) .gt. 1.0e-6) then 
+    print*,'T_norm in settings neq T0up. Normalisation wont work'
+    print*,'T0= ',T0
+    print*,'T0up= ',T0up
+    stop
+endif
+!Check that the initial conditions are consistent with settings
+if (abs(n0up-n0) .gt. 1.0e-6) then 
+    print*,'n0 in settings neq n0up. Normalisation wont work'
+    print*,'n0= ',n0
+    print*,'n0up= ',n0up
+    stop
+endif
+
+
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !Flag to make sure I have the right ionisation routine
@@ -80,6 +97,7 @@ if (my_rank.eq.0) print*,'Calculating LTE excitation state'
 !Allocate arrays 
 !This is only used for the n_level stuff
 !Should be within a flag or deleted for MHD to save memory
+allocate(nexcite0(n_levels+1))
 allocate(Nexcite(ix,jx,kx,n_levels+1)) !Allocate the fractional array
 allocate(Colrat(ix,jx,kx,n_levels+1,n_levels+1))
 call expintread
@@ -192,7 +210,7 @@ f_p_pdown=ppdown/n0up!(pnup+ppup)
 
 
 print*,ppup,ppdown
-print*,b0up,b0down
+!print*,b0up,b0down
 
 !Set velocity arrays to zero
   vy_h=0.0d0;vz_h=0.0d0
@@ -262,12 +280,19 @@ ro_m=ro_m/n0up!*T0up
 ro_h=ro_h/n0up!*T0up
 Nexcite=Nexcite/n0up
 
+!Set the fraction for the ionisation
+!f_p_ini=f_pup
+!f_p_p_ini=f_p_pup
 
 !Make sure that the level populations are properly defined
 if (flag_IR .eq. 4) then
 Nexcite(:,:,:,n_levels+1)=ro_m
 do i=1,n_levels
     Nexcite(:,:,:,i)=Nexcite(:,:,:,i)*ro_h/sum(Nexcite(:,:,:,1:n_levels),dim=4)
+enddo
+!set an initial reference value for normalisation
+do i=1,n_levels+1
+    nexcite0(i)=nexciteup(i)/n0up
 enddo
 endif
 
