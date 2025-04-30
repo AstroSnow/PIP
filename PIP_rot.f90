@@ -8,6 +8,7 @@ module PIP_rot
   use parameters,only:T_r_p,deg1,deg2,pi
   use Boundary_rot,only:bnd_energy
   use MPI_rot,only:send_Gm_rec_ref
+  use parameters,only:pi
   implicit none
   integer,save::col_type,IR_type,xin_type,is_IR,IR_T_dependence
   double precision factor,factor2,mu_p,mu_n,T_ionization,factor3
@@ -1439,5 +1440,28 @@ enddo
 
     return
   end subroutine source_PIP
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine set_LTE_saha(electron_T,electron_n,nstates)
+  !Routine to set the LTE states from the saha boltzman equation for a reference electron temperature and number density
+  double precision, intent(in)::electron_T,electron_n
+  double precision, intent(out)::nstates(n_levels+1)
+  double precision,parameter::kbhat=1.38064852,mehat=9.10938356,hhat=6.62607004
+  double precision,parameter::kboltz=1.38064852e-23
+  double precision::Eion(6)
+  integer::i
+    !Ionisation energies
+    Eion=[13.6,3.4,1.51,0.85,0.54,0.0] !in eV
+    Eion=Eion/13.6*2.18e-18 !Convert to joules (to be dimensionally correct)
+    nstates(n_levels+1)=electron_n
+    do i=1,n_levels
+        nstates(i)=(2.d0/electron_n/2.d0*(2.d0*pi*mehat*kbhat*electron_T/hhat/hhat*1.0e14)**(3.d0/2.d0)*&
+                   exp(-Eion(i)/kboltz/electron_T))
+    enddo
+    nstates(1:n_levels)=electron_n/nstates(1:n_levels)
+    nstates=nstates/electron_n
+    nstates=nstates/sum(nstates(:))
+
+  end subroutine set_LTE_saha
 
 end module PIP_rot
