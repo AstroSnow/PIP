@@ -1498,13 +1498,35 @@ enddo
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine set_NLTE_equilibrium(electron_T,electron_n,nstates,dt,nsteps)
-  double precision, intent(in)::electron_T,electron_n,dt,nsteps
+  double precision, intent(in)::electron_T,electron_n,dt
+  integer,intent(in)::nsteps
   double precision, intent(inout)::nstates(n_levels+1)
-  integer::i
+  integer::i,ii,jj
+  double precision::dneutv(n_levels+1)
 
   do i=1,nsteps
+        !Get the collisional rates
+        call get_col_ion_coeff(spread(spread(spread(electron_T,1,ix),2,jx),3,kx),&
+		    spread(spread(spread(electron_n,1,ix),2,jx),3,kx),Gm_ion,Gm_rec,.True.,1)
+        if (flag_rad .ge. 2) then
+            !Get the radiative rates assuming T_p=T_n
+            call get_radrat_fixed(rad_temp,spread(spread(spread(electron_T,1,ix),2,jx),3,kx),&
+                spread(spread(spread(electron_T,1,ix),2,jx),3,kx),&
+                spread(spread(spread(electron_n,1,ix),2,jx),3,kx),&
+                Gm_ion_rad,Gm_rec_rad,.True.,1)
+        endif
 
-
+        dneutv(:)=0.d0
+        do ii=1,n_levels+1
+            do jj=1,n_levels+1
+                dneutv(ii)=dneutv(ii)+nstates(jj)*colrat(1,1,1,jj,ii)/Gm_rec_ref*t_ir - &
+                			nstates(ii)*colrat(1,1,1,ii,jj)/Gm_rec_ref*t_ir
+                if (flag_rad .ge. 2) then
+                    dneutv(ii)=dneutv(ii)+nstates(jj)*radrat(1,1,1,jj,ii)/Gm_rec_ref*t_ir - &
+                    			nstates(ii)*radrat(1,1,1,ii,jj)/Gm_rec_ref*t_ir
+                endif
+            enddo
+        enddo
   enddo
   end subroutine set_NLTE_equilibrium
 end module PIP_rot
