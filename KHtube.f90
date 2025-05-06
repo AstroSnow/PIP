@@ -8,7 +8,7 @@ subroutine KHtube
   use scheme_rot,only:pv2cq_mhd,pv2cq_hd
   use model_rot, only:set_coordinate,setcq
   use matrix_rot,only:inverse_tridiagonal
-  use PIP_rot, only:get_col_ion_coeff,expintread,get_radrat_fixed
+  use PIP_rot, only:get_col_ion_coeff,expintread,get_radrat_fixed,set_NLTE_equilibrium
   implicit none
   double precision :: ro_h(1:ix,1:jx,1:kx),ro_m(1:ix,1:jx,1:kx)
   double precision :: vx_h(1:ix,1:jx,1:kx),vx_m(1:ix,1:jx,1:kx)
@@ -61,9 +61,9 @@ subroutine KHtube
 !n0up=7.0d16
 !n0down=n0up*30.d0
 !Tube values
-T0down=10000.d0
+T0down=8000.d0
 T0up=8000.d0
-n0up=7.5d16
+n0up=1.0d16
 n0down=n0up*1.d0
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -118,6 +118,12 @@ enddo
 Nexciteup(1:n_levels)=n0up/Nexciteup(1:n_levels)
 Nexciteup=Nexciteup/n0up
 Nexciteup=Nexciteup/sum(Nexciteup(:))
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+call set_NLTE_equilibrium(T0up,n0up,nexciteup,1.0d-3,10000)
+stop
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
 Nexcitedown(n_levels+1)=n0down
 do i=1,n_levels
