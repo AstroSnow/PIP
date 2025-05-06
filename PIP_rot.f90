@@ -365,11 +365,12 @@ print*,Gm_rec_ref,my_RANK,T0,n0
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine get_col_ion_coeff(Telec,Nelec,Gm_ion,Gm_rec,get_ref_vals)
+  subroutine get_col_ion_coeff(Telec,Nelec,Gm_ion,Gm_rec,get_ref_vals,rate_subset)
     !Calculate the excitation and ionisation coefficients from Johnson 1972
     !Assume a 6 level hydrogen atom (1=ground, 2=1st excitation, ...., 6=ionised) 
     double precision,intent(in)::Telec(ix,jx,kx),Nelec(ix,jx,kx)
     logical,intent(in),optional::get_ref_vals
+    integer,intent(in),optional::rate_subset
     double precision,intent(out)::Gm_ion(ix,jx,kx),Gm_rec(ix,jx,kx)
     !Universal constants
     double precision,parameter::melec=9.10938356e-31 !Electron mass [kg]
@@ -382,12 +383,23 @@ print*,Gm_rec_ref,my_RANK,T0,n0
     double precision::garr(3)
     double precision::Colex(n_levels+1,n_levels+1),dneut(n_levels+1)
     integer::k,j,i,ii,jj
+    integer::i_extent,j_extent,k_extent
     double precision::rn(6),bn(6),xrat(n_levels,n_levels),Enn(n_levels,n_levels),&
     yhat,rnn(n_levels,n_levels),zhat,gauntfac(n_levels,n_levels),fnn(n_levels,n_levels)
     double precision::Ann(n_levels,n_levels),Bnn(n_levels,n_levels),E0y,E1y,E2y,E0z,E1z,E2z
     double precision::yn,zn,ziyn,zizn,An0,Bn0
     double precision::dntot
     integer::nmaxloc
+
+    if (present(rate_subset)) then
+        i_extent=1
+        j_extent=1
+        k_extent=1
+    else
+        i_extent=ix
+        j_extent=jx
+        k_extent=kx
+    endif
     !This is all consant so can be moved somewhere else?
     gweight(1)=2.d0 !ground state
     gweight(2)=8.d0 !1st level excitation
@@ -445,7 +457,7 @@ print*,Gm_rec_ref,my_RANK,T0,n0
     colex(:,:)=0.d0
     colrat(:,:,:,:,:)=0.0d0
     !Loop over the grid
-    do k=1,kx;do j=1,jx; do i=1,ix
+    do k=1,k_extent;do j=1,j_extent; do i=1,i_extent
         !loop over the Excitation states
             do ii=1,n_levels
 
@@ -628,20 +640,34 @@ endif
 
   end subroutine get_col_ion_coeff  
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine get_radrat_fixed(Trad,Telec,Tneut,nelec,Gm_ion_rad,Gm_rec_rad)
+  subroutine get_radrat_fixed(Trad,Telec,Tneut,nelec,Gm_ion_rad,Gm_rec_rad,get_ref_vals,rate_subset)
 !use the fixed ratiative rates from Sollum 2003 thesis
     double precision,intent(in)::Trad,Telec(ix,jx,kx),Tneut(ix,jx,kx),nelec(ix,jx,kx)
     double precision,intent(out)::Gm_ion_rad(ix,jx,kx),Gm_rec_rad(ix,jx,kx)
+    integer,intent(in),optional::rate_subset
+    logical,intent(in),optional::get_ref_vals
     double precision::nuarr(6,6),fosc(6,6),gfac(6),E(6),dneut(6),Tradarr(ix,jx,kx)
     double precision::nu0,sol,oldsol,s1c,alp0,diff,exf,sahasol,Tradtemp
     double precision::dntot
     integer::i,j,k,ii,jj,iii
+    integer::i_extent,j_extent,k_extent
     double precision,parameter::h=6.62607004e-34 !Planck's constant in m2 kg s^-1
     double precision,parameter::cli=299792458.d0 !Speed of light in m/s
     double precision,parameter::ech=-1.6e-19 !Charge of electron in coulomb.
     double precision,parameter::melec=9.10938356e-31 !Electron mass [kg]
     double precision,parameter::kboltz=1.38064852e-23 !Boltzmann Constant [m^2 kg s^-2 K^-1]
     integer::nmaxloc
+
+    if (present(rate_subset)) then
+        i_extent=1
+        j_extent=1
+        k_extent=1
+    else
+        i_extent=ix
+        j_extent=jx
+        k_extent=kx
+    endif
+
     !Oscilator strengths
     !From table 1 in Goldwire 1968
     !http://articles.adsabs.harvard.edu//full/1968ApJS...17..445G/0000450.000.html
@@ -751,7 +777,7 @@ endif
 			
 			!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!		
 			!Recombination rates  
-			do i=1,ix;do j=1,jx;do k=1,kx  
+			do i=1,i_extent;do j=1,j_extent;do k=1,k_extent  
 
 				!Old slow routines
 !				sol=0.d0
@@ -779,7 +805,7 @@ endif
     	
     	if (flag_rad .eq. 3) then
 		!Some appoximation of optically thick Lyman tranistions    	
-			do i=1,ix;do j=1,jx;do k=1,kx
+			do i=1,i_extent;do j=1,j_extent;do k=1,k_extent
 				Tradtemp=Trad
 				if (ii.eq. 1) Tradtemp=Tneut(i,j,k)
 				
@@ -870,9 +896,15 @@ endif
     Gm_ion_rad(:,:,:)=0.d0
     Gm_rec_rad(:,:,:)=0.d0
     do ii=1,n_levels
-        Gm_ion_rad(:,:,:)=Gm_ion_rad(:,:,:)+max(Nexcite(:,:,:,ii)*radrat(:,:,:,ii,n_levels+1),0.d0)
-        Gm_rec_rad(:,:,:)=Gm_rec_rad(:,:,:)+max(Nexcite(:,:,:,n_levels+1)*radrat(:,:,:,n_levels+1,ii),0.d0)
+        if(present(get_ref_vals)) then
+            Gm_ion_rad(:,:,:)=Gm_ion_rad(:,:,:)+max(Nexcite0(ii)*radrat(:,:,:,ii,n_levels+1),0.d0)
+            Gm_rec_rad(:,:,:)=Gm_rec_rad(:,:,:)+max(Nexcite0(n_levels+1)*radrat(:,:,:,n_levels+1,ii),0.d0)
+        else 
+            Gm_ion_rad(:,:,:)=Gm_ion_rad(:,:,:)+max(Nexcite(:,:,:,ii)*radrat(:,:,:,ii,n_levels+1),0.d0)
+            Gm_rec_rad(:,:,:)=Gm_rec_rad(:,:,:)+max(Nexcite(:,:,:,n_levels+1)*radrat(:,:,:,n_levels+1,ii),0.d0)
+        endif
     enddo
+
 !print*,gm_ion_rad(1,1,1),gm_rec_rad(1,1,1)
 !stop
     !divide rates by total neutral/plasma density for consistency
@@ -1461,7 +1493,18 @@ enddo
     nstates(1:n_levels)=electron_n/nstates(1:n_levels)
     nstates=nstates/electron_n
     nstates=nstates/sum(nstates(:))
-
   end subroutine set_LTE_saha
 
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  subroutine set_NLTE_equilibrium(electron_T,electron_n,nstates,dt,nsteps)
+  double precision, intent(in)::electron_T,electron_n,dt,nsteps
+  double precision, intent(inout)::nstates(n_levels+1)
+  integer::i
+
+  do i=1,nsteps
+
+
+  enddo
+  end subroutine set_NLTE_equilibrium
 end module PIP_rot
