@@ -1,19 +1,22 @@
 #Calculate the mean photon energy
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.integrate as integrate
 
 c=299792458.0 #m/s
 h=6.62607015e-34 #J s
-#h=4.1357e-15 # eV s
+heV=4.1357e-15 # eV s
 kB=1.380649e-23 #J/K
 #kB=8.6173303e-5 #eV/K
 Trad=5000.0
 Te=8000.00
 
 #Waveloength of transition
-l0=c/91.175e-9
+#l0=c/91.175e-9
+l0=91.2e-9
+l1=410.0e-9
 #l0=91.175e-9
-print(l0,1.0/l0)
+#print(l0,1.0/l0)
 
 def photon_ionisation(Trad, Te,nu):
     res=1.0/nu*(1.0+1.0/(np.exp(h*nu/kB/Trad)-1.0))*np.exp(-h*nu/kB/Te)
@@ -24,6 +27,13 @@ def photon_recombination(Trad,nu):
     res=1.0/nu*1.0/(np.exp(h*nu/kB/Trad)-1.0)
     return(res)
 
+def plank(nu):
+    E=8.0*np.pi*heV*nu**3/c**3* 1.0/(np.exp(h*nu/kB/Trad)-1.0)
+    return E
+
+def plank_l(l):
+    E=8.0*np.pi*heV*l**-3*1.0/(np.exp(h*c/l/kB/Trad)-1.0)
+    return E
 #nu=1.0/np.logspace(-3,5,1000)
 #l=np.linspace(0.1*l0,100*l0,10000)
 
@@ -35,21 +45,27 @@ def photon_recombination(Trad,nu):
 #E=1.0/(np.exp(h/l/kB/Trad)-1.0)/l**3
 
 #nu=np.linspace(l0,100000000*l0,10000)/c
-l=np.linspace(0,3.0e-6,10000)
+l=np.linspace(1.0e-8,1.0e-5,10000)
 nu=c/l
-E=8.0*np.pi*h*nu**3/c**3* 1.0/(np.exp(h*nu/kB/Trad)-1.0)
-E=E*6.242e18 # convert joules to eV
+#E=8.0*np.pi*heV*nu**3/c**3* 1.0/(np.exp(h*nu/kB/Trad)-1.0)
+#E=E*6.242e18 # convert joules to eV
 #l=nu/c*1.0e-6 #in micrometres
 
 #l=np.linspace(l0*0.001,100*l0,10000)
 #E=1.0/(np.exp(h*l/kB/Trad)-1.0)*l**3
 
 #plt.loglog(nu,1.0/(np.exp(h/nu/kB/Trad)-1.0))
-plt.plot(l,E)
-#plt.plot([l0,l0],[0,1.0e42])
+#plt.plot(l,plank(nu),color='k')
+plt.plot(l,plank_l(l),color='k')
+plt.axvline(x=l0,color='b')
+plt.axvline(x=l1,color='r')
+#plt.plot([l1,l1],[0,6000])
 #plt.loglog(1.0/nu,photon_recombination(Trad,nu)*4.13558e-15)
 #plt.loglog(1.0/nu,photon_ionisation(Trad,Te,nu)*4.13558e-15)
 plt.show()
+
+print(integrate.quad(plank,nu[-1],nu[0]))
+print(integrate.quad(plank_l,l0,l[-1]))
 
 """
 #########################################################################
