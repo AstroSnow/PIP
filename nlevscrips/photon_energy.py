@@ -1,15 +1,18 @@
 #Calculate the mean photon energy
 import numpy as np
+#import matplotlib
 import matplotlib.pyplot as plt
 import scipy.integrate as integrate
 
-c=299792458.0 #m/s
-h=6.62607015e-34 #J s
-heV=4.1357e-15 # eV s
-kB=1.380649e-23 #J/K
+#matplotlib.rcParams.update({'font.size': 14})
+
+c=299792458.0 #speed of light - m/s
+h=6.62607015e-34 #Planks constant - J s
+heV=4.1357e-15 #Planks constant - eV s
+kB=1.380649e-23 #Boltzmanns constant - J/K
 #kB=8.6173303e-5 #eV/K
-Trad=5000.0
-Te=8000.00
+Trad=5000.0 # Temperature of blackbody source - K
+Te=8000.00 # Electron temperature - K
 
 #Waveloength of transition
 #l0=c/91.175e-9
@@ -18,21 +21,39 @@ l1=410.0e-9
 #l0=91.175e-9
 #print(l0,1.0/l0)
 
-def photon_ionisation(Trad, Te,nu):
+def photon_recombination(nu):
+    E=plank(nu)
     res=1.0/nu*(1.0+1.0/(np.exp(h*nu/kB/Trad)-1.0))*np.exp(-h*nu/kB/Te)
     #print(np.exp(-h*nu/kB/Te))
-    return(res)
+    return res
 
-def photon_recombination(Trad,nu):
-    res=1.0/nu*1.0/(np.exp(h*nu/kB/Trad)-1.0)
-    return(res)
+def photon_ionisation(nu,p):
+    E=1.0
+    if p == 'True':
+        E=plank(nu)
+    res=E*1.0/nu*1.0/(np.exp(h*nu/kB/Trad)-1.0)
+    return res
 
-def plank(nu):
-    E=8.0*np.pi*heV*nu**3/c**3* 1.0/(np.exp(h*nu/kB/Trad)-1.0)
+def photon_ionisation_l(l,p):
+    E=1.0
+    if p == 'True':
+        E=plank_l(l)
+    res=E*l/c*1.0/(np.exp(h*c/l/kB/Trad)-1.0)
+    return res
+
+def plank(nu): #Plank spectral energy density
+    E=8.0*np.pi*heV*nu**3/c**3 * 1.0/(np.exp(h*nu/kB/Trad)-1.0) #Wikipedia
+    #E=2.0*heV*nu**3/c**2 * 1.0/(np.exp(E0/kB/Trad)-1.0) #Sollum
     return E
 
 def plank_l(l):
-    E=8.0*np.pi*heV*l**-3*1.0/(np.exp(h*c/l/kB/Trad)-1.0)
+    #E=8.0*np.pi*heV*l**-3 * 1.0/(np.exp(h*c/l/kB/Trad)-1.0)
+    #E=2.0*np.pi*h*c**2*l**-5 * 1.0/(np.exp(h*c/l/kB/Trad)-1.0)
+    E=8.0*np.pi*heV*c/l**5*1.0/(np.exp(h*c/kB/Trad/l)-1) #https://www.researchgate.net/publication/258394628_Radiation_and_Heat_Transfer_in_the_Atmosphere_A_Comprehensive_Approach_on_a_Molecular_Basis
+    return E
+
+def spectral_radiance(l):
+    E=2.0*h*(c/l)**3/c**2*1.0/(np.exp(h*c/l/kB/Trad)-1.0)
     return E
 #nu=1.0/np.logspace(-3,5,1000)
 #l=np.linspace(0.1*l0,100*l0,10000)
@@ -45,6 +66,7 @@ def plank_l(l):
 #E=1.0/(np.exp(h/l/kB/Trad)-1.0)/l**3
 
 #nu=np.linspace(l0,100000000*l0,10000)/c
+#l=np.linspace(1.0e-8,1.0e-5,10000)
 l=np.linspace(1.0e-8,1.0e-5,10000)
 nu=c/l
 #E=8.0*np.pi*heV*nu**3/c**3* 1.0/(np.exp(h*nu/kB/Trad)-1.0)
@@ -56,15 +78,21 @@ nu=c/l
 
 #plt.loglog(nu,1.0/(np.exp(h/nu/kB/Trad)-1.0))
 #plt.plot(l,plank(nu),color='k')
+
 plt.plot(l,plank_l(l),color='k')
 plt.axvline(x=l0,color='b')
 plt.axvline(x=l1,color='r')
+plt.axvline(x=560e-9,color='g')
+
+#plt.plot(l*1.0e6,spectral_radiance(l))
+
+#plt.plot(l,h*c/l/kB/Trad)
 #plt.plot([l1,l1],[0,6000])
 #plt.loglog(1.0/nu,photon_recombination(Trad,nu)*4.13558e-15)
 #plt.loglog(1.0/nu,photon_ionisation(Trad,Te,nu)*4.13558e-15)
 plt.show()
 
-print(integrate.quad(plank,nu[-1],nu[0]))
+#print(integrate.quad(plank,nu[-1],nu[0]))
 print(integrate.quad(plank_l,l0,l[-1]))
 
 """
