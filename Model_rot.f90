@@ -38,7 +38,7 @@ contains
 
 subroutine get_parameters
 ! this reads the parameters from params.txt
-  character*15 key
+  character*20 key
   character*8 flag_eqs
   character*200  tmp
   integer ind_e,ix0,jx0,kx0,i_tmp,r_count
