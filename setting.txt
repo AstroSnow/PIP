@@ -58,7 +58,8 @@ KHtube:flag_ini; flag for initial setting
 1.0e-5:t_IR;time scale of ionization and recombination relative to collisional time
 ==Radiative losses==;
 3:flag_rad; (0:no radiative IR, 2:Black-body radiative)
-6000.d0:rad_temp; Black-body radiation temperature
+5777.d0:rad_temp; Black-body radiation temperature
+1:flag_photo_heating; flag for photon heating
 ==For heat condution===;
 0 :flag_heat;heat conduction flag (0:switch-off, 1:switch-on)
 1 :hc_type; type of heat conduction (0:constant-type, 1:Spitzer-type)
@@ -88,7 +89,7 @@ KHtube:flag_ini; flag for initial setting
 100000.0   :damp_time; timescale for damping
 ==Normalisation parameters==
 8000.0d0 :T_norm; Temperature in K (13.6 eV = 157814.4 K)
-7.5e16  :n_norm; number density
+1.0e16  :n_norm; number density
 3.d5    :L_norm; Length scale
 ==Optional save flags (0 on, -1 off) TOGGLE AT YOUR PERIL! MAY PREVENT RESTARTS==;
 0:ac_sav;collisional coefficient
