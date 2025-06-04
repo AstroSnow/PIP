@@ -3,7 +3,7 @@ module PIP_rot
        flag_pip_imp,gm,n_fraction,t_ir,col,x,y,z,beta,T0, n0,my_rank,flag_IR_type,flag_col,arb_heat,nout,flag_restart,Colrat,&
         Nexcite,n0,f_p_ini,f_p_p_ini,n0fac,Gm_rec_ref,expinttab,&
         rad_temp,flag_rad,gm_ion_rad,gm_rec_rad,radrat,ion_pot,radexpinttab,flag_sch,&
-        s_order,ndim,n_levels,nexcite0,flag_photo_heating
+        s_order,ndim,n_levels,nexcite0,flag_photo_heating,heat_photon
   use scheme_rot,only:get_Te_HD,get_Te_MHD,cq2pv_HD,cq2pv_MHD,get_vel_diff,derivative
   use parameters,only:T_r_p,deg1,deg2,pi
   use Boundary_rot,only:bnd_energy
@@ -278,7 +278,8 @@ print*,Gm_rec_ref,my_RANK,T0,n0
         !get the arbitraty heating
         allocate(arb_heat(ix,jx,kx))
 		allocate(ion_pot(ix,jx,kx))
-        call IRgetionpot(U_h(:,:,:,1),ion_pot) 
+		allocate(heat_photon(ix,jx,kx))
+        call IRgetionpot(U_h(:,:,:,1),ion_pot,heat_photon) 
 !        call IRgetionpot(U_h(:,:,:,1),arb_heat) 
 		arb_heat=0.d0!ion_pot
     endif
@@ -1204,12 +1205,12 @@ enddo
   end subroutine hydrogen_excitation_update
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine IRgetionpot(nde,enloss)
+  subroutine IRgetionpot(nde,enloss,photo_heat)
 ! calculate the ionisation potential loss
   double precision,intent(in)::nde(ix,jx,kx)
-  double precision,intent(out)::enloss(ix,jx,kx)
+  double precision,intent(out)::enloss(ix,jx,kx),photo_heat(ix,jx,kx)
   double precision::ieloss(ix,jx,kx),iegain(ix,jx,kx),Eev(6)
-  double precision::photo_ion_excess(6),photo_heat(ix,jx,kx),photo_cool(ix,jx,kx)
+  double precision::photo_ion_excess(6),photo_cool(ix,jx,kx)
   integer:: i,j
 
 Eev=[13.6,3.4,1.51,0.85,0.54,0.0]
@@ -1280,13 +1281,14 @@ enddo
     
     
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+    photo_heat(:,:,:)=0.d0
     !Photon energy transfer terms
     if (flag_photo_heating .eq. 1) then
         !if(abs(Trad-6000.0) .gt. 1.0) stop
         photo_ion_excess=[14.08,3.84,1.91,1.20,0.85,0.00]-Eev !Based on Trad=5777K 
         !print*,photo_ion_excess(1:n_levels+1)
         
-        photo_heat(:,:,:)=0.d0
+        !photo_heat(:,:,:)=0.d0
         photo_cool(:,:,:)=0.d0
         do i=1,n_levels
             !Photo-ionisation heating
@@ -1460,7 +1462,7 @@ enddo
 	S_m(:,:,:,1:5)=S_m(:,:,:,1:5)-ds(:,:,:,1:5)
 	ion_pot=0.0d0
         if (IR_type .eq. 4) then
-            call irgetionpot(nde,ion_pot)
+            call irgetionpot(nde,ion_pot,heat_photon)
         else
 		    if(mod(flag_col,2) .eq. 1) then
 			    ion_pot=Gm_ion*nde*(13.6d0/gm/T0/8.6173e-5)
@@ -1473,7 +1475,7 @@ enddo
         endif
 !print*,maxval(Gm_ion),maxval(ion_pot),maxval(abs(arb_heat))
 !print*,maxval(abs(ion_pot)),maxval(abs(arb_heat)),maxval(abs(ion_pot-arb_heat))
-	S_m(:,:,:,5)=S_m(:,:,:,5)-ion_pot+arb_heat
+	S_m(:,:,:,5)=S_m(:,:,:,5)-ion_pot+arb_heat+heat_photon
 !	print*,'New type'
 	else if(flag_IR_type .eq. 1) then
 	ds(:,:,:,5)=0.5d0*(Gm_rec*de*(vx*vx+vy*vy+vz*vz)- &
