@@ -22,7 +22,7 @@ module model_rot
        vd_cri,j_cri,flag_damp,damp_time,flag_rad, T0, n0, L0,flag_IR_type, &
        flag_visc, nu_0, esav, emsavtime, rad_temp, &
 	ac_sav, xi_sav, ion_sav, rec_sav, col_sav, gr_sav, vs_sav, heat_sav, et_sav, ps_sav,&
-	U_m_backup,U_h_backup,n_levels
+	U_m_backup,U_h_backup,n_levels,flag_photo_heating
   use scheme_rot,only:pv2cq_mhd,pv2cq_hd
   use HC_rot,only:initialize_HC
   use Res_rot,only:initialize_resistivity
@@ -206,6 +206,8 @@ subroutine get_parameters
         read(tmp(1:ind_e-1),*)damp_time
      else if(key.eq.'flag_rad') then
         read(tmp(1:ind_e-1),*)flag_rad
+     else if(key.eq.'flag_photo_heating') then
+        read(tmp(1:ind_e-1),*)flag_photo_heating
      else if(key.eq.'rad_temp') then
         read(tmp(1:ind_e-1),*)rad_temp
      else if(key.eq.'T_norm') then
