@@ -1475,7 +1475,10 @@ enddo
         endif
 !print*,maxval(Gm_ion),maxval(ion_pot),maxval(abs(arb_heat))
 !print*,maxval(abs(ion_pot)),maxval(abs(arb_heat)),maxval(abs(ion_pot-arb_heat))
-	S_m(:,:,:,5)=S_m(:,:,:,5)-ion_pot+arb_heat+heat_photon
+	S_m(:,:,:,5)=S_m(:,:,:,5)-ion_pot+arb_heat
+	if (flag_photo_heating .eq. 1) then
+	    S_m(:,:,:,5)=S_m(:,:,:,5)+heat_photon
+	endif
 !	print*,'New type'
 	else if(flag_IR_type .eq. 1) then
 	ds(:,:,:,5)=0.5d0*(Gm_rec*de*(vx*vx+vy*vy+vz*vz)- &
