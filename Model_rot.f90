@@ -38,7 +38,7 @@ contains
 
 subroutine get_parameters
 ! this reads the parameters from params.txt
-  character*20 key
+  character*15 key
   character*8 flag_eqs
   character*200  tmp
   integer ind_e,ix0,jx0,kx0,i_tmp,r_count
@@ -206,7 +206,7 @@ subroutine get_parameters
         read(tmp(1:ind_e-1),*)damp_time
      else if(key.eq.'flag_rad') then
         read(tmp(1:ind_e-1),*)flag_rad
-     else if(key.eq.'flag_photo_heating') then
+     else if(key.eq.'flag_photo_heat') then
         read(tmp(1:ind_e-1),*)flag_photo_heating
      else if(key.eq.'rad_temp') then
         read(tmp(1:ind_e-1),*)rad_temp
