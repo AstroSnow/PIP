@@ -62,7 +62,7 @@ use HDF5
   double precision,save :: cmax
 
 ! Radiative losses
-  integer,save :: flag_rad
+  integer,save :: flag_rad,flag_photo_heating
   double precision,save :: rad_temp
   double precision,allocatable,save::GM_rec_rad(:,:,:),Gm_ion_rad(:,:,:),radrat(:,:,:,:,:)
 
