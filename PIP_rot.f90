@@ -3,7 +3,7 @@ module PIP_rot
        flag_pip_imp,gm,n_fraction,t_ir,col,x,y,z,beta,T0, n0,my_rank,flag_IR_type,flag_col,arb_heat,nout,flag_restart,Colrat,&
         Nexcite,n0,f_p_ini,f_p_p_ini,n0fac,Gm_rec_ref,expinttab,&
         rad_temp,flag_rad,gm_ion_rad,gm_rec_rad,radrat,ion_pot,radexpinttab,flag_sch,&
-        s_order,ndim,n_levels,nexcite0
+        s_order,ndim,n_levels,nexcite0,flag_photo_heating
   use scheme_rot,only:get_Te_HD,get_Te_MHD,cq2pv_HD,cq2pv_MHD,get_vel_diff,derivative
   use parameters,only:T_r_p,deg1,deg2,pi
   use Boundary_rot,only:bnd_energy
@@ -1209,6 +1209,7 @@ enddo
   double precision,intent(in)::nde(ix,jx,kx)
   double precision,intent(out)::enloss(ix,jx,kx)
   double precision::ieloss(ix,jx,kx),iegain(ix,jx,kx),Eev(6)
+  double precision::photo_ion_excess(6),photo_heat(ix,jx,kx),photo_cool(ix,jx,kx)
   integer:: i,j
 
 Eev=[13.6,3.4,1.51,0.85,0.54,0.0]
@@ -1276,6 +1277,39 @@ enddo
 
     !Normalise based on parameters    
     enloss=enloss/Gm_rec_ref*t_ir
+    
+    
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+    !Photon energy transfer terms
+    if (flag_photo_heating .eq. 1) then
+        !if(abs(Trad-6000.0) .gt. 1.0) stop
+        photo_ion_excess=[14.08,3.84,1.91,1.20,0.85,0.00]-Eev !Based on Trad=5777K 
+        !print*,photo_ion_excess(1:n_levels+1)
+        
+        photo_heat(:,:,:)=0.d0
+        photo_cool(:,:,:)=0.d0
+        do i=1,n_levels
+            !Photo-ionisation heating
+            !print*,photo_heat(1,1,1),radrat(1,1,1,i,n_levels+1),nexcite(1,1,1,i)
+            photo_heat(:,:,:)=photo_heat(:,:,:)+radrat(:,:,:,i,n_levels+1)*photo_ion_excess(i)*nexcite(:,:,:,i)
+        enddo
+        
+        if(mod(flag_col,2) .eq. 1) then
+        	    photo_heat=(photo_heat)/gm/T0/8.6173e-5
+        elseif(mod(flag_col,2) .eq. 0) then
+	        photo_heat=(photo_heat)/(beta/T0/2.d0/8.6173e-5)
+        else
+	        print*,'option not included!'
+	        stop
+        endif
+
+        !Normalise based on parameters    
+        photo_heat=photo_heat/Gm_rec_ref*t_ir
+        
+        
+        print*,photo_heat(1,1,1),enloss(1,1,1)
+    endif
+    
 
   end subroutine IRgetionpot
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
