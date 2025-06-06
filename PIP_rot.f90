@@ -1309,7 +1309,7 @@ enddo
         photo_heat=photo_heat/Gm_rec_ref*t_ir
         
         
-        print*,photo_heat(1,1,1),enloss(1,1,1)
+        !print*,photo_heat(1,1,1),enloss(1,1,1)
     endif
     
 
@@ -1477,6 +1477,7 @@ enddo
 !print*,maxval(abs(ion_pot)),maxval(abs(arb_heat)),maxval(abs(ion_pot-arb_heat))
 	S_m(:,:,:,5)=S_m(:,:,:,5)-ion_pot+arb_heat
 	if (flag_photo_heating .eq. 1) then
+	    !print*,'Added photo heating',heat_photon(0,0,0)
 	    S_m(:,:,:,5)=S_m(:,:,:,5)+heat_photon
 	endif
 !	print*,'New type'
