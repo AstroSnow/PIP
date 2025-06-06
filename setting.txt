@@ -2,8 +2,8 @@ Data/:outdir; output directory (This should written at the first line in this fi
 Data/:indir; input directory
 PIP:flag_eqs;flag_for equation (HD,MHD, PIP) 
 -1:flag_restart; restart count (-1:no restart, 0: restart. nout at the end of config.txt will be read, >0: restart from No."flag_restart" data)
-3:ndim; dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
-64:ix; grid number for x-direction
+1:ndim; dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
+4:ix; grid number for x-direction
 32:jx; grid number for y-direction
 8:kx; grid number for z-direction
 0.1 :dtout;  output period 100 
@@ -59,7 +59,7 @@ KHtube:flag_ini; flag for initial setting
 ==Radiative losses==;
 3:flag_rad; (0:no radiative IR, 2:Black-body radiative)
 5777.d0:rad_temp; Black-body radiation temperature
-1:flag_photo_heating; flag for photon heating
+1:flag_photo_heat; flag for photon heating
 ==For heat condution===;
 0 :flag_heat;heat conduction flag (0:switch-off, 1:switch-on)
 1 :hc_type; type of heat conduction (0:constant-type, 1:Spitzer-type)
