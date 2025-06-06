@@ -3,7 +3,7 @@ module PIP_rot
        flag_pip_imp,gm,n_fraction,t_ir,col,x,y,z,beta,T0, n0,my_rank,flag_IR_type,flag_col,arb_heat,nout,flag_restart,Colrat,&
         Nexcite,n0,f_p_ini,f_p_p_ini,n0fac,Gm_rec_ref,expinttab,&
         rad_temp,flag_rad,gm_ion_rad,gm_rec_rad,radrat,ion_pot,radexpinttab,flag_sch,&
-        s_order,ndim,n_levels,nexcite0,flag_photo_heating,heat_photon
+        s_order,ndim,n_levels,nexcite0,flag_photo_heating,heat_photon,rad_cooling_h
   use scheme_rot,only:get_Te_HD,get_Te_MHD,cq2pv_HD,cq2pv_MHD,get_vel_diff,derivative
   use parameters,only:T_r_p,deg1,deg2,pi
   use Boundary_rot,only:bnd_energy
@@ -1324,6 +1324,62 @@ enddo
   end subroutine IRgetionpot
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+subroutine read_rad_cooling_hydrogen(flag_rad)
+USE HDF5
+
+	integer,intent(in)::flag_rad
+	INTEGER :: ErrorFlag	
+	INTEGER(HID_T) :: file_id
+    INTEGER(HID_T) :: dset_id       ! Dataset identifier
+    INTEGER(HID_T) :: space_id       ! Dataspace identifier
+    INTEGER(HID_T) :: dtype_id       ! Dataspace identifier
+    INTEGER(HSIZE_T), DIMENSION(2) :: data_dims
+    INTEGER(HSIZE_T), DIMENSION(2) :: max_dims
+!	Character(len=65),parameter::filename='lossfunc.h5'
+Character(len=65),parameter::filename='rad_cooling_h.h5'
+	CHARACTER(LEN=65), PARAMETER :: dset1name = "temperature"  ! Dataset name
+	CHARACTER(LEN=65), PARAMETER :: dset2name = "rad_loss"     ! Dataset name
+	INTEGER::nelements,i
+	
+	if (my_rank == 0) print*,'Reading file'
+		CALL h5open_f(ErrorFlag)
+		CALL h5fopen_f (filename, H5F_ACC_RDONLY_F, file_id, ErrorFlag)
+		CALL h5dopen_f(file_id, dset1name, dset_id, ErrorFlag)
+		CALL h5dget_space_f(dset_id, space_id,ErrorFlag)
+		
+		!Get dataspace dims
+		CALL h5sget_simple_extent_dims_f(space_id,data_dims, max_dims, ErrorFlag)
+
+		nelements = data_dims(1)
+
+		!Allocate dimensions to dset_data for reading
+		ALLOCATE(rad_cooling_h(nelements,2))
+
+
+		!Get data
+		CALL h5dread_f(dset_id, H5T_NATIVE_DOUBLE, rad_cooling_h(:,1), data_dims, ErrorFlag)
+		
+		CALL h5dopen_f(file_id, dset2name, dset_id, ErrorFlag)
+		CALL h5dget_space_f(dset_id, space_id,ErrorFlag)
+		CALL h5dread_f(dset_id, H5T_NATIVE_DOUBLE, rad_cooling_h(:,2), data_dims, ErrorFlag)
+		
+		CALL h5close_f(ErrorFlag)
+
+!                if (maxval(radlossfun(:,1)) .GE. 100.0) then
+!                        if (my_rank == 0) print*,'Converting rad table to log T'
+!                        radlossfun(:,1)=dlog10(radlossfun(:,1))
+!                endif
+
+!		radlossfun(:,2)=radlossfun(:,2)/maxval(radlossfun(:,2))
+    if (my_rank ==0) print*,'file read'
+!		do i=1,nelements
+!			print*,radlossfun(i,1),radlossfun(i,2)!/maxval(radlossfun(:,2))
+!		enddo
+
+
+end subroutine read_rad_cooling_hydrogen
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   subroutine get_initial_xin(Pr_tot,Te_tot,N_tot,xi_n0)
     !return initial xi_n and total number density from

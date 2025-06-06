@@ -65,7 +65,7 @@ use HDF5
 ! Radiative losses
   integer,save :: flag_rad,flag_photo_heating
   double precision,save :: rad_temp
-  double precision,allocatable,save::GM_rec_rad(:,:,:),Gm_ion_rad(:,:,:),radrat(:,:,:,:,:)
+  double precision,allocatable,save::GM_rec_rad(:,:,:),Gm_ion_rad(:,:,:),radrat(:,:,:,:,:),rad_cooling_h(:,:)
 
 !for coordinate system
   integer,save::ix,jx,kx,nvar_h,nvar_m,margin(3),ndim,ig(3)
