@@ -301,6 +301,8 @@ subroutine get_parameters
       endif
       if(flag_artvis.eq.-1)flag_artvis=1
       margin(1)=s_order+min(flag_resi,1)+min(flag_amb,1)+flag_artvis*2
+      margin(1)=min(3,margin(1))
+      print*,'Manually overwritting Margin'
       if(flag_divb.gt.2) flag_divb=1	!ORIGINALLY 1, SHOULD BE 2 for iterative
    case(2)
       margin(1)=4+flag_amb*2
