@@ -279,7 +279,7 @@ print*,Gm_rec_ref,my_RANK,T0,n0
         allocate(arb_heat(ix,jx,kx))
 		allocate(ion_pot(ix,jx,kx))
 		allocate(heat_photon(ix,jx,kx))
-        call IRgetionpot(U_h(:,:,:,1),ion_pot,heat_photon) 
+        call IRgetionpot(U_h(:,:,:,1),Te_p,ion_pot,heat_photon) 
 !        call IRgetionpot(U_h(:,:,:,1),arb_heat) 
 		arb_heat=0.d0!ion_pot
     endif
@@ -1205,13 +1205,13 @@ enddo
   end subroutine hydrogen_excitation_update
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine IRgetionpot(nde,enloss,photo_heat)
+  subroutine IRgetionpot(nde,Te_p,enloss,photo_heat)
 ! calculate the ionisation potential loss
-  double precision,intent(in)::nde(ix,jx,kx)
+  double precision,intent(in)::nde(ix,jx,kx),Te_p(ix,jx,kx)
   double precision,intent(out)::enloss(ix,jx,kx),photo_heat(ix,jx,kx)
   double precision::ieloss(ix,jx,kx),iegain(ix,jx,kx),Eev(6)
-  double precision::photo_ion_excess(6),photo_cool(ix,jx,kx)
-  integer:: i,j
+  double precision::photo_ion_excess(6),photo_cool(ix,jx,kx),T_e_local
+  integer:: i,j,k,ii
 
 Eev=[13.6,3.4,1.51,0.85,0.54,0.0]
 
@@ -1282,6 +1282,7 @@ enddo
     
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
     photo_heat(:,:,:)=0.d0
+    photo_cool(:,:,:)=0.d0
     !Photon energy transfer terms
     if (flag_photo_heating .eq. 1) then
         !if(abs(Trad-6000.0) .gt. 1.0) stop
@@ -1289,12 +1290,19 @@ enddo
         !print*,photo_ion_excess(1:n_levels+1)
         
         !photo_heat(:,:,:)=0.d0
-        photo_cool(:,:,:)=0.d0
+        !photo_cool(:,:,:)=0.d0
         do i=1,n_levels
             !Photo-ionisation heating
             !print*,photo_heat(1,1,1),radrat(1,1,1,i,n_levels+1),nexcite(1,1,1,i)
             photo_heat(:,:,:)=photo_heat(:,:,:)+radrat(:,:,:,i,n_levels+1)*photo_ion_excess(i)*nexcite(:,:,:,i)
         enddo
+        
+        !Cooling term depends on local temperature so need to loop over grid
+        do k=1,kx;do j=1,jx;do i=1,ix
+            T_e_local=Te_p(i,j,k)*T0/tfac !Temperature in Kelvin
+            print*,T_e_local
+        enddo;enddo;enddo
+        stop
         
         if(mod(flag_col,2) .eq. 1) then
         	    photo_heat=(photo_heat)/gm/T0/8.6173e-5
@@ -1462,7 +1470,7 @@ enddo
 	S_m(:,:,:,1:5)=S_m(:,:,:,1:5)-ds(:,:,:,1:5)
 	ion_pot=0.0d0
         if (IR_type .eq. 4) then
-            call irgetionpot(nde,ion_pot,heat_photon)
+            call irgetionpot(nde,te,ion_pot,heat_photon)
         else
 		    if(mod(flag_col,2) .eq. 1) then
 			    ion_pot=Gm_ion*nde*(13.6d0/gm/T0/8.6173e-5)
