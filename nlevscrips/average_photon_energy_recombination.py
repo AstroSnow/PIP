@@ -5,6 +5,7 @@ import lightweaver as lw
 from lightweaver.rh_atoms import H_9_atom
 from scipy.integrate import quad
 import matplotlib.pyplot as plt
+import h5py
 
 Trad = 5777
 T_elec=6000.0 #electron temperature
@@ -55,7 +56,8 @@ def get_energies(T_elec):
     #    print(f"{lambda_edge:.2f} nm: {energy.value:.2f} eV")
     return avg_energies
     
-T_elec_arr=np.logspace(3,6,1001)
+n_elements=1001
+T_elec_arr=np.logspace(3,6,n_elements)
 cooling_energy=np.zeros_like(T_elec_arr)
 cooling_energy1=np.zeros_like(T_elec_arr)
 cooling_energy2=np.zeros_like(T_elec_arr)
@@ -72,7 +74,22 @@ for i in range(0,np.size(T_elec_arr)):
     cooling_energy3[i]=avg_energies[3].value
     cooling_energy4[i]=avg_energies[4].value
     cooling_energy5[i]=avg_energies[5].value
-    
+
+#for i in range(1,n_elements):
+#    dLt=np.log(T_elec_arr[i])-np.log(T_elec_arr[i-1])
+#    print(dLt)
+
+#Save the data    
+f = h5py.File("ave_photon_energy_rec.hdf5", "w")
+dset = f.create_dataset("n_elements",data=n_elements)
+dset = f.create_dataset("T_elec",data=np.log(T_elec_arr))
+dset = f.create_dataset("p-n0",data=cooling_energy)
+dset = f.create_dataset("p-n1",data=cooling_energy1)
+dset = f.create_dataset("p-n2",data=cooling_energy2)
+dset = f.create_dataset("p-n3",data=cooling_energy3)
+dset = f.create_dataset("p-n4",data=cooling_energy4)
+dset = f.create_dataset("p-n5",data=cooling_energy5)
+f.close()
 #plt.plot(np.log10(T_elec_arr),np.log10(cooling_energy)) 
 #plt.plot(np.log10(T_elec_arr),4.9-np.log10(T_elec_arr),'r')
 #plt.show()
