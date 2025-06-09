@@ -1336,9 +1336,10 @@ USE HDF5
     INTEGER(HSIZE_T), DIMENSION(2) :: data_dims
     INTEGER(HSIZE_T), DIMENSION(2) :: max_dims
 !	Character(len=65),parameter::filename='lossfunc.h5'
-Character(len=65),parameter::filename='rad_cooling_h.h5'
+    Character(len=65),parameter::filename='ave_photon_energy_rec.hdf5'
 	CHARACTER(LEN=65), PARAMETER :: dset1name = "temperature"  ! Dataset name
 	CHARACTER(LEN=65), PARAMETER :: dset2name = "rad_loss"     ! Dataset name
+	CHARACTER(LEN=4)::transition_name
 	INTEGER::nelements,i
 	
 	if (my_rank == 0) print*,'Reading file'
@@ -1353,15 +1354,24 @@ Character(len=65),parameter::filename='rad_cooling_h.h5'
 		nelements = data_dims(1)
 
 		!Allocate dimensions to dset_data for reading
-		ALLOCATE(rad_cooling_h(nelements,2))
-
-
-		!Get data
-		CALL h5dread_f(dset_id, H5T_NATIVE_DOUBLE, rad_cooling_h(:,1), data_dims, ErrorFlag)
+		ALLOCATE(rad_cooling_h(nelements,n_levels+1))
 		
-		CALL h5dopen_f(file_id, dset2name, dset_id, ErrorFlag)
+		CALL h5dopen_f(file_id, 'T_elec', dset_id, ErrorFlag)
 		CALL h5dget_space_f(dset_id, space_id,ErrorFlag)
-		CALL h5dread_f(dset_id, H5T_NATIVE_DOUBLE, rad_cooling_h(:,2), data_dims, ErrorFlag)
+		CALL h5dread_f(dset_id, H5T_NATIVE_DOUBLE, rad_cooling_h(:,1), data_dims, ErrorFlag)
+
+        do i=1,n_levels
+            write(transition_name, '(a, i0)') 'radrat', i+1
+            CALL h5dopen_f(file_id, transition_name, dset_id, ErrorFlag)
+		    CALL h5dget_space_f(dset_id, space_id,ErrorFlag)
+		    CALL h5dread_f(dset_id, H5T_NATIVE_DOUBLE, rad_cooling_h(:,i+1), data_dims, ErrorFlag)
+        enddo
+		!Get data
+		!CALL h5dread_f(dset_id, H5T_NATIVE_DOUBLE, rad_cooling_h(:,1), data_dims, ErrorFlag)
+		
+		!CALL h5dopen_f(file_id, dset2name, dset_id, ErrorFlag)
+		!CALL h5dget_space_f(dset_id, space_id,ErrorFlag)
+		!CALL h5dread_f(dset_id, H5T_NATIVE_DOUBLE, rad_cooling_h(:,2), data_dims, ErrorFlag)
 		
 		CALL h5close_f(ErrorFlag)
 
