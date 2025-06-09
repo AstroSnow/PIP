@@ -18,10 +18,10 @@ lambda_edges = [c.lambdaEdge for c in H_9_atom().continua]
 #     return 1 / nu * 1 / (np.exp(const.h.value * nu / (const.k_B.value * Trad)) - 1)
 
 def integrand_numerator_x(x, Trad):
-    return np.exp(-x) / (np.exp(-x*T_elec/Trad) - 1)
+    return T_elec * const.k_B.value/const.h.value * np.exp(-x) / (1.0-np.exp(-x*T_elec/Trad))
 
 def integrand_denominator_x(x, Trad):
-    return const.h.value / const.k_B.value / Trad / x * np.exp(-x) / (np.exp(-x*T_elec/Trad) - 1)
+    return x * np.exp(-x) / (1.0-np.exp(-x*T_elec/Trad))
 
 def wave_to_x(wave, Trad):
     nu = (wave << u.nm).to(u.Hz, equivalencies=u.spectral()).value
@@ -55,13 +55,33 @@ def get_energies(T_elec):
     #    print(f"{lambda_edge:.2f} nm: {energy.value:.2f} eV")
     return avg_energies
     
-T_elec_arr=np.linspace(6000,13000,1001)
+T_elec_arr=np.logspace(3,6,1001)
 cooling_energy=np.zeros_like(T_elec_arr)
+cooling_energy1=np.zeros_like(T_elec_arr)
+cooling_energy2=np.zeros_like(T_elec_arr)
+cooling_energy3=np.zeros_like(T_elec_arr)
+cooling_energy4=np.zeros_like(T_elec_arr)
+cooling_energy5=np.zeros_like(T_elec_arr)
 for i in range(0,np.size(T_elec_arr)):
     T_elec=T_elec_arr[i]
     avg_energies=get_energies(T_elec)
     print(T_elec,(avg_energies[0].value))
     cooling_energy[i]=avg_energies[0].value
+    cooling_energy1[i]=avg_energies[1].value
+    cooling_energy2[i]=avg_energies[2].value
+    cooling_energy3[i]=avg_energies[3].value
+    cooling_energy4[i]=avg_energies[4].value
+    cooling_energy5[i]=avg_energies[5].value
     
-plt.plot(T_elec_arr,cooling_energy)
-plt.show()
+#plt.plot(np.log10(T_elec_arr),np.log10(cooling_energy)) 
+#plt.plot(np.log10(T_elec_arr),4.9-np.log10(T_elec_arr),'r')
+#plt.show()
+
+plt.loglog(T_elec_arr,cooling_energy,label='p-n0')
+plt.loglog(T_elec_arr,cooling_energy1,label='p-n1')
+plt.loglog(T_elec_arr,cooling_energy2,label='p-n2')
+plt.loglog(T_elec_arr,cooling_energy3,label='p-n3')
+plt.loglog(T_elec_arr,cooling_energy4,label='p-n4')
+plt.loglog(T_elec_arr,cooling_energy5,label='p-n5')
+plt.legend()
+plt.show() 
