@@ -280,7 +280,7 @@ print*,Gm_rec_ref,my_RANK,T0,n0
 		allocate(ion_pot(ix,jx,kx))
 		allocate(heat_photon(ix,jx,kx))
 		call read_rad_cooling_hydrogen(flag_rad)
-		stop
+		
         call IRgetionpot(U_h(:,:,:,1),Te_p,ion_pot,heat_photon) 
 !        call IRgetionpot(U_h(:,:,:,1),arb_heat) 
 		arb_heat=0.d0!ion_pot
