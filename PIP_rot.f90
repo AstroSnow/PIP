@@ -279,6 +279,8 @@ print*,Gm_rec_ref,my_RANK,T0,n0
         allocate(arb_heat(ix,jx,kx))
 		allocate(ion_pot(ix,jx,kx))
 		allocate(heat_photon(ix,jx,kx))
+		call read_rad_cooling_hydrogen(flag_rad)
+		stop
         call IRgetionpot(U_h(:,:,:,1),Te_p,ion_pot,heat_photon) 
 !        call IRgetionpot(U_h(:,:,:,1),arb_heat) 
 		arb_heat=0.d0!ion_pot
@@ -1337,15 +1339,13 @@ USE HDF5
     INTEGER(HSIZE_T), DIMENSION(2) :: max_dims
 !	Character(len=65),parameter::filename='lossfunc.h5'
     Character(len=65),parameter::filename='ave_photon_energy_rec.hdf5'
-	CHARACTER(LEN=65), PARAMETER :: dset1name = "temperature"  ! Dataset name
-	CHARACTER(LEN=65), PARAMETER :: dset2name = "rad_loss"     ! Dataset name
 	CHARACTER(LEN=4)::transition_name
 	INTEGER::nelements,i
 	
 	if (my_rank == 0) print*,'Reading file'
 		CALL h5open_f(ErrorFlag)
 		CALL h5fopen_f (filename, H5F_ACC_RDONLY_F, file_id, ErrorFlag)
-		CALL h5dopen_f(file_id, dset1name, dset_id, ErrorFlag)
+		CALL h5dopen_f(file_id, 'T_elec', dset_id, ErrorFlag)
 		CALL h5dget_space_f(dset_id, space_id,ErrorFlag)
 		
 		!Get dataspace dims
@@ -1356,12 +1356,14 @@ USE HDF5
 		!Allocate dimensions to dset_data for reading
 		ALLOCATE(rad_cooling_h(nelements,n_levels+1))
 		
+		print*,'T_elec'
 		CALL h5dopen_f(file_id, 'T_elec', dset_id, ErrorFlag)
 		CALL h5dget_space_f(dset_id, space_id,ErrorFlag)
 		CALL h5dread_f(dset_id, H5T_NATIVE_DOUBLE, rad_cooling_h(:,1), data_dims, ErrorFlag)
 
         do i=1,n_levels
-            write(transition_name, '(a, i0)') 'radrat', i+1
+            write(transition_name, '(a, i0)') 'p-n', i-1
+            print*,transition_name
             CALL h5dopen_f(file_id, transition_name, dset_id, ErrorFlag)
 		    CALL h5dget_space_f(dset_id, space_id,ErrorFlag)
 		    CALL h5dread_f(dset_id, H5T_NATIVE_DOUBLE, rad_cooling_h(:,i+1), data_dims, ErrorFlag)
@@ -1381,7 +1383,7 @@ USE HDF5
 !                endif
 
 !		radlossfun(:,2)=radlossfun(:,2)/maxval(radlossfun(:,2))
-    if (my_rank ==0) print*,'file read'
+    if (my_rank ==0) print*,'photon cooling file read'
 !		do i=1,nelements
 !			print*,radlossfun(i,1),radlossfun(i,2)!/maxval(radlossfun(:,2))
 !		enddo
