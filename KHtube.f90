@@ -120,8 +120,8 @@ Nexciteup=Nexciteup/n0up
 Nexciteup=Nexciteup/sum(Nexciteup(:))
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-call set_NLTE_equilibrium(T0up,n0up,nexciteup,1.0d-3,10000)
-stop
+!call set_NLTE_equilibrium(T0up,n0up,nexciteup,1.0d-3,10000)
+!stop
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
