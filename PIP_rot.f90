@@ -3,7 +3,7 @@ module PIP_rot
        flag_pip_imp,gm,n_fraction,t_ir,col,x,y,z,beta,T0, n0,my_rank,flag_IR_type,flag_col,arb_heat,nout,flag_restart,Colrat,&
         Nexcite,n0,f_p_ini,f_p_p_ini,n0fac,Gm_rec_ref,expinttab,&
         rad_temp,flag_rad,gm_ion_rad,gm_rec_rad,radrat,ion_pot,radexpinttab,flag_sch,&
-        s_order,ndim,n_levels,nexcite0,flag_photo_heating,heat_photon,rad_cooling_h
+        s_order,ndim,n_levels,nexcite0,flag_photo_heating,heat_photon,cool_photon,rad_cooling_h
   use scheme_rot,only:get_Te_HD,get_Te_MHD,cq2pv_HD,cq2pv_MHD,get_vel_diff,derivative
   use parameters,only:T_r_p,deg1,deg2,pi
   use Boundary_rot,only:bnd_energy
@@ -281,7 +281,7 @@ print*,Gm_rec_ref,my_RANK,T0,n0
 		allocate(heat_photon(ix,jx,kx))
 		call read_rad_cooling_hydrogen(flag_rad)
 		
-        call IRgetionpot(U_h(:,:,:,1),Te_p,ion_pot,heat_photon) 
+        call IRgetionpot(U_h(:,:,:,1),Te_p,ion_pot,heat_photon,cool_photon) 
 !        call IRgetionpot(U_h(:,:,:,1),arb_heat) 
 		arb_heat=0.d0!ion_pot
     endif
@@ -1207,10 +1207,10 @@ enddo
   end subroutine hydrogen_excitation_update
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine IRgetionpot(nde,Te_p,enloss,photo_heat)
+  subroutine IRgetionpot(nde,Te_p,enloss,photo_heat,photon_cool)
 ! calculate the ionisation potential loss
   double precision,intent(in)::nde(ix,jx,kx),Te_p(ix,jx,kx)
-  double precision,intent(out)::enloss(ix,jx,kx),photo_heat(ix,jx,kx)
+  double precision,intent(out)::enloss(ix,jx,kx),photo_heat(ix,jx,kx),photon_cool(ix,jx,kx)
   double precision::ieloss(ix,jx,kx),iegain(ix,jx,kx),Eev(6)
   double precision::photo_ion_excess(6),photo_cool(ix,jx,kx),T_e_local
   integer:: i,j,k,ii
@@ -1538,7 +1538,7 @@ end subroutine read_rad_cooling_hydrogen
 	S_m(:,:,:,1:5)=S_m(:,:,:,1:5)-ds(:,:,:,1:5)
 	ion_pot=0.0d0
         if (IR_type .eq. 4) then
-            call irgetionpot(nde,te,ion_pot,heat_photon)
+            call irgetionpot(nde,te,ion_pot,heat_photon,cool_photon)
         else
 		    if(mod(flag_col,2) .eq. 1) then
 			    ion_pot=Gm_ion*nde*(13.6d0/gm/T0/8.6173e-5)
@@ -1554,7 +1554,7 @@ end subroutine read_rad_cooling_hydrogen
 	S_m(:,:,:,5)=S_m(:,:,:,5)-ion_pot+arb_heat
 	if (flag_photo_heating .eq. 1) then
 	    !print*,'Added photo heating',heat_photon(0,0,0)
-	    S_m(:,:,:,5)=S_m(:,:,:,5)+heat_photon
+	    S_m(:,:,:,5)=S_m(:,:,:,5)+heat_photon-cool_photon
 	endif
 !	print*,'New type'
 	else if(flag_IR_type .eq. 1) then
