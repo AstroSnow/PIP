@@ -1312,11 +1312,10 @@ enddo
                                   (rad_cooling_h(tab_loc+1,1)-rad_cooling_h(tab_loc,1))+& !Photo excess energy
                                   Eev(ii))*& !Electron base energy
                                   nexcite(i,j,k,n_levels+1)*radrat(i,j,k,n_levels+1,ii) !Include the rate and level populate
-                print*,photo_cool(i,j,k),ii
+                print*,photo_cool(i,j,k),ii,radrat(i,j,k,n_levels+1,ii),nexcite(i,j,k,n_levels+1)
             enddo
-stop
         enddo;enddo;enddo
-        stop
+        
         
         if(mod(flag_col,2) .eq. 1) then
         	    photo_heat=(photo_heat)/gm/T0/8.6173e-5
