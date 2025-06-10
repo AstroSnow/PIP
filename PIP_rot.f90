@@ -1305,22 +1305,24 @@ enddo
             T_e_local=dlog10(Te_p(i,j,k)*T0/tfac) !Temperature in Kelvin
             !print*,'Temperature,dim in log10',T_e_local,dT_photon_cool_table,rad_cooling_h(1,1)
             tab_loc=1+floor((T_e_local-rad_cooling_h(1,1))/dT_photon_cool_table)
-            print*,tab_loc,rad_cooling_h(tab_loc,1),T_e_local,rad_cooling_h(tab_loc+1,1)
+            !print*,tab_loc,rad_cooling_h(tab_loc,1),T_e_local,rad_cooling_h(tab_loc+1,1)
             do ii=1,n_levels
                 photo_cool(i,j,k)=photo_cool(i,j,k)+(rad_cooling_h(tab_loc,ii+1)+(T_e_local-rad_cooling_h(tab_loc,1))*&
                                   (rad_cooling_h(tab_loc+1,ii+1)-rad_cooling_h(tab_loc,ii+1))/&
                                   (rad_cooling_h(tab_loc+1,1)-rad_cooling_h(tab_loc,1))+& !Photo excess energy
                                   Eev(ii))*& !Electron base energy
                                   nexcite(i,j,k,n_levels+1)*radrat(i,j,k,n_levels+1,ii) !Include the rate and level populate
-                print*,photo_cool(i,j,k),ii,radrat(i,j,k,n_levels+1,ii),nexcite(i,j,k,n_levels+1)
+                !print*,photo_cool(i,j,k),ii,radrat(i,j,k,n_levels+1,ii),nexcite(i,j,k,n_levels+1)
             enddo
         enddo;enddo;enddo
         
         
         if(mod(flag_col,2) .eq. 1) then
-        	    photo_heat=(photo_heat)/gm/T0/8.6173e-5
+        	photo_heat=(photo_heat)/gm/T0/8.6173e-5
+                photo_cool=(photo_cool)/gm/T0/8.6173e-5
         elseif(mod(flag_col,2) .eq. 0) then
 	        photo_heat=(photo_heat)/(beta/T0/2.d0/8.6173e-5)
+                photo_cool=(photo_cool)/(beta/T0/2.d0/8.6173e-5)
         else
 	        print*,'option not included!'
 	        stop
@@ -1328,7 +1330,7 @@ enddo
 
         !Normalise based on parameters    
         photo_heat=photo_heat/Gm_rec_ref*t_ir
-        
+        photo_cool=photo_cool/Gm_rec_ref*t_ir
         
         !print*,photo_heat(1,1,1),enloss(1,1,1)
     endif
