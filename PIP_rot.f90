@@ -1303,9 +1303,16 @@ enddo
         dT_photon_cool_table=rad_cooling_h(3,1)-rad_cooling_h(2,1)
         do k=1,kx;do j=1,jx;do i=1,ix
             T_e_local=dlog10(Te_p(i,j,k)*T0/tfac) !Temperature in Kelvin
-            print*,'Temperature,dim in log10',T_e_local,dT_photon_cool_table,rad_cooling_h(1,1)
-            tab_loc=floor((T_e_local-rad_cooling_h(1,1))/dT_photon_cool_table)
+            !print*,'Temperature,dim in log10',T_e_local,dT_photon_cool_table,rad_cooling_h(1,1)
+            tab_loc=1+floor((T_e_local-rad_cooling_h(1,1))/dT_photon_cool_table)
             print*,tab_loc,rad_cooling_h(tab_loc,1),T_e_local,rad_cooling_h(tab_loc+1,1)
+            do ii=1,n_levels
+                photo_cool(i,j,k)=photo_cool(i,j,k)+rad_cooling_h(tab_loc,ii+1)+(T_e_local-rad_cooling_h(tab_loc,1))*&
+                                  (rad_cooling_h(tab_loc+1,ii+1)-rad_cooling_h(tab_loc,ii+1))/&
+                                  (rad_cooling_h(tab_loc+1,1)-rad_cooling_h(tab_loc,1))
+                print*,photo_cool(i,j,k),ii
+            enddo
+stop
         enddo;enddo;enddo
         stop
         
