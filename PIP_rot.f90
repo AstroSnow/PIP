@@ -1307,10 +1307,11 @@ enddo
             tab_loc=1+floor((T_e_local-rad_cooling_h(1,1))/dT_photon_cool_table)
             print*,tab_loc,rad_cooling_h(tab_loc,1),T_e_local,rad_cooling_h(tab_loc+1,1)
             do ii=1,n_levels
-                photo_cool(i,j,k)=photo_cool(i,j,k)+rad_cooling_h(tab_loc,ii+1)+(T_e_local-rad_cooling_h(tab_loc,1))*&
+                photo_cool(i,j,k)=photo_cool(i,j,k)+(rad_cooling_h(tab_loc,ii+1)+(T_e_local-rad_cooling_h(tab_loc,1))*&
                                   (rad_cooling_h(tab_loc+1,ii+1)-rad_cooling_h(tab_loc,ii+1))/&
-                                  (rad_cooling_h(tab_loc+1,1)-rad_cooling_h(tab_loc,1)) !Photo excess energy
-                photo_cool(i,j,k)=photo_cool(i,j,k)+Eev(ii) !Electron base energy
+                                  (rad_cooling_h(tab_loc+1,1)-rad_cooling_h(tab_loc,1))+& !Photo excess energy
+                                  Eev(ii))*& !Electron base energy
+                                  nexcite(i,j,k,n_levels+1)*radrat(i,j,k,n_levels+1,ii) !Include the rate and level populate
                 print*,photo_cool(i,j,k),ii
             enddo
 stop
