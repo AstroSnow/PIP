@@ -1212,8 +1212,8 @@ enddo
   double precision,intent(in)::nde(ix,jx,kx),Te_p(ix,jx,kx)
   double precision,intent(out)::enloss(ix,jx,kx),photo_heat(ix,jx,kx),photon_cool(ix,jx,kx)
   double precision::ieloss(ix,jx,kx),iegain(ix,jx,kx),Eev(6)
-  double precision::photo_ion_excess(6),photo_cool(ix,jx,kx),T_e_local
-  integer:: i,j,k,ii
+  double precision::photo_ion_excess(6),photo_cool(ix,jx,kx),T_e_local,dT_photon_cool_table
+  integer:: i,j,k,ii,tab_loc
 
 Eev=[13.6,3.4,1.51,0.85,0.54,0.0]
 
@@ -1300,9 +1300,12 @@ enddo
         enddo
         
         !Cooling term depends on local temperature so need to loop over grid
+        dT_photon_cool_table=rad_cooling_h(3,1)-rad_cooling_h(2,1)
         do k=1,kx;do j=1,jx;do i=1,ix
-            T_e_local=Te_p(i,j,k)*T0/tfac !Temperature in Kelvin
-            print*,T_e_local
+            T_e_local=dlog10(Te_p(i,j,k)*T0/tfac) !Temperature in Kelvin
+            print*,'Temperature,dim in log10',T_e_local,dT_photon_cool_table,rad_cooling_h(1,1)
+            tab_loc=floor((T_e_local-rad_cooling_h(1,1))/dT_photon_cool_table)
+            print*,tab_loc,rad_cooling_h(tab_loc,1),T_e_local,rad_cooling_h(tab_loc+1,1)
         enddo;enddo;enddo
         stop
         
@@ -1360,7 +1363,9 @@ USE HDF5
 		CALL h5dopen_f(file_id, 'T_elec', dset_id, ErrorFlag)
 		CALL h5dget_space_f(dset_id, space_id,ErrorFlag)
 		CALL h5dread_f(dset_id, H5T_NATIVE_DOUBLE, rad_cooling_h(:,1), data_dims, ErrorFlag)
-
+do i=1,nelements
+print*,rad_cooling_h(i,1)
+enddo
         do i=1,n_levels
             write(transition_name, '(a, i0)') 'p-n', i-1
             print*,transition_name
