@@ -279,6 +279,7 @@ print*,Gm_rec_ref,my_RANK,T0,n0
         allocate(arb_heat(ix,jx,kx))
 		allocate(ion_pot(ix,jx,kx))
 		allocate(heat_photon(ix,jx,kx))
+                allocate(cool_photon(ix,jx,kx))
 		call read_rad_cooling_hydrogen(flag_rad)
 		
         call IRgetionpot(U_h(:,:,:,1),Te_p,ion_pot,heat_photon,cool_photon) 
