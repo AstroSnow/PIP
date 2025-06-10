@@ -82,7 +82,7 @@ for i in range(0,np.size(T_elec_arr)):
 #Save the data    
 f = h5py.File("ave_photon_energy_rec.hdf5", "w")
 dset = f.create_dataset("n_elements",data=n_elements)
-dset = f.create_dataset("T_elec",data=np.log(T_elec_arr))
+dset = f.create_dataset("T_elec",data=np.log10(T_elec_arr))
 dset = f.create_dataset("p-n0",data=cooling_energy)
 dset = f.create_dataset("p-n1",data=cooling_energy1)
 dset = f.create_dataset("p-n2",data=cooling_energy2)
@@ -90,6 +90,7 @@ dset = f.create_dataset("p-n3",data=cooling_energy3)
 dset = f.create_dataset("p-n4",data=cooling_energy4)
 dset = f.create_dataset("p-n5",data=cooling_energy5)
 f.close()
+
 #plt.plot(np.log10(T_elec_arr),np.log10(cooling_energy)) 
 #plt.plot(np.log10(T_elec_arr),4.9-np.log10(T_elec_arr),'r')
 #plt.show()
