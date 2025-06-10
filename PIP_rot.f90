@@ -1309,7 +1309,8 @@ enddo
             do ii=1,n_levels
                 photo_cool(i,j,k)=photo_cool(i,j,k)+rad_cooling_h(tab_loc,ii+1)+(T_e_local-rad_cooling_h(tab_loc,1))*&
                                   (rad_cooling_h(tab_loc+1,ii+1)-rad_cooling_h(tab_loc,ii+1))/&
-                                  (rad_cooling_h(tab_loc+1,1)-rad_cooling_h(tab_loc,1))
+                                  (rad_cooling_h(tab_loc+1,1)-rad_cooling_h(tab_loc,1)) !Photo excess energy
+                photo_cool(i,j,k)=photo_cool(i,j,k)+Eev(ii) !Electron base energy
                 print*,photo_cool(i,j,k),ii
             enddo
 stop
