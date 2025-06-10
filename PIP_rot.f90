@@ -1370,9 +1370,9 @@ USE HDF5
 		CALL h5dopen_f(file_id, 'T_elec', dset_id, ErrorFlag)
 		CALL h5dget_space_f(dset_id, space_id,ErrorFlag)
 		CALL h5dread_f(dset_id, H5T_NATIVE_DOUBLE, rad_cooling_h(:,1), data_dims, ErrorFlag)
-do i=1,nelements
-print*,rad_cooling_h(i,1)
-enddo
+!do i=1,nelements
+!print*,rad_cooling_h(i,1)
+!enddo
         do i=1,n_levels
             write(transition_name, '(a, i0)') 'p-n', i-1
             print*,transition_name
