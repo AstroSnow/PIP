@@ -1327,6 +1327,7 @@ enddo
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 subroutine read_rad_cooling_hydrogen(flag_rad)
+!Read in the photon energy lost during photorecombination as a function of temperature
 USE HDF5
 
 	integer,intent(in)::flag_rad
