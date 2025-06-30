@@ -1556,9 +1556,6 @@ end subroutine read_rad_cooling_hydrogen
 	ion_pot=0.0d0
         if (IR_type .eq. 4) then
             call irgetionpot(nde,te,ion_pot,heat_photon,cool_photon)
-            !print*,'heat_photon range',minval(heat_photon),maxval(heat_photon)
-            !print*,'cool_photon range',minval(cool_photon),maxval(cool_photon)
-            !stop
         else
 		    if(mod(flag_col,2) .eq. 1) then
 			    ion_pot=Gm_ion*nde*(13.6d0/gm/T0/8.6173e-5)
