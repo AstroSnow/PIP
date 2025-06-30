@@ -19,7 +19,7 @@ module io_rot
        Nexcite,gm_ion_rad,gm_rec_rad, &
        file_id, plist_id, hdf5_error, filespace_id, memspace_id,&
        dimsFile, dimsMem, start_stop, hdf5_offset, neighbor, ig, ion_pot,colrat,radrat,&
-       n_levels,flag_photo_heating,heat_photon
+       n_levels,flag_photo_heating,heat_photon,cool_photon
   use mpi_rot,only:end_mpi
   use IOT_rot,only:initialize_IOT,get_next_output
   use Util_rot,only:get_word,get_value_integer
@@ -309,6 +309,7 @@ contains
         end do
 		if(flag_ir_type .eq. 0) call write_3D_array("ion_loss",ion_pot)
 		if(flag_photo_heating .eq. 1) call write_3D_array("heat_photon",heat_photon)
+		if(flag_photo_heating .eq. 1) call write_3D_array("cool_photon",cool_photon)
 	    if(flag_rad .ge. 2) then
 	      if(ion_sav.eq.0) call write_3D_array("ion_rad",Gm_ion_rad)
 	      if(rec_sav.eq.0) call write_3D_array("rec_rad",Gm_rec_rad)
