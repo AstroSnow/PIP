@@ -1208,12 +1208,12 @@ enddo
   end subroutine hydrogen_excitation_update
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine IRgetionpot(nde,Te_p,enloss,photo_heat,photon_cool)
+  subroutine IRgetionpot(nde,Te_p,enloss,photo_heat,photo_cool)
 ! calculate the ionisation potential loss
   double precision,intent(in)::nde(ix,jx,kx),Te_p(ix,jx,kx)
-  double precision,intent(out)::enloss(ix,jx,kx),photo_heat(ix,jx,kx),photon_cool(ix,jx,kx)
+  double precision,intent(out)::enloss(ix,jx,kx),photo_heat(ix,jx,kx),photo_cool(ix,jx,kx)
   double precision::ieloss(ix,jx,kx),iegain(ix,jx,kx),Eev(6)
-  double precision::photo_ion_excess(6),photo_cool(ix,jx,kx),T_e_local,dT_photon_cool_table
+  double precision::photo_ion_excess(6),T_e_local,dT_photon_cool_table
   integer:: i,j,k,ii,tab_loc
 
 Eev=[13.6,3.4,1.51,0.85,0.54,0.0]
@@ -1320,10 +1320,10 @@ enddo
         
         if(mod(flag_col,2) .eq. 1) then
         	photo_heat=(photo_heat)/gm/T0/8.6173e-5
-                photo_cool=(photo_cool)/gm/T0/8.6173e-5
+            photo_cool=(photo_cool)/gm/T0/8.6173e-5
         elseif(mod(flag_col,2) .eq. 0) then
 	        photo_heat=(photo_heat)/(beta/T0/2.d0/8.6173e-5)
-                photo_cool=(photo_cool)/(beta/T0/2.d0/8.6173e-5)
+            photo_cool=(photo_cool)/(beta/T0/2.d0/8.6173e-5)
         else
 	        print*,'option not included!'
 	        stop
@@ -1556,6 +1556,9 @@ end subroutine read_rad_cooling_hydrogen
 	ion_pot=0.0d0
         if (IR_type .eq. 4) then
             call irgetionpot(nde,te,ion_pot,heat_photon,cool_photon)
+            !print*,'heat_photon range',minval(heat_photon),maxval(heat_photon)
+            !print*,'cool_photon range',minval(cool_photon),maxval(cool_photon)
+            !stop
         else
 		    if(mod(flag_col,2) .eq. 1) then
 			    ion_pot=Gm_ion*nde*(13.6d0/gm/T0/8.6173e-5)
