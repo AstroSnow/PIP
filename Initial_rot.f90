@@ -120,6 +120,8 @@ contains
           call ionrectest
        case('shock_tube_ion')
           call shock_tube_ion
+       case('shock_tube_photon')
+          call shock_tube_photon
        case('shock_tube_stab')
           call shock_tube_stab
        case('shock_tube_stab2')
