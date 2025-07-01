@@ -18,7 +18,7 @@ module scheme_rot
        x,y,z,col,n_fraction,flag_ir,gm_rec,gm_ion,gm_rec_rad,gm_ion_rad,t_ir,mpi_pos,my_rank,&
        debug_parameter,ro_lim,pr_lim,tiny,cmax,dsc,b_cr,damp_time,flag_damp,&
        oldke_damp,flag_rad,ion_pot,flag_IR_type,nexcite,colrat,radrat,gm_rec_ref,&
-       n_levels
+       n_levels,heat_photon,cool_photon,flag_photo_heating
   use MPI_rot,only:mpi_double_interface
   use Boundary_rot,only:bnd_divb
   !use PIP_rot,only:hydrogen_excitation_timestep
@@ -332,6 +332,12 @@ contains
      if (flag_IR_type .eq. 0) then
          call get_Pr_MHD(U_m,pr)
      	dttemp=min(dttemp,safety/max(maxval(ion_pot/(pr/(gm-1.d0))),1.0d-5)) 
+     endif
+     
+     if (flag_photo_heating .eq. 1) then
+         call get_Pr_MHD(U_m,pr)
+     	dttemp=min(dttemp,safety/max(maxval(heat_photon/(pr/(gm-1.d0))),1.0d-5))
+     	dttemp=min(dttemp,safety/max(maxval(cool_photon/(pr/(gm-1.d0))),1.0d-5)) 
      endif
    end subroutine cfl_pip_ir
 
