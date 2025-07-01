@@ -330,9 +330,12 @@ contains
   subroutine cfl_pip_ir_nexcite(U_m,U_h,dttemp)
      double precision,intent(inout)::dttemp
      double precision,intent(inout)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
-     double precision::dneut(ix,jx,kx,5)
+     double precision::dneut(ix,jx,kx,n_levels)
      call hydrogen_excitation_timestep(U_m,U_h,dneut)
-     dttemp=min(dttemp,min(safety,0.01d0)/max(maxval(dneut),1.0d-5))
+     !print*,dneut
+     print*,'max(dneut)',maxval(dneut(:,:,:,1:n_levels))
+     print*,dttemp,min(safety,0.01d0)/max(maxval(dneut(:,:,:,1:n_levels)),1.0d-5)
+     dttemp=min(dttemp,min(safety,0.01d0)/max(maxval(dneut(:,:,:,1:n_levels)),1.0d-5))
    end subroutine cfl_pip_ir_nexcite
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -1003,7 +1006,7 @@ endif
 ! calculate the hydrogen excite timestep
   double precision,intent(in)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
   double precision,intent(out)::dnexcite(ix,jx,kx,n_levels)
-  double precision::dneut(6),rom(ix,jx,kx),roh(ix,jx,kx)
+  double precision::dneut(n_levels+1),rom(ix,jx,kx),roh(ix,jx,kx)
   double precision::dntot
   double precision::dneutv(ix,jx,kx,n_levels+1)
   double precision::conv(ix,jx,kx,n_levels+1),conv_temp(ix,jx,kx)
@@ -1045,6 +1048,9 @@ endif
        			endif
             enddo
 
+print*,'hydrogen_excitation_timestep'
+print*,maxval(dneutv(:,:,:,1:n_levels))
+print*,maxval(conv(:,:,:,1:n_levels))
 	    dnexcite(:,:,:,1:n_levels)=dneutv(:,:,:,1:n_levels)-conv(:,:,:,1:n_levels)
   end subroutine hydrogen_excitation_timestep
   
