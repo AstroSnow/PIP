@@ -316,13 +316,22 @@ contains
   double precision,intent(inout)::dttemp
      double precision,intent(inout)::U_m(ix,jx,kx,nvar_m),U_h(ix,jx,kx,nvar_h)
      double precision::pr(ix,jx,kx)
-     dttemp=min(dttemp,min(safety,0.1d0)/max(maxval(gm_rec),maxval(gm_ion),1.0d-5))   !,maxval(gm_rec/U_m(:,:,:,1))+maxval(gm_ion/U_h(:,:,:,1)) 
+     
+     if (flag_rad .eq. 3) then 
+     	!dttemp=min(dttemp,min(safety,0.1d0)/max(maxval(gm_rec_rad),maxval(gm_ion_rad),1.0d-5))
+     	dttemp=min(dttemp,min(safety,0.1d0)/max(maxval(abs((gm_rec+gm_rec_rad)*U_m(:,:,:,1)-&
+     	             (gm_ion+gm_ion_rad)*U_h(:,:,:,1))/U_m(:,:,:,1)),&
+                     maxval(abs((gm_rec+gm_rec_rad)*U_m(:,:,:,1)-&
+                     (gm_ion+gm_ion_rad)*U_h(:,:,:,1))/U_h(:,:,:,1)),1.0d-5))   
+     else
+        !dttemp=min(dttemp,min(safety,0.1d0)/max(maxval(gm_rec),maxval(gm_ion),1.0d-5))
+        dttemp=min(dttemp,min(safety,0.1d0)/max(maxval(abs(gm_rec*U_m(:,:,:,1)-gm_ion*U_h(:,:,:,1))/U_m(:,:,:,1)),&
+        maxval(abs(gm_rec*U_m(:,:,:,1)-gm_ion*U_h(:,:,:,1))/U_h(:,:,:,1)),1.0d-5))
+     endif
+            
      if (flag_IR_type .eq. 0) then
          call get_Pr_MHD(U_m,pr)
      	dttemp=min(dttemp,safety/max(maxval(ion_pot/(pr/(gm-1.d0))),1.0d-5)) 
-     endif
-     if (flag_rad .eq. 3) then 
-     	dttemp=min(dttemp,min(safety,0.1d0)/max(maxval(gm_rec_rad),maxval(gm_ion_rad),1.0d-5)) 
      endif
    end subroutine cfl_pip_ir
 
