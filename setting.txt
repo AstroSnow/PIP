@@ -1,9 +1,9 @@
-Data/:outdir; output directory (This should written at the first line in this file!!)
+shock_photon_6000_n1/:outdir; output directory (This should written at the first line in this file!!)
 Data/:indir; input directory
 PIP:flag_eqs;flag_for equation (HD,MHD, PIP) 
 -1:flag_restart; restart count (-1:no restart, 0: restart. nout at the end of config.txt will be read, >0: restart from No."flag_restart" data)
 1:ndim; dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
-4:ix; grid number for x-direction
+64000:ix; grid number for x-direction
 32:jx; grid number for y-direction
 8:kx; grid number for z-direction
 10.0 :dtout;  output period 100 
@@ -14,8 +14,8 @@ PIP:flag_eqs;flag_for equation (HD,MHD, PIP)
 5.0    :gm_d; 
 3.0    :gm_n;
 0.8  :safety;  safety factor
-KHtube:flag_ini; flag for initial setting   
-1:flag_sch;  flag for numerical scheme (0:HLL-branch, 1:SLW)
+shock_tube_photon:flag_ini; flag for initial setting   
+0:flag_sch;  flag for numerical scheme (0:HLL-branch, 1:SLW)
 2:flag_hll; flag for HLL branch (0:HLL,1:Rusanov,2:HLLD)
 1:s_order;order of space for HLL branch (1, 2)
 0:flag_time; flag for time integration method (0:RK, 1: SSPRK)
@@ -48,14 +48,14 @@ KHtube:flag_ini; flag for initial setting
 100.0:vd_cri; critical drift velocity (for vd-dependent anomalous res)
 ===For Two fluid=====;
 0.9:n_fraction; for uniform ionization degree 
-10.0:col;for collisional coefficient
+1.0:col;for collisional coefficient
 0     :flag_pip_imp;for implicit scheme in source term
 10.0   :pip_imp_factor;cfl condition factor for pip_implicit scheme
 3    :flag_col;flag for collisional coefficient
 4:flag_IR;flag for ionization and recombination (0:none, 1:Single level, 2:Empirical)
-2:nlevels; number of neutral levels to include (max of 5 for 6-level model)
+1:nlevels; number of neutral levels to include (max of 5 for 6-level model)
 0:flag_IR_type; (0:new, 1:Khomenko, 2:Singh)
-1.0e-5:t_IR;time scale of ionization and recombination relative to collisional time
+1.0e-3:t_IR;time scale of ionization and recombination relative to collisional time
 ==Radiative losses==;
 3:flag_rad; (0:no radiative IR, 2:Black-body radiative)
 5777.d0:rad_temp; Black-body radiation temperature
@@ -88,7 +88,7 @@ KHtube:flag_ini; flag for initial setting
 0     :flag_damp; flag for damping
 100000.0   :damp_time; timescale for damping
 ==Normalisation parameters==
-8000.0d0 :T_norm; Temperature in K (13.6 eV = 157814.4 K)
+6000.0d0 :T_norm; Temperature in K (13.6 eV = 157814.4 K)
 1.0e16  :n_norm; number density
 3.d5    :L_norm; Length scale
 ==Optional save flags (0 on, -1 off) TOGGLE AT YOUR PERIL! MAY PREVENT RESTARTS==;

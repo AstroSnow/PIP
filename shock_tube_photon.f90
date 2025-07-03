@@ -177,7 +177,7 @@ f_p_n=f_p_nup
 
   !Set coordinate (uniform grid)--------------------------
   !!set lower and upper coordinate
-  start(1)=0.0d0 ;end(1)=1000.0d0
+  start(1)=0.0d0 ;end(1)=10000.0d0
   start(2)=0.0d0 ;end(2)=2.0d0
   start(3)=-10.0d0 ;end(3)=10.0d0
   call set_coordinate(start,end)
@@ -252,7 +252,7 @@ print*,ppup,ppdown
   tmp=0.0
 
 !print*,'Setting B0=0'
-  B0=0.0d0
+!  B0=0.0d0
 
   v_l=(/1.0d0,beta*B0**2/2.d0,0.0d0,0.0d0,0.0d0,B0*0.3d0,B0,0.0d0/)
   v_r=(/1.0d0,beta*B0**2/2.d0,0.0d0,0.0d0,0.0d0,B0*0.3d0,-B0,0.0d0/)
