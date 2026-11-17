@@ -1,21 +1,21 @@
-shock_photon_6000_n1/:outdir; output directory (This should written at the first line in this file!!)
+/tonkotsu/Snow/OT_MHD_16384/:outdir; output directory (This should written at the first line in this file!!)
 Data/:indir; input directory
-PIP:flag_eqs;flag_for equation (HD,MHD, PIP) 
+MHD:flag_eqs;flag_for equation (HD,MHD, PIP) 
 -1:flag_restart; restart count (-1:no restart, 0: restart. nout at the end of config.txt will be read, >0: restart from No."flag_restart" data)
-1:ndim; dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
-64000:ix; grid number for x-direction
-32:jx; grid number for y-direction
+2:ndim; dimension (If you try debug_direction of >1, then you need to set ndim to 2 or 3)
+16384:ix; grid number for x-direction
+16384:jx; grid number for y-direction
 8:kx; grid number for z-direction
-10.0 :dtout;  output period 100 
-1000.0:tend;tend time for simulation (if lt 0 then default value is set) 20000
+0.1 :dtout;  output period 100 
+1.0:tend;tend time for simulation (if lt 0 then default value is set) 20000
 0:esav; flag for save after given physical time
 0001.d0:emsavtime; Physical time to save for esav
 0 :flag_cyl; set to 1 when you use Cylindrical coordinates (x=>r,y=>z,z=>phi) NB: Only ndim=2 is allowed (rz-plane)
 5.0    :gm_d; 
 3.0    :gm_n;
 0.8  :safety;  safety factor
-shock_tube_photon:flag_ini; flag for initial setting   
-0:flag_sch;  flag for numerical scheme (0:HLL-branch, 1:SLW)
+Orszag_Tang:flag_ini; flag for initial setting   
+1:flag_sch;  flag for numerical scheme (0:HLL-branch, 1:SLW)
 2:flag_hll; flag for HLL branch (0:HLL,1:Rusanov,2:HLLD)
 1:s_order;order of space for HLL branch (1, 2)
 0:flag_time; flag for time integration method (0:RK, 1: SSPRK)
@@ -24,7 +24,7 @@ shock_tube_photon:flag_ini; flag for initial setting
 0    :flag_visc;  flag for viscosity
 1.0e-3  :nu_0; Value of viscosity
 -1:flag_artvis;flag for artificial viscosity (default :-1)
-1.2 :theta; parameterfor artificial viscosity (set between 1 and 2 inclusive)
+1.4 :theta; parameterfor artificial viscosity (set between 1 and 2 inclusive)
 ===For limits===;
 0.00000001 :ro_lim; Lower limit for density
 0.00000001 :pr_lim; Lower limit for pressure
@@ -36,7 +36,7 @@ shock_tube_photon:flag_ini; flag for initial setting
 -1    :flag_bnd_z_l; flag for z-boundary (if 0 then default value is set)
 -1    :flag_bnd_z_r; flag for z+boundary (if 0 then default value is set)
 ===For MHD===;
-0.01:beta; initial plasma beta 
+1.0:beta; initial plasma beta 
 0:flag_amb; flag for resistive of not (Ambipolar)
 1:flag_divb; flag for divB cleaning (0: no cleaning, 1:9-wave, 2:iterative 9-wave)
 0.7 :db_clean; paramter for divb cleaning
@@ -52,14 +52,14 @@ shock_tube_photon:flag_ini; flag for initial setting
 0     :flag_pip_imp;for implicit scheme in source term
 10.0   :pip_imp_factor;cfl condition factor for pip_implicit scheme
 3    :flag_col;flag for collisional coefficient
-4:flag_IR;flag for ionization and recombination (0:none, 1:Single level, 2:Empirical)
+0:flag_IR;flag for ionization and recombination (0:none, 1:Single level, 2:Empirical)
 1:nlevels; number of neutral levels to include (max of 5 for 6-level model)
 0:flag_IR_type; (0:new, 1:Khomenko, 2:Singh)
 1.0e-3:t_IR;time scale of ionization and recombination relative to collisional time
 ==Radiative losses==;
-3:flag_rad; (0:no radiative IR, 2:Black-body radiative)
+0:flag_rad; (0:no radiative IR, 2:Black-body radiative)
 5777.d0:rad_temp; Black-body radiation temperature
-1:flag_photo_heat; flag for photon heating
+0:flag_photo_heat; flag for photon heating
 ==For heat condution===;
 0 :flag_heat;heat conduction flag (0:switch-off, 1:switch-on)
 1 :hc_type; type of heat conduction (0:constant-type, 1:Spitzer-type)
@@ -73,8 +73,8 @@ shock_tube_photon:flag_ini; flag for initial setting
 1.0:sor_omega; SOR-omega parameter (for iterative method)
 ==For MPI====;
 1     :flag_mpi;flag for mpi
-1     :mpi_x;node number for x-direction
-1     :mpi_y;node number for y-direction
+12     :mpi_x;node number for x-direction
+14     :mpi_y;node number for y-direction
 1     :mpi_z;node number for z-direction
 1     :flag_mpi_split;flag for splitting domain (Activated ONLY WHEN A=mpi_x*mpi_y*mpi_z=0 or A ne total_prc)
 ==For debug==;
