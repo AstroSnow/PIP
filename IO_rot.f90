@@ -105,7 +105,7 @@ contains
   end subroutine output
 
   subroutine create_hdf5_outfile
-    character(40) :: file_path
+    character(256) :: file_path   ! outdir is up to 200 chars; was 40, which truncated long paths
 
     ! Initialize FORTRAN predefined datatypes
     CALL h5open_f(hdf5_error)
@@ -461,7 +461,7 @@ contains
   end subroutine restart
 
   subroutine read_restart_hdf5()
-    character(40) :: file_path
+    character(256) :: file_path   ! indir is up to 200 chars; was 40, which truncated long paths
     character*4 step_char
     integer(HSIZE_T) :: dims_1D(1)
     integer(HSIZE_T) :: proc_block

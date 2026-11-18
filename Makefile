@@ -1,5 +1,5 @@
 TARGET = a.out
-OBJECTS = Util_rot.o BMP_rot.o Matrix_rot.o \
+OBJECTS = rand_compat.o Util_rot.o BMP_rot.o Matrix_rot.o \
 	Globalvar.o Parameters.o MPI_rot.o Boundary_rot.o Scheme_rot.o \
 	HC_rot.o \
 	Res_rot.o Gra_rot.o PIP_rot.o Visc_rot.o\
@@ -18,7 +18,7 @@ OBJECTS = Util_rot.o BMP_rot.o Matrix_rot.o \
 	Initial_rot.o  main.o relax_prom.o relax_prom2.o procedures.o hsstatic.o\
 	resonator.o ionrectest.o  Complete_spectrum.o shock_tube_stab.o shock_tube_stab2.o \
 	shock_tube_stab3.o shock_tube_photon.o kink_wave.o RMI.o kink_instability.o jetcrosssection.o HC_tests.o
-MOD_FILES = util_rot.mod globalvar.mod parameters.mod \
+MOD_FILES = rand_compat.mod util_rot.mod globalvar.mod parameters.mod \
 	scheme_rot.mod hc_rot.mod \
 	res_rot.mod gra_rot.mod pip_rot.mod visc_rot.mod\
 	mpi_rot.mod io_rot.mod \

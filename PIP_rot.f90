@@ -1061,7 +1061,7 @@ subroutine expintruttonn1(x,sol)
         i=1
         do while (diff .GT. 0.0000001)
             oldsol=sol
-            sol=sol-(-1.d0)**i*x**i/(dble(i)*dgamma(dble(i+1))) !gamma(i+1)=i! I think
+            sol=sol-(-1.d0)**i*x**i/(dble(i)*gamma(dble(i+1))) !gamma(i+1)=i! I think
             diff=abs((sol-oldsol)/sol)
             i=i+1
         enddo

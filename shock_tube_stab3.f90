@@ -1,4 +1,5 @@
 subroutine shock_tube_stab3
+  use rand_compat, only: rand, srand   ! portable copy of gfortran RAND/SRAND (same sequence)
   use parameters,only:pi
   use globalvar,only:ix,jx,kx,U_h,U_m,flag_bnd,col,beta,flag_b_stg,dtout,&
        flag_mhd,flag_mpi,my_rank,flag_pip,gm,beta,tend,&
