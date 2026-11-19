@@ -66,9 +66,12 @@ if [ $((MPIX * MPIY * MPIZ)) -ne "$SLURM_NTASKS" ]; then
     exit 1
 fi
 
-scontrol show hostnames "$SLURM_JOB_NODELIST" > nodes.txt
+# One line per node with an explicit slot count. Without "slots=", Open MPI assumes it can
+# use every core it detects on a node, packs more than 16 ranks onto it, and then fails to
+# bind ranks to cores outside this job's 16-core allocation (hwloc_set_cpubind error).
+scontrol show hostnames "$SLURM_JOB_NODELIST" | sed "s/\$/ slots=$SLURM_NTASKS_PER_NODE/" > nodes.txt
 
 echo "Job $SLURM_JOB_ID on $SLURM_JOB_NUM_NODES nodes, $SLURM_NTASKS ranks, started $(date)"
-mpirun -x LD_LIBRARY_PATH -x PATH -x MALLOC_MMAP_MAX_ -x MALLOC_TRIM_THRESHOLD_ -machinefile nodes.txt \
+mpirun -x LD_LIBRARY_PATH -x PATH -x MALLOC_MMAP_MAX_ -x MALLOC_TRIM_THRESHOLD_ -machinefile nodes.txt --report-bindings \
        -np "$SLURM_NTASKS" --bind-to core ./a.out > "$OUTDIR/run.log" 2>&1
 echo "Finished $(date)"
