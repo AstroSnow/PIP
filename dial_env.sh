@@ -13,14 +13,18 @@ module purge
 module load intel-oneapi/2022.1.2
 module load openmpi4/intel/4.0.5
 
-# openmpi4/intel/4.0.5 was built against PMIx 3 (/cm/shared/apps/cm-pmix3/3.1.4) but its
-# module does not put that on LD_LIBRARY_PATH, so the system PMIx 2.2.5 in /lib64 (same
-# soname, libpmix.so.2) gets loaded and mpirun aborts with "unexpected version of PMIx".
-PMIX3_DIR=/cm/shared/apps/cm-pmix3/3.1.4
-if [ -d "$PMIX3_DIR/lib" ]; then
-    export LD_LIBRARY_PATH=$PMIX3_DIR/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+# openmpi4/intel/4.0.5 was built against PMIx 3 (/cm/shared/apps/cm-pmix3/3.1.4), but that
+# directory no longer holds libpmix.so.2, so the loader falls back to the system PMIx 2.2.5
+# in /lib64 (same soname) and mpirun aborts with "unexpected version of PMIx". Put the
+# first PMIx 3 directory that really contains the library on LD_LIBRARY_PATH.
+PMIX3_LIB=
+for d in /cm/shared/apps/cm-pmix3/3.1.4/lib /cm/shared/apps/cm-pmix3/3.1.7/lib /cm/shared/apps/cm-pmix3/current/lib; do
+    if [ -e "$d/libpmix.so.2" ]; then PMIX3_LIB=$d; break; fi
+done
+if [ -n "$PMIX3_LIB" ]; then
+    export LD_LIBRARY_PATH=$PMIX3_LIB${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
 else
-    module load cm-pmix3/3.1.7            # same 3.1 series, ABI compatible
+    echo "dial_env.sh: WARNING: no PMIx 3 libpmix.so.2 found under /cm/shared/apps/cm-pmix3" >&2
 fi
 
 # Parallel HDF5 built by build_hdf5_dial.sh (DIaL3 has no parallel HDF5 module).
