@@ -1,4 +1,4 @@
-OT_PIP_32768/:outdir; output directory (This should written at the first line in this file!!)
+/scratch/dp446/dc-snow1/OT_PIP_32768/:outdir; output directory (This should written at the first line in this file!!)
 Data/:indir; input directory
 PIP:flag_eqs;flag_for equation (HD,MHD, PIP) 
 -1:flag_restart; restart count (-1:no restart, 0: restart. nout at the end of config.txt will be read, >0: restart from No."flag_restart" data)

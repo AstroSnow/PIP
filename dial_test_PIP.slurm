@@ -23,7 +23,7 @@ source ./dial_env.sh
 set -euo pipefail
 
 NTEST=8192
-RUNDIR=test_PIP_${NTEST}_${SLURM_JOB_ID}
+RUNDIR=/scratch/dp446/dc-snow1/test_PIP_${NTEST}_${SLURM_JOB_ID}   # scratch: home quota is small
 mkdir -p "$RUNDIR"
 cp a.out "$RUNDIR/"
 
@@ -52,7 +52,7 @@ echo "Job $SLURM_JOB_ID on $SLURM_JOB_NUM_NODES nodes ($SLURM_JOB_NODELIST), $SL
 echo "h5pfc: $(which h5pfc)   mpirun: $(which mpirun)"
 START=$(date +%s)
 set +e
-mpirun -np "$SLURM_NTASKS" --bind-to core -x MALLOC_MMAP_MAX_ -x MALLOC_TRIM_THRESHOLD_ ./a.out > "$OUTDIR/run.log" 2>&1
+mpirun -np "$SLURM_NTASKS" --bind-to core -x LD_LIBRARY_PATH -x MALLOC_MMAP_MAX_ -x MALLOC_TRIM_THRESHOLD_ ./a.out > "$OUTDIR/run.log" 2>&1
 STATUS=$?
 set -e
 echo "mpirun exit status $STATUS after $(( $(date +%s) - START )) s"

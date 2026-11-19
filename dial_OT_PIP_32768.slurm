@@ -22,7 +22,7 @@
 # overwritten. If the job hits the wall time, the emergency save (esav, 70 h) will
 # have written a snapshot. To restart from it, edit $RUNDIR/setting.txt:
 #   flag_restart = 0                (continue from the last snapshot listed in config.txt)
-#   indir        = OT_PIP_32768/    (restart data is read from indir, not outdir)
+#   indir        = /scratch/dp446/dc-snow1/OT_PIP_32768/   (restart data is read from indir, not outdir)
 #   tend         = time remaining   (on restart the code sets tend = tend + current time)
 #   esav         = 1                (re-arm the emergency save)
 # then resubmit with:
@@ -33,7 +33,7 @@ source ./dial_env.sh
 
 set -euo pipefail
 
-RUNDIR=run_OT_PIP_32768
+RUNDIR=/scratch/dp446/dc-snow1/run_OT_PIP_32768
 SETTINGS=setting_dial_OT_PIP_32768.txt
 
 if [ "${RESTART:-0}" != "1" ]; then
@@ -63,5 +63,5 @@ if [ $((MPIX * MPIY * MPIZ)) -ne "$SLURM_NTASKS" ]; then
 fi
 
 echo "Job $SLURM_JOB_ID on $SLURM_JOB_NUM_NODES nodes, $SLURM_NTASKS ranks, started $(date)"
-mpirun -np "$SLURM_NTASKS" --bind-to core -x MALLOC_MMAP_MAX_ -x MALLOC_TRIM_THRESHOLD_ ./a.out > "$OUTDIR/run.log" 2>&1
+mpirun -np "$SLURM_NTASKS" --bind-to core -x LD_LIBRARY_PATH -x MALLOC_MMAP_MAX_ -x MALLOC_TRIM_THRESHOLD_ ./a.out > "$OUTDIR/run.log" 2>&1
 echo "Finished $(date)"
